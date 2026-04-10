@@ -511,6 +511,7 @@
       <div class="form-group"><label>Law Firm</label><input type="text" id="fLawFirm"></div>
       <div class="form-group"><label>Law Firm Contact</label><input type="text" id="fLawContact" placeholder="Phone / Email"></div>
       <div class="form-group"><label>Referral Source</label><input type="text" id="fRefSource" list="refSourceList" placeholder="Type or select a source"><datalist id="refSourceList"></datalist></div>
+      <div class="form-group"><label>Referred / Registered Date</label><input type="date" id="fRegDate"></div>
       <div class="form-group"><label>Scheduled Appointment Date</label><input type="date" id="fApptDate"></div>
       <div class="form-group"><label>Status</label><select id="fStatus"><option value="Pending Scheduling">Pending Scheduling</option><option value="Scheduled">Scheduled</option><option value="Active Treatment">Active Treatment</option><option value="Completed">Completed</option></select></div>
       <div class="form-group full"><label>Alerts / Missing Info (select all that apply)</label>
@@ -1642,6 +1643,7 @@ function openNewRefModal() {
   document.getElementById('refModalTitle').textContent = 'Register New Referral';
   document.getElementById('btnDeleteRef').style.display = 'none';
   ['fName','fDOB','fPhone','fEmail','fDOI','fAttorney','fLawFirm','fLawContact','fApptDate','fNotes','fAlertOther'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fRegDate').value = today();
   document.getElementById('fCaseType').value='WC';document.getElementById('fLocation').value='';document.getElementById('fLanguage').value='English';document.getElementById('fStatus').value='Pending Scheduling';
   document.querySelectorAll('.alertCb').forEach(cb=>{cb.checked=false});
   populateRefSourceDropdown();
@@ -1660,6 +1662,7 @@ function openEditRefModal(id) {
   document.getElementById('fLocation').value=r.location||'';document.getElementById('fLanguage').value=r.language||'English';
   document.getElementById('fAttorney').value=r.attorney||'';document.getElementById('fLawFirm').value=r.lawFirm||'';
   document.getElementById('fLawContact').value=r.lawContact||'';document.getElementById('fApptDate').value=r.apptDate||'';
+  document.getElementById('fRegDate').value=r.createdDate||'';
   document.getElementById('fNotes').value=r.notes||'';document.getElementById('fStatus').value=r.status||'Pending Scheduling';
   // Load alert types
   const alerts=r.alertType?r.alertType.split(' | '):[];
@@ -1693,8 +1696,9 @@ function saveReferral() {
   if (editingRefId) {
     const idx=refs.findIndex(r=>r.id===editingRefId); if(idx===-1) return;
     const prev=refs[idx];
+    var updatedRegDate=document.getElementById('fRegDate').value||prev.createdDate;
     if(data.apptDate&&!prev.apptDate){data.dateScheduledOn=today();data.daysToSchedule=daysBtw(prev.createdDate,today());data.alertAssignedTo=null;if(data.status==='Pending Scheduling')data.status='Scheduled';}
-    refs[idx]={...prev,...data};
+    refs[idx]={...prev,...data,createdDate:updatedRegDate};
     // Auto-create case if just got scheduled and no linked case exists
     if(data.apptDate&&!prev.apptDate&&!cases.find(c=>c.sourceRefId===editingRefId)) createCaseFromRef(refs[idx]);
     // Sync alertType to linked case's missingInfo
@@ -1711,7 +1715,7 @@ function saveReferral() {
       saveCases();
     }
   } else {
-    const nr={id:genId(),...data,createdDate:today(),registeredBy:currentUser,updateLog:[],alertAssignedTo:null,lastContactDate:null,dateScheduledOn:null,daysToSchedule:null,apptOutcome:null,apptConfirmAssignedTo:null,lastApptFollowUp:null};
+    const nr={id:genId(),...data,createdDate:document.getElementById('fRegDate').value||today(),registeredBy:currentUser,updateLog:[],alertAssignedTo:null,lastContactDate:null,dateScheduledOn:null,daysToSchedule:null,apptOutcome:null,apptConfirmAssignedTo:null,lastApptFollowUp:null};
     if(data.apptDate){nr.dateScheduledOn=today();nr.daysToSchedule=0;if(nr.status==='Pending Scheduling')nr.status='Scheduled';}
     refs.push(nr);
     // Auto-create case if scheduled
