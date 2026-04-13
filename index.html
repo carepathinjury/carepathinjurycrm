@@ -440,6 +440,7 @@
     <div class="nav-item active" data-page="mkt-pipeline" onclick="mktNav('mkt-pipeline')"><div class="nav-icon">📈</div> Pipeline</div>
     <div class="nav-item" data-page="mkt-correlation" onclick="mktNav('mkt-correlation')"><div class="nav-icon">🔗</div> Referral Correlation</div>
     <div class="nav-item" data-page="mkt-contacts" onclick="mktNav('mkt-contacts')"><div class="nav-icon">📇</div> Contacts</div>
+    <div class="nav-item" data-page="mkt-analytics" onclick="mktNav('mkt-analytics')"><div class="nav-icon">📊</div> Analytics</div>
   </div>
   <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential</p></div>
 </nav>
@@ -447,6 +448,7 @@
   <div class="section active" id="sec-mkt-pipeline"></div>
   <div class="section" id="sec-mkt-correlation"></div>
   <div class="section" id="sec-mkt-contacts"></div>
+  <div class="section" id="sec-mkt-analytics"></div>
 </div>
 </div>
 </div>
@@ -496,23 +498,24 @@
 <!-- ══════════ MODALS ══════════ -->
 <!-- Referral Modal -->
 <div class="modal-overlay" id="referralModal">
-  <div class="modal" style="width:720px">
+  <div class="modal" style="width:720px;max-height:90vh;overflow-y:auto">
     <div class="modal-header"><h2 id="refModalTitle">Register New Referral</h2><button class="modal-close" onclick="closeRefModal()">&times;</button></div>
     <div class="modal-body"><div class="form-grid">
       <div class="form-group"><label>Patient Name</label><input type="text" id="fName" placeholder="Last, First"></div>
       <div class="form-group"><label>Patient DOB</label><input type="date" id="fDOB"></div>
-      <div class="form-group"><label>Patient Phone</label><input type="tel" id="fPhone" placeholder="(555) 123-4567"></div>
+      <div class="form-group"><label>Patient Phone</label><input type="tel" id="fPhone" placeholder="(555) 123-4567" oninput="formatPhone(this)"></div>
       <div class="form-group"><label>Patient Email</label><input type="email" id="fEmail" placeholder="patient@email.com"></div>
-      <div class="form-group"><label>Case Type</label><select id="fCaseType"><option value="WC">WC</option><option value="MVA">MVA</option><option value="PI">PI</option></select></div>
+      <div class="form-group"><label>Case Type</label><select id="fCaseType"><option value="WC">WC</option><option value="MVA">MVA</option><option value="NJ MVA">NJ MVA</option><option value="PI">PI</option></select></div>
       <div class="form-group"><label>Date of Injury</label><input type="date" id="fDOI"></div>
       <div class="form-group"><label>Clinic Location</label><select id="fLocation"><option value="">— Select —</option><option>Allentown</option><option>Wilkes Barre</option><option>Old City</option><option>Hazleton</option><option>Williamsport</option><option>Carlisle</option><option>Lansdale</option><option>Reading</option><option>Port Richmond</option><option>Germantown</option><option>NE Philly</option><option>Darby</option><option>Cherry Hill NJ</option></select></div>
       <div class="form-group"><label>Preferred Language</label><select id="fLanguage"><option>English</option><option>Spanish</option><option>Other</option></select></div>
       <div class="form-group"><label>Attorney Name</label><input type="text" id="fAttorney"></div>
-      <div class="form-group"><label>Law Firm</label><input type="text" id="fLawFirm"></div>
+      <div class="form-group"><label>Law Firm</label><input type="text" id="fLawFirm" list="lawFirmList" placeholder="Select or type law firm"><datalist id="lawFirmList"></datalist></div>
       <div class="form-group"><label>Law Firm Contact</label><input type="text" id="fLawContact" placeholder="Phone / Email"></div>
       <div class="form-group"><label>Referral Source</label><input type="text" id="fRefSource" list="refSourceList" placeholder="Type or select a source"><datalist id="refSourceList"></datalist></div>
       <div class="form-group"><label>Referred / Registered Date</label><input type="date" id="fRegDate"></div>
       <div class="form-group"><label>Scheduled Appointment Date</label><input type="date" id="fApptDate"></div>
+      <div class="form-group"><label>New Patient Paperwork Completed?</label><select id="fPaperwork"><option value="no">No</option><option value="yes">Yes</option></select></div>
       <div class="form-group"><label>Status</label><select id="fStatus"><option value="Pending Scheduling">Pending Scheduling</option><option value="Scheduled">Scheduled</option><option value="Active Treatment">Active Treatment</option><option value="Completed">Completed</option></select></div>
       <div class="form-group full"><label>Alerts / Missing Info (select all that apply)</label>
         <div id="fAlertCheckboxes" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">
@@ -523,6 +526,11 @@
         </div>
       </div>
       <div class="form-group"><label>Other Alert (free text)</label><input type="text" id="fAlertOther" placeholder="Any other alert needed..."></div>
+      <div class="form-group full" style="border-top:2px solid var(--gray-200);padding-top:16px;margin-top:8px">
+        <label style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:8px;display:block">Records Needed / Facilities</label>
+        <div id="fRecordsContainer"></div>
+        <button type="button" onclick="addRecordRow()" style="font-size:11px;padding:6px 14px;background:var(--gray-100);border:2px solid var(--gray-200);border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Sans';font-weight:600;color:var(--navy);margin-top:6px">+ Add Facility / Record</button>
+      </div>
       <div class="form-group full"><label>Notes</label><textarea id="fNotes"></textarea></div>
     </div></div>
     <div class="modal-footer"><button class="btn-delete" id="btnDeleteRef" style="display:none" onclick="deleteReferral()">Delete</button><button class="btn-cancel" onclick="closeRefModal()">Cancel</button><button class="btn-save" onclick="saveReferral()">Save</button></div>
@@ -734,7 +742,7 @@
         <div class="form-group">
           <label>Outcome</label>
           <select id="miOutcome" onchange="toggleMiFields()">
-            <option value="followed_up">Followed Up — Still Waiting (re-alert in 14 days)</option>
+            <option value="followed_up">Followed Up — Still Waiting (re-alert in 10 days)</option>
             <option value="resolved">Resolved — Info Obtained</option>
           </select>
         </div>
@@ -894,6 +902,47 @@ function fmtDate(d){if(!d)return'—';const p=d.split('-');return p[1]+'/'+p[2]+
 function daysBtw(a,b){const d1=new Date(a),d2=new Date(b);d1.setHours(0,0,0,0);d2.setHours(0,0,0,0);return Math.round((d2-d1)/864e5)}
 function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function getNextStaff(){const s=CRM_STAFF[robinIdx%CRM_STAFF.length];robinIdx++;saveRobin();return s}
+
+// Phone auto-format (xxx) xxx-xxxx
+function formatPhone(el){var v=el.value.replace(/\D/g,'');if(v.length>10)v=v.slice(0,10);if(v.length>=7)el.value='('+v.slice(0,3)+') '+v.slice(3,6)+'-'+v.slice(6);else if(v.length>=4)el.value='('+v.slice(0,3)+') '+v.slice(3);else if(v.length>0)el.value='('+v;else el.value='';}
+
+// Law firm dropdown list
+const LAW_FIRMS=['10x Law','Altman Law','Bishop, Dorfman, Kroupa and Bishop','Brandon J Broderick','Brandon Swartz','Brett Tessler & Associates','Clearfield & Kofsky','Cohen, Feeley, Altemose and Rambo','Dashevsky, Horwitz, Kuhn, Novello & Shorr','Cordisco & Saile','Dion, Solomon & Shapiro','Eric Brauer Law','Fellerman Law','Foxworth Law Group','Fredsone, Statmore, and Bitterman','Galerman Law','Gibbons & Crighton','H. Rosen Law','Hourigan, Kluger & Quinn P.C.','J Fine Law','Jeffery S Gross, Esquire','Kavensky Law','Kitlay Law Offices','Kotlar Hernandez and Cohen Law Offices','Kwartler Manus','Lassiter & Associates','Law Offices of Jared S. Zafran LLC','Law Offices of Eric B. Brauer','Lundy Law','Malamut Law','Martin Law','Matt Breslin','Krasno Krasno','Mednick, Mezyk & Kredo','Morgan & Morgan','O\'Donnel Law Offices','Pearson Kutcher','Pond Lehocky','Pujlos Law Group','Robinson Law','Rodden, Rodden & Breslin Law','Rosenbaum & Associates','Simon & Simon','Stampone Law','Stark & Stark','Stern & Cohen','Stoll Medical Group','Swartz Culleton','Wapner Neuman Weinerman'];
+function populateLawFirmDropdown(){var dl=document.getElementById('lawFirmList');dl.innerHTML='';LAW_FIRMS.forEach(f=>{var o=document.createElement('option');o.value=f;dl.appendChild(o)});}
+
+// Records needed rows
+var recordRowCounter=0;
+function addRecordRow(data){
+  var c=document.getElementById('fRecordsContainer');
+  var idx=recordRowCounter++;
+  var div=document.createElement('div');
+  div.className='record-row';
+  div.id='recordRow_'+idx;
+  div.style.cssText='display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px;padding:10px;background:var(--gray-100);border-radius:var(--radius-sm)';
+  div.innerHTML='<div><label style="font-size:10px;font-weight:700;color:var(--gray-500);text-transform:uppercase;display:block;margin-bottom:3px">Facility / Provider</label><input type="text" class="recFacility" value="'+(data&&data.facility?esc(data.facility):'')+'" placeholder="e.g. Temple Hospital" style="width:100%;padding:7px 10px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:DM Sans;font-size:12px;box-sizing:border-box"></div>'
+    +'<div><label style="font-size:10px;font-weight:700;color:var(--gray-500);text-transform:uppercase;display:block;margin-bottom:3px">Records Needed</label><input type="text" class="recNeeded" value="'+(data&&data.records?esc(data.records):'')+'" placeholder="e.g. MRI results, treatment notes" style="width:100%;padding:7px 10px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:DM Sans;font-size:12px;box-sizing:border-box"></div>'
+    +'<div style="display:flex;gap:6px;align-items:center;padding-bottom:2px">'
+    +'<select class="recStatus" style="padding:7px 8px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:DM Sans;font-size:11px;font-weight:600"><option value="pending">Pending</option><option value="requested">Requested</option><option value="received">Received</option><option value="incomplete">Incomplete</option></select>'
+    +'<button type="button" onclick="this.closest(\'.record-row\').remove()" style="padding:5px 8px;background:var(--red-light);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:11px;font-weight:700">&times;</button></div>';
+  if(data&&data.status)div.querySelector('.recStatus').value=data.status;
+  c.appendChild(div);
+}
+function getRecordsData(){
+  var rows=document.querySelectorAll('#fRecordsContainer .record-row');
+  var arr=[];
+  rows.forEach(function(r){
+    var fac=r.querySelector('.recFacility').value.trim();
+    var rec=r.querySelector('.recNeeded').value.trim();
+    var st=r.querySelector('.recStatus').value;
+    if(fac||rec)arr.push({facility:fac,records:rec,status:st});
+  });
+  return arr;
+}
+function loadRecordsData(arr){
+  document.getElementById('fRecordsContainer').innerHTML='';
+  recordRowCounter=0;
+  if(arr&&arr.length>0)arr.forEach(function(d){addRecordRow(d);});
+}
 
 // ══════════════════════════════════════════════════════════════════════
 // LOGIN & MODULE SWITCHING
@@ -1056,6 +1105,8 @@ function topNewAction() {
 function goToAlerts() {
   if (activeModule === 'crm') crmNav('crm-alerts');
   else if (activeModule === 'cm') cmNav('cm-alerts');
+  else if (activeModule === 'psr') psrNav('psr-tickets');
+  else { switchModule('crm'); crmNav('crm-alerts'); }
 }
 
 function renderActiveModule() {
@@ -1084,6 +1135,17 @@ function crmAlerts() {
     // Appt confirmation
     if (r.apptDate && r.apptOutcome !== 'completed' && r.status !== 'Completed') {
       const past = daysBtw(r.apptDate, now);
+      // Paperwork alert — 1 day before appointment
+      if (past >= -1 && past <= 0 && r.paperworkCompleted !== 'yes') {
+        alerts.push({ id:r.id, type:'paperwork', patientName:r.patientName, assignedTo:r.alertAssignedTo||r.apptConfirmAssignedTo, apptDate:r.apptDate, location:r.location, caseType:r.caseType, phone:r.phone, email:r.email });
+      }
+      // Records needed alert — 3 days before appointment
+      if (past >= -3 && past <= 0 && r.recordsNeeded && r.recordsNeeded.length > 0) {
+        var pendingRecs = r.recordsNeeded.filter(function(rc){return rc.status!=='received';});
+        if (pendingRecs.length > 0) {
+          alerts.push({ id:r.id, type:'records_needed', patientName:r.patientName, assignedTo:r.alertAssignedTo||r.apptConfirmAssignedTo, apptDate:r.apptDate, location:r.location, caseType:r.caseType, phone:r.phone, email:r.email, pendingRecords:pendingRecs });
+        }
+      }
       if (past >= 1) {
         if (r.apptOutcome === 'no_show' || r.apptOutcome === 'cancelled') {
           const ck2 = r.lastApptFollowUp || r.apptDate;
@@ -1116,7 +1178,7 @@ function cmAlerts() {
       alerts.push({ type:'intro-email', severity:'red', title:'Send Attorney New Patient Introduction Email', message:'Attorney introduction email has not been sent yet. Send now and log the date.', caseId:c.id, patientName:c.patientName, assigned:c.assigned, location:c.location, daysSince:ds, requiresDate:true });
     }
 
-    // MISSING INFO ALERT — fires immediately if missingInfo is set, then re-alerts every 14 days after follow-up
+    // MISSING INFO ALERT — fires immediately if missingInfo is set, then re-alerts every 10 days after follow-up
     if (c.missingInfo) {
       if (!c.followUpDate) {
         // No follow-up yet — fire immediately
@@ -1125,9 +1187,9 @@ function cmAlerts() {
           alerts.push({ type:'missing-info', severity:'red', title:'Action Required: '+c.missingInfo, message:'This was flagged at registration. Follow up to obtain the required information and update the referring party.', caseId:c.id, patientName:c.patientName, assigned:c.assigned, location:c.location, daysSince:ds });
         }
       } else {
-        // Has follow-up date — re-alert after 14 days
+        // Has follow-up date — re-alert after 10 days
         const ds = daysBtw(c.followUpDate, now);
-        if (ds >= 14 && !dismissed.includes('missing-info'))
+        if (ds >= 10 && !dismissed.includes('missing-info'))
           alerts.push({ type:'missing-info', severity:'red', title:'Missing Info Follow-Up Overdue: '+c.missingInfo, message:'Last follow-up was '+fmtDate(c.followUpDate)+' ('+ds+' days ago). Follow up again now.', caseId:c.id, patientName:c.patientName, assigned:c.assigned, location:c.location, daysSince:ds });
       }
     }
@@ -1247,13 +1309,24 @@ function crmRefRow(r) {
 
 function renderCrmAlertCard(a, i) {
   const isAppt = a.type==='appt_confirm'||a.type==='reschedule';
-  const gold = isAppt;
+  const isPaperwork = a.type==='paperwork';
+  const isRecords = a.type==='records_needed';
+  const gold = isAppt||isPaperwork||isRecords;
   const contact = (a.phone||a.email)?'<br><span style="font-size:10px;color:var(--gray-600)">'+esc(a.phone||'')+' '+esc(a.email||'')+'</span>':'';
   let title, desc, btn;
   if(a.type==='scheduling'){
     title='Patient Still Needs to be Scheduled!';
     desc='Contact <strong>'+esc(a.patientName)+'</strong>. '+a.daysSinceReg+'d since registration.'+contact;
     btn='<button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="openResolveModal(\''+a.id+'\')">Resolve</button>';
+  } else if(a.type==='paperwork'){
+    title='New Patient Paperwork Not Completed!';
+    desc='<strong>'+esc(a.patientName)+'</strong> has appt on '+fmtDate(a.apptDate)+'. Paperwork still pending — contact patient to complete and upload.'+contact;
+    btn='<button class="btn-resolve" style="background:rgba(200,151,58,0.12);color:var(--gold);border-color:rgba(200,151,58,0.3)" onclick="openEditRefModal(\''+a.id+'\')">Update</button>';
+  } else if(a.type==='records_needed'){
+    var recList=a.pendingRecords.map(function(rc){return esc(rc.facility)+' ('+esc(rc.status)+')'}).join(', ');
+    title='Records Still Needed Before Appointment!';
+    desc='<strong>'+esc(a.patientName)+'</strong> appt on '+fmtDate(a.apptDate)+'. Outstanding: '+recList+contact;
+    btn='<button class="btn-resolve" style="background:rgba(200,151,58,0.12);color:var(--gold);border-color:rgba(200,151,58,0.3)" onclick="openEditRefModal(\''+a.id+'\')">Update Records</button>';
   } else if(a.type==='appt_confirm'){
     title='Confirm Appointment Outcome';
     desc='<strong>'+esc(a.patientName)+'</strong> appt on '+fmtDate(a.apptDate)+' ('+a.daysPastAppt+'d ago). Was it completed?'+contact;
@@ -1514,7 +1587,7 @@ function renderCrmMgrDash(el) {
   if(crmMgrDateTo)filteredRefs=filteredRefs.filter(r=>(r.createdDate||'')<=crmMgrDateTo);
   const total=filteredRefs.length, pending=filteredRefs.filter(r=>!r.apptDate&&r.status!=='Completed').length;
   const alerts=crmAlerts().length;
-  const wc=filteredRefs.filter(r=>r.caseType==='WC').length, mva=filteredRefs.filter(r=>r.caseType==='MVA').length, pi=filteredRefs.filter(r=>r.caseType==='PI').length;
+  const caseTypes={};filteredRefs.forEach(r=>{var t=r.caseType||'Unknown';caseTypes[t]=(caseTypes[t]||0)+1;});
   const locCounts={};filteredRefs.forEach(r=>{const l=r.location||'Unknown';locCounts[l]=(locCounts[l]||0)+1;});
   const srcCounts={};filteredRefs.forEach(r=>{const s=r.referralSource||'Unknown';srcCounts[s]=(srcCounts[s]||0)+1;});
   let h = renderManagerExecSummary();
@@ -1522,15 +1595,77 @@ function renderCrmMgrDash(el) {
   h+='<div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap"><span style="font-size:11px;font-weight:600;color:var(--navy)">Date Range:</span><input type="date" class="search-input" id="crmMgrFrom" value="'+crmMgrDateFrom+'" onchange="renderCrmMgrDash(document.getElementById(\'sec-crm-mgr-dashboard\'))" style="width:140px"><span style="font-size:11px;color:var(--gray-400)">to</span><input type="date" class="search-input" id="crmMgrTo" value="'+crmMgrDateTo+'" onchange="renderCrmMgrDash(document.getElementById(\'sec-crm-mgr-dashboard\'))" style="width:140px">';
   if(crmMgrDateFrom||crmMgrDateTo)h+='<button class="btn-resolve" onclick="crmMgrDateFrom=\'\';crmMgrDateTo=\'\';renderCrmMgrDash(document.getElementById(\'sec-crm-mgr-dashboard\'))" style="font-size:10px">Clear</button>';
   h+='</div>';
-  h += '<div class="stats-row" style="grid-template-columns:repeat(5,1fr)">'+stat('Total',total,'teal')+stat('Pending',pending,'gold')+stat('Alerts',alerts,'red')+stat('WC',wc,'')+stat('MVA / PI',mva+' / '+pi,'')+'</div>';
+  // Summary stats
+  var ctSummary=Object.entries(caseTypes).map(function(e){return e[0]+': '+e[1]}).join(' · ');
+  h += '<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('Total Referrals',total,'teal')+stat('Pending Scheduling',pending,'gold')+stat('Active Alerts',alerts,'red')+stat('Case Mix',ctSummary||'—','')+'</div>';
+
+  // Patients by Law Firm
+  var firmCounts={};filteredRefs.forEach(function(r){var f=r.lawFirm||'No Firm';firmCounts[f]=(firmCounts[f]||0)+1;});
+  h += '<div class="table-card"><div class="table-header"><h3>Patients by Law Firm</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Law Firm</th><th>Patients</th><th>%</th><th>Breakdown</th></tr></thead><tbody>';
+  Object.entries(firmCounts).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
+    var firm=e[0],cnt=e[1];
+    var firmRefs=filteredRefs.filter(function(r){return (r.lawFirm||'No Firm')===firm});
+    var statuses={};firmRefs.forEach(function(r){var s=r.status||'Unknown';statuses[s]=(statuses[s]||0)+1;});
+    var breakdown=Object.entries(statuses).map(function(s){return s[0]+': '+s[1]}).join(', ');
+    h+='<tr style="cursor:pointer" onclick="toggleFirmDetail(\''+esc(firm)+'\',this)"><td style="font-weight:600">'+esc(firm)+'</td><td>'+cnt+'</td><td>'+(total>0?Math.round(cnt/total*100):0)+'%</td><td style="font-size:10px;color:var(--gray-600)">'+breakdown+'</td></tr>';
+    // Expandable patient list row
+    h+='<tr class="firm-detail-row" data-firm="'+esc(firm)+'" style="display:none"><td colspan="4" style="padding:0"><div style="padding:8px 16px;background:var(--gray-100);font-size:11px">';
+    firmRefs.forEach(function(r){h+='<div style="padding:3px 0"><span class="patient-name" onclick="showCrmDetail(\''+r.id+'\')">'+esc(r.patientName)+'</span> — '+esc(r.caseType)+' · '+esc(r.location||'')+' · '+esc(r.status)+'</div>';});
+    h+='</div></td></tr>';
+  });
+  h += '</tbody></table></div></div>';
+
+  // Case Type by Location
+  var locTypes={};filteredRefs.forEach(function(r){var l=r.location||'Unknown';if(!locTypes[l])locTypes[l]={};var t=r.caseType||'Unknown';locTypes[l][t]=(locTypes[l][t]||0)+1;});
+  var allTypes=Object.keys(caseTypes).sort();
+  h += '<div class="table-card"><div class="table-header"><h3>Case Type by Location</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Location</th>';
+  allTypes.forEach(function(t){h+='<th>'+esc(t)+'</th>';});
+  h+='<th>Total</th></tr></thead><tbody>';
+  Object.entries(locCounts).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
+    var loc=e[0],locTotal=e[1];
+    h+='<tr><td style="font-weight:600">'+esc(loc)+'</td>';
+    allTypes.forEach(function(t){var n=(locTypes[loc]&&locTypes[loc][t])||0;h+='<td>'+n+'</td>';});
+    h+='<td style="font-weight:700">'+locTotal+'</td></tr>';
+  });
+  h += '</tbody></table></div></div>';
+
+  // Attorney Referral Source Conversion
+  var srcConv={};filteredRefs.forEach(function(r){
+    var s=r.referralSource||'Unknown';
+    if(!srcConv[s])srcConv[s]={total:0,scheduled:0,completed:0,active:0,noShow:0};
+    srcConv[s].total++;
+    if(r.apptDate)srcConv[s].scheduled++;
+    if(r.apptOutcome==='completed')srcConv[s].completed++;
+    if(r.status==='Active Treatment')srcConv[s].active++;
+    if(r.apptOutcome==='no_show')srcConv[s].noShow++;
+  });
+  h += '<div class="table-card"><div class="table-header"><h3>Referral Source Conversion</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Source</th><th>Total Refs</th><th>Scheduled</th><th>Sched %</th><th>Completed</th><th>Conv %</th><th>Active Tx</th><th>No Shows</th></tr></thead><tbody>';
+  Object.entries(srcConv).sort(function(a,b){return b[1].total-a[1].total}).forEach(function(e){
+    var s=e[0],d=e[1];
+    var schedPct=d.total>0?Math.round(d.scheduled/d.total*100):0;
+    var convPct=d.total>0?Math.round(d.completed/d.total*100):0;
+    h+='<tr><td style="font-weight:600">'+esc(s)+'</td><td>'+d.total+'</td><td>'+d.scheduled+'</td><td>'+schedPct+'%</td><td>'+d.completed+'</td><td>'+convPct+'%</td><td>'+d.active+'</td><td>'+(d.noShow>0?'<span style="color:var(--red)">'+d.noShow+'</span>':'0')+'</td></tr>';
+  });
+  h += '</tbody></table></div></div>';
+
+  // By Location
   h += '<div class="table-card"><div class="table-header"><h3>By Location</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Location</th><th>Count</th><th>%</th></tr></thead><tbody>';
   Object.entries(locCounts).sort((a,b)=>b[1]-a[1]).forEach(([l,c])=>{h+='<tr><td style="font-weight:600">'+esc(l)+'</td><td>'+c+'</td><td>'+(total>0?Math.round(c/total*100):0)+'%</td></tr>';});
   h += '</tbody></table></div></div>';
+
+  // Top Referral Sources
   h += '<div class="table-card"><div class="table-header"><h3>Top Referral Sources</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Source</th><th>Count</th><th>%</th></tr></thead><tbody>';
   Object.entries(srcCounts).sort((a,b)=>b[1]-a[1]).slice(0,15).forEach(([s,c])=>{h+='<tr><td style="font-weight:600">'+esc(s)+'</td><td>'+c+'</td><td>'+(total>0?Math.round(c/total*100):0)+'%</td></tr>';});
   h += '</tbody></table></div></div>';
   h += renderMktConversionReport();
   el.innerHTML = h;
+}
+
+function toggleFirmDetail(firm,row){
+  var next=row.nextElementSibling;
+  if(next&&next.classList.contains('firm-detail-row')){
+    next.style.display=next.style.display==='none'?'table-row':'none';
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -1561,9 +1696,18 @@ function showCrmDetail(id) {
     dcell('Days in System','<span class="days-count '+dc+'">'+days+'</span> days')+dcell('Appointment',fmtDate(r.apptDate))+
     (r.apptDate ? '<div class="detail-cell"><div class="detail-cell-label">Appt Outcome</div><div class="detail-cell-value"><span style="'+ocStyle+'cursor:pointer" onclick="openApptConfirmModal(\''+r.id+'\')">'+oc+' <span style="font-size:9px;color:var(--teal);font-weight:600">✎ edit</span></span></div></div>' : dcell('Appt Outcome','—'))+
     dcell('Attorney',r.attorney||'—')+dcell('Law Firm',r.lawFirm||'—')+dcell('Firm Contact',r.lawContact||'—')+
-    dcell('Referral Source',r.referralSource||'—')+dcell('Alert / Missing Info',r.alertType?'<span style="color:var(--red);font-weight:700">'+esc(r.alertType)+'</span>':'<span style="color:var(--gray-400)">None</span>')+dcell('Registered',fmtDate(r.createdDate))+dcell('Registered By',r.registeredBy||'—')+
+    dcell('Referral Source',r.referralSource||'—')+dcell('Alert / Missing Info',r.alertType?'<span style="color:var(--red);font-weight:700">'+esc(r.alertType)+'</span>':'<span style="color:var(--gray-400)">None</span>')+dcell('NP Paperwork',r.paperworkCompleted==='yes'?'<span style="color:var(--teal);font-weight:700">✓ Completed</span>':'<span style="color:var(--red);font-weight:700">✗ Not Completed</span>')+dcell('Registered',fmtDate(r.createdDate))+dcell('Registered By',r.registeredBy||'—')+
   '</div>';
   if(r.notes) h+='<div class="detail-notes"><div class="detail-cell-label">Notes</div><div class="detail-cell-value" style="font-size:12px">'+esc(r.notes)+'</div></div>';
+  // Records Needed section
+  if(r.recordsNeeded&&r.recordsNeeded.length>0){
+    h+='<div style="margin-top:12px;padding:14px 18px;background:var(--gray-100);border-radius:var(--radius);border:2px solid var(--gray-200)"><div style="font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Records Needed / Facilities</div>';
+    r.recordsNeeded.forEach(function(rc){
+      var stColor=rc.status==='received'?'var(--teal)':rc.status==='requested'?'var(--gold)':rc.status==='incomplete'?'var(--red)':'var(--gray-600)';
+      h+='<div style="display:flex;gap:10px;align-items:center;padding:5px 0;border-bottom:1px solid var(--gray-200);font-size:12px"><span style="font-weight:600;flex:1">'+esc(rc.facility)+'</span><span style="color:var(--gray-600);flex:1">'+esc(rc.records)+'</span><span style="color:'+stColor+';font-weight:700;text-transform:uppercase;font-size:10px">'+esc(rc.status)+'</span></div>';
+    });
+    h+='</div>';
+  }
   const linked = cases.find(c => c.sourceRefId === r.id);
   h += '<div class="detail-actions">';
   h += '<button class="btn-cancel" onclick="openEditRefModal(\''+r.id+'\')">Edit Referral</button>';
@@ -1691,7 +1835,7 @@ function saveReferral() {
   const selectedAlerts=getSelectedAlerts();
   const alertType=selectedAlerts.length>0?selectedAlerts.join(' | '):'';
 
-  const data = {patientName:name,dob:dob,phone:document.getElementById('fPhone').value.trim(),email:document.getElementById('fEmail').value.trim(),doi:document.getElementById('fDOI').value,caseType:document.getElementById('fCaseType').value,location:document.getElementById('fLocation').value,language:document.getElementById('fLanguage').value,attorney:document.getElementById('fAttorney').value.trim(),lawFirm:document.getElementById('fLawFirm').value.trim(),lawContact:document.getElementById('fLawContact').value.trim(),referralSource:document.getElementById('fRefSource').value,apptDate:document.getElementById('fApptDate').value,notes:document.getElementById('fNotes').value.trim(),status:document.getElementById('fStatus').value,alertType:alertType};
+  const data = {patientName:name,dob:dob,phone:document.getElementById('fPhone').value.trim(),email:document.getElementById('fEmail').value.trim(),doi:document.getElementById('fDOI').value,caseType:document.getElementById('fCaseType').value,location:document.getElementById('fLocation').value,language:document.getElementById('fLanguage').value,attorney:document.getElementById('fAttorney').value.trim(),lawFirm:document.getElementById('fLawFirm').value.trim(),lawContact:document.getElementById('fLawContact').value.trim(),referralSource:document.getElementById('fRefSource').value,apptDate:document.getElementById('fApptDate').value,notes:document.getElementById('fNotes').value.trim(),status:document.getElementById('fStatus').value,alertType:alertType,paperworkCompleted:document.getElementById('fPaperwork').value,recordsNeeded:getRecordsData()};
 
   if (editingRefId) {
     const idx=refs.findIndex(r=>r.id===editingRefId); if(idx===-1) return;
@@ -1715,8 +1859,8 @@ function saveReferral() {
       saveCases();
     }
   } else {
-    const nr={id:genId(),...data,createdDate:document.getElementById('fRegDate').value||today(),registeredBy:currentUser,updateLog:[],alertAssignedTo:null,lastContactDate:null,dateScheduledOn:null,daysToSchedule:null,apptOutcome:null,apptConfirmAssignedTo:null,lastApptFollowUp:null};
-    if(data.apptDate){nr.dateScheduledOn=today();nr.daysToSchedule=0;if(nr.status==='Pending Scheduling')nr.status='Scheduled';}
+    const nr={id:genId(),...data,createdDate:document.getElementById('fRegDate').value||today(),registeredBy:currentUser,updateLog:[],alertAssignedTo:getNextStaff(),lastContactDate:null,dateScheduledOn:null,daysToSchedule:null,apptOutcome:null,apptConfirmAssignedTo:null,lastApptFollowUp:null};
+    if(data.apptDate){nr.dateScheduledOn=today();nr.daysToSchedule=0;if(nr.status==='Pending Scheduling')nr.status='Scheduled';nr.apptConfirmAssignedTo=nr.alertAssignedTo;}
     refs.push(nr);
     // Auto-create case if scheduled
     if(data.apptDate) createCaseFromRef(nr);
@@ -1909,7 +2053,7 @@ function submitMissingInfo(){
     const linkedRef=refs.find(r=>r.id===c.sourceRefId);
     if(linkedRef){linkedRef.alertType='';saveRefs();}
   } else {
-    // Followed up but still waiting — set followUpDate to today, alert re-fires in 14 days
+    // Followed up but still waiting — set followUpDate to today, alert re-fires in 10 days
     c.followUpDate=dateStr;
     // Clear any dismissal so the 14-day cadence is clean
     c.dismissedAlerts=(c.dismissedAlerts||[]).filter(d=>d!=='missing-info');
@@ -2395,6 +2539,7 @@ function renderMktPage(page){
   if(page==='mkt-pipeline')renderMktPipeline(el);
   else if(page==='mkt-correlation')renderMktCorrelation(el);
   else if(page==='mkt-contacts')renderMktContacts(el);
+  else if(page==='mkt-analytics')renderMktAnalytics(el);
 }
 
 // Marketing follow-up alerts
@@ -2671,6 +2816,91 @@ function deleteMktContact(){if(!editingMcId||!confirm('Delete contact?'))return;
 // ══════════════════════════════════════════════════════════════════════
 // CALL LOG SYSTEM (shared across CRM, CM, PSR)
 // ══════════════════════════════════════════════════════════════════════
+function renderMktAnalytics(el){
+  var now=today();
+  var thisWeekStart=new Date();thisWeekStart.setDate(thisWeekStart.getDate()-thisWeekStart.getDay());var weekStart=thisWeekStart.toISOString().split('T')[0];
+  var thisMonth=now.substring(0,7);
+  var thisQ=Math.floor((new Date().getMonth())/3);var qStart=new Date(new Date().getFullYear(),thisQ*3,1).toISOString().split('T')[0];
+
+  // Pipeline summary
+  var stages={};mktList.forEach(function(m){var s=m.stage||'Unknown';stages[s]=(stages[s]||0)+1;});
+  var totalInitiatives=mktList.length;
+  var activeRels=stages['Active Relationship']||0;
+  var contacted=stages['Contacted']||0;
+  var meetingSched=stages['Meeting Scheduled']||0;
+
+  // Time-based counts
+  var weekNew=mktList.filter(function(m){return (m.dateInitiated||'')>=weekStart}).length;
+  var monthNew=mktList.filter(function(m){return (m.dateInitiated||'').startsWith(thisMonth)}).length;
+  var qNew=mktList.filter(function(m){return (m.dateInitiated||'')>=qStart}).length;
+
+  // Referral conversion from marketing
+  var totalMktRefs=0,mktConversions=[];
+  mktList.forEach(function(m){
+    var refCount=refs.filter(function(r){return (r.referralSource||'')===m.name}).length;
+    totalMktRefs+=refCount;
+    mktConversions.push({name:m.name,stage:m.stage,effort:m.effort||'Low',volume:m.volume||'—',refs:refCount,roi:mktRoi(m)});
+  });
+  mktConversions.sort(function(a,b){return b.refs-a.refs});
+
+  var h='<div class="page-title">Marketing Analytics</div><div class="page-subtitle">Campaign performance, pipeline health, and referral conversion.</div>';
+
+  // Summary stats
+  h+='<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('Total Initiatives',totalInitiatives,'teal')+stat('Active Relationships',activeRels,'teal')+stat('Referrals from Marketing',totalMktRefs,'gold')+stat('Conversion Rate',totalInitiatives>0?Math.round(mktConversions.filter(function(m){return m.refs>0}).length/totalInitiatives*100)+'%':'—','')+'</div>';
+
+  // Pipeline Status Summary
+  h+='<div class="table-card"><div class="table-header"><h3>Pipeline Status Summary</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Period</th><th>New Initiatives</th><th>Active Relationships</th><th>Total Pipeline</th></tr></thead><tbody>';
+  h+='<tr><td style="font-weight:600">This Week</td><td>'+weekNew+'</td><td>'+activeRels+'</td><td>'+totalInitiatives+'</td></tr>';
+  h+='<tr><td style="font-weight:600">This Month</td><td>'+monthNew+'</td><td>'+activeRels+'</td><td>'+totalInitiatives+'</td></tr>';
+  h+='<tr><td style="font-weight:600">This Quarter</td><td>'+qNew+'</td><td>'+activeRels+'</td><td>'+totalInitiatives+'</td></tr>';
+  h+='</tbody></table></div></div>';
+
+  // Pipeline by Stage
+  h+='<div class="table-card"><div class="table-header"><h3>Pipeline by Stage</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Stage</th><th>Count</th><th>%</th></tr></thead><tbody>';
+  var stageOrder=['Contacted','Meeting Scheduled','Active Relationship','Inactive'];
+  stageOrder.forEach(function(s){
+    var c=stages[s]||0;
+    if(c>0)h+='<tr><td style="font-weight:600">'+esc(s)+'</td><td>'+c+'</td><td>'+(totalInitiatives>0?Math.round(c/totalInitiatives*100):0)+'%</td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+
+  // NP Referral Source to Marketing Conversion
+  h+='<div class="table-card"><div class="table-header"><h3>Marketing → Patient Referral Conversion</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Initiative / Source</th><th>Stage</th><th>Effort</th><th>Expected Volume</th><th>Actual Referrals</th><th>ROI</th></tr></thead><tbody>';
+  mktConversions.forEach(function(m){
+    h+='<tr><td style="font-weight:600">'+esc(m.name)+'</td><td><span class="status-badge '+(m.stage==='Active Relationship'?'status-active':m.stage==='Inactive'?'status-settled':'status-pending')+'">'+esc(m.stage)+'</span></td><td>'+esc(m.effort)+'</td><td>'+esc(m.volume)+'</td><td style="font-weight:700">'+m.refs+'</td><td><span style="color:'+m.roi.color+';font-weight:700">'+m.roi.icon+' '+m.roi.label+'</span></td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+
+  // Upcoming Initiatives / Follow-ups
+  var upcoming=mktList.filter(function(m){return m.nextFollowUp&&m.stage!=='Inactive'}).sort(function(a,b){return (a.nextFollowUp||'').localeCompare(b.nextFollowUp||'')});
+  h+='<div class="table-card"><div class="table-header"><h3>Upcoming Follow-ups & Initiatives</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Initiative</th><th>Contact</th><th>Stage</th><th>Next Follow-up</th><th>Status</th></tr></thead><tbody>';
+  if(upcoming.length===0)h+='<tr><td colspan="5" style="text-align:center;color:var(--gray-400);padding:20px">No upcoming follow-ups scheduled.</td></tr>';
+  upcoming.slice(0,20).forEach(function(m){
+    var daysUntil=daysBtw(now,m.nextFollowUp);
+    var statusColor=daysUntil<0?'var(--red)':daysUntil<=3?'var(--gold)':'var(--teal)';
+    var statusText=daysUntil<0?'Overdue ('+Math.abs(daysUntil)+'d)':daysUntil===0?'Today':'In '+daysUntil+' days';
+    h+='<tr><td style="font-weight:600">'+esc(m.name)+'</td><td>'+esc(m.contact||'—')+'</td><td>'+esc(m.stage)+'</td><td>'+fmtDate(m.nextFollowUp)+'</td><td><span style="color:'+statusColor+';font-weight:700">'+statusText+'</span></td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+
+  // Activity Summary
+  var totalActivities=0;var actByType={};
+  mktList.forEach(function(m){
+    (m.activityLog||[]).forEach(function(a){
+      totalActivities++;
+      actByType[a.type]=(actByType[a.type]||0)+1;
+    });
+  });
+  h+='<div class="table-card"><div class="table-header"><h3>Activity Summary</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Activity Type</th><th>Count</th><th>%</th></tr></thead><tbody>';
+  Object.entries(actByType).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
+    h+='<tr><td style="font-weight:600">'+esc(e[0])+'</td><td>'+e[1]+'</td><td>'+(totalActivities>0?Math.round(e[1]/totalActivities*100):0)+'%</td></tr>';
+  });
+  if(totalActivities===0)h+='<tr><td colspan="3" style="text-align:center;color:var(--gray-400);padding:20px">No activities logged yet.</td></tr>';
+  h+='</tbody></table></div></div>';
+
+  el.innerHTML=h;
+}
+
 let callLogRefId=null, callLogCaseId=null;
 
 function openCallLogModal(refId, caseId){
@@ -3398,7 +3628,7 @@ function ofFindOffices(){
 // ══════════════════════════════════════════════════════════════════════
 function promptPIN(targetPage){if(managerUnlocked){if(targetPage.startsWith('crm-'))crmNav(targetPage);else if(targetPage.startsWith('psr-'))psrNav(targetPage);else cmNav(targetPage);return;}pendingPINPage=targetPage;document.getElementById('pinModal').classList.add('show');document.getElementById('pinInput').value='';document.getElementById('pinError').style.display='none';setTimeout(()=>document.getElementById('pinInput').focus(),200)}
 function closePinModal(){document.getElementById('pinModal').classList.remove('show');if(currentUser==='Manager'&&!managerUnlocked)logout();}
-function verifyPIN(){if(document.getElementById('pinInput').value===storeGet(K.pin)){managerUnlocked=true;document.getElementById('pinModal').classList.remove('show');setupUIForRole();if(pendingPINPage){if(pendingPINPage.startsWith('crm-'))crmNav(pendingPINPage);else if(pendingPINPage.startsWith('psr-'))psrNav(pendingPINPage);else cmNav(pendingPINPage);}}else{document.getElementById('pinError').style.display='block';document.getElementById('pinInput').value='';document.getElementById('pinInput').focus();}}
+function verifyPIN(){var pin=storeGet(K.pin)||'0824';if(pin.charAt(0)==='"')pin=JSON.parse(pin);if(document.getElementById('pinInput').value===pin){managerUnlocked=true;document.getElementById('pinModal').classList.remove('show');setupUIForRole();if(pendingPINPage){if(pendingPINPage.startsWith('crm-'))crmNav(pendingPINPage);else if(pendingPINPage.startsWith('psr-'))psrNav(pendingPINPage);else cmNav(pendingPINPage);}}else{document.getElementById('pinError').style.display='block';document.getElementById('pinInput').value='';document.getElementById('pinInput').focus();}}
 
 // ══════════════════════════════════════════════════════════════════════
 // SEED DATA
