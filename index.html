@@ -501,7 +501,7 @@
   <div class="modal" style="width:720px;max-height:90vh;overflow-y:auto">
     <div class="modal-header"><h2 id="refModalTitle">Register New Referral</h2><button class="modal-close" onclick="closeRefModal()">&times;</button></div>
     <div class="modal-body"><div class="form-grid">
-      <div class="form-group"><label>Patient Name</label><input type="text" id="fName" placeholder="Last, First"></div>
+      <div class="form-group"><label>Patient Name <span style="font-weight:400;color:var(--gray-400)">(Last, First)</span></label><input type="text" id="fName" placeholder="Last Name, First Name"></div>
       <div class="form-group"><label>Patient DOB</label><input type="date" id="fDOB"></div>
       <div class="form-group"><label>Patient Phone</label><input type="tel" id="fPhone" placeholder="(555) 123-4567" oninput="formatPhone(this)"></div>
       <div class="form-group"><label>Patient Email</label><input type="email" id="fEmail" placeholder="patient@email.com"></div>
@@ -523,6 +523,9 @@
           <label style="display:flex;align-items:center;gap:5px;font-size:12px;padding:5px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);background:var(--gray-100);cursor:pointer"><input type="checkbox" class="alertCb" value="Need LOP" style="accent-color:var(--teal)"> Need LOP</label>
           <label style="display:flex;align-items:center;gap:5px;font-size:12px;padding:5px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);background:var(--gray-100);cursor:pointer"><input type="checkbox" class="alertCb" value="Missing Attorney Info" style="accent-color:var(--teal)"> Missing Attorney Info</label>
           <label style="display:flex;align-items:center;gap:5px;font-size:12px;padding:5px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);background:var(--gray-100);cursor:pointer"><input type="checkbox" class="alertCb" value="Patient Needs Legal Representation" style="accent-color:var(--teal)"> Patient Needs Legal Representation</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;padding:5px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);background:var(--gray-100);cursor:pointer"><input type="checkbox" class="alertCb" value="Missing Adjuster" style="accent-color:var(--teal)"> Missing Adjuster</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;padding:5px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);background:var(--gray-100);cursor:pointer"><input type="checkbox" class="alertCb" value="Need PIP Status Update" style="accent-color:var(--teal)"> Need PIP Status Update</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;padding:5px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);background:var(--gray-100);cursor:pointer"><input type="checkbox" class="alertCb" value="Missing Patient Email" style="accent-color:var(--teal)"> Missing Patient Email</label>
         </div>
       </div>
       <div class="form-group"><label>Other Alert (free text)</label><input type="text" id="fAlertOther" placeholder="Any other alert needed..."></div>
@@ -612,8 +615,9 @@
     <div class="modal-header"><h2 id="caseModalTitle">New Case</h2><button class="modal-close" onclick="closeCaseModal()">&times;</button></div>
     <div class="modal-body"><div class="form-grid">
       <div class="form-group"><label>Patient Name</label><input type="text" id="cPatient" placeholder="Last, First"></div>
+      <div class="form-group"><label>Patient DOB</label><input type="date" id="cDOB"></div>
       <div class="form-group"><label>Date of Injury</label><input type="date" id="cDOI"></div>
-      <div class="form-group"><label>Case Type</label><select id="cCaseType"><option value="WC">WC</option><option value="MVA">MVA</option><option value="PI">PI</option></select></div>
+      <div class="form-group"><label>Case Type</label><select id="cCaseType"><option value="WC">WC</option><option value="MVA">MVA</option><option value="NJ MVA">NJ MVA</option><option value="PI">PI</option></select></div>
       <div class="form-group"><label>Clinic Location</label><select id="cLocation" onchange="cmAutoAssign()"><option value="">— Select —</option><option>Allentown</option><option>Wilkes Barre</option><option>Old City</option><option>Hazleton</option><option>Williamsport</option><option>Carlisle</option><option>Lansdale</option><option>Reading</option><option>Port Richmond</option><option>Germantown</option><option>NE Philly</option><option>Darby</option><option>Cherry Hill NJ</option></select></div>
       <div class="form-group"><label>Assigned To</label><select id="cAssigned"><option>Sean</option><option>Sophia</option><option>Kent</option></select></div>
       <div class="form-group"><label>Upcoming Appointment</label><input type="date" id="cApptDate"></div>
@@ -906,6 +910,51 @@ function getNextStaff(){const s=CRM_STAFF[robinIdx%CRM_STAFF.length];robinIdx++;
 // Phone auto-format (xxx) xxx-xxxx
 function formatPhone(el){var v=el.value.replace(/\D/g,'');if(v.length>10)v=v.slice(0,10);if(v.length>=7)el.value='('+v.slice(0,3)+') '+v.slice(3,6)+'-'+v.slice(6);else if(v.length>=4)el.value='('+v.slice(0,3)+') '+v.slice(3);else if(v.length>0)el.value='('+v;else el.value='';}
 
+// CSV Download utility
+function downloadCSV(filename, headers, rows){
+  var csv=headers.join(',')+'\n';
+  rows.forEach(function(row){
+    csv+=row.map(function(cell){
+      var s=String(cell==null?'':cell).replace(/"/g,'""');
+      return '"'+s+'"';
+    }).join(',')+'\n';
+  });
+  var blob=new Blob([csv],{type:'text/csv'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();
+}
+function downloadTableAsCSV(title,tableEl){
+  if(!tableEl)return;
+  var headers=[];var rows=[];
+  tableEl.querySelectorAll('thead th').forEach(function(th){headers.push(th.textContent.trim())});
+  tableEl.querySelectorAll('tbody tr').forEach(function(tr){
+    if(tr.style.display==='none')return;
+    var row=[];tr.querySelectorAll('td').forEach(function(td){row.push(td.textContent.trim())});
+    if(row.length>0)rows.push(row);
+  });
+  downloadCSV(title+'.csv',headers,rows);
+}
+function downloadBtn(label,onclick){return '<button onclick="'+onclick+'" style="font-size:10px;padding:5px 10px;background:var(--gray-100);border:2px solid var(--gray-200);border-radius:var(--radius-sm);cursor:pointer;font-family:DM Sans;font-weight:600;color:var(--navy)">⬇ '+label+'</button>';
+}
+function exportAllMetrics(){
+  // Referrals summary
+  var rHeaders=['Patient','DOB','Case Type','Location','Law Firm','Attorney','Source','Status','Registered','Appt Date','Outcome'];
+  var rRows=refs.map(function(r){return[r.patientName,r.dob,r.caseType,r.location,r.lawFirm,r.attorney,r.referralSource,r.status,r.createdDate,r.apptDate,r.apptOutcome||'']});
+  downloadCSV('carepath-referrals-'+today()+'.csv',rHeaders,rRows);
+}
+function exportCases(){
+  var h=['Patient','DOB','Case Type','Location','Assigned','Status','Appt','Missing Info','Created'];
+  var rows=cases.map(function(c){return[c.patientName,c.dob||'',c.caseType,c.location,c.assigned,c.status,c.apptDate,c.missingInfo||'',c.createdDate]});
+  downloadCSV('carepath-cases-'+today()+'.csv',h,rows);
+}
+function exportMktData(){
+  var h=['Initiative','Contact','Type','Stage','Volume','Effort','Date Initiated','Next Follow-up','Referrals Generated','ROI'];
+  var rows=mktList.map(function(m){
+    var refCount=refs.filter(function(r){return(r.referralSource||'')===m.name}).length;
+    var roi=mktRoi(m);
+    return[m.name,m.contact,m.type,m.stage,m.volume||'',m.effort||'',m.dateInitiated,m.nextFollowUp||'',refCount,roi.label];
+  });
+  downloadCSV('carepath-marketing-'+today()+'.csv',h,rows);
+}
 // Law firm dropdown list
 const LAW_FIRMS=['10x Law','Altman Law','Bishop, Dorfman, Kroupa and Bishop','Brandon J Broderick','Brandon Swartz','Brett Tessler & Associates','Clearfield & Kofsky','Cohen, Feeley, Altemose and Rambo','Dashevsky, Horwitz, Kuhn, Novello & Shorr','Cordisco & Saile','Dion, Solomon & Shapiro','Eric Brauer Law','Fellerman Law','Foxworth Law Group','Fredsone, Statmore, and Bitterman','Galerman Law','Gibbons & Crighton','H. Rosen Law','Hourigan, Kluger & Quinn P.C.','J Fine Law','Jeffery S Gross, Esquire','Kavensky Law','Kitlay Law Offices','Kotlar Hernandez and Cohen Law Offices','Kwartler Manus','Lassiter & Associates','Law Offices of Jared S. Zafran LLC','Law Offices of Eric B. Brauer','Lundy Law','Malamut Law','Martin Law','Matt Breslin','Krasno Krasno','Mednick, Mezyk & Kredo','Morgan & Morgan','O\'Donnel Law Offices','Pearson Kutcher','Pond Lehocky','Pujlos Law Group','Robinson Law','Rodden, Rodden & Breslin Law','Rosenbaum & Associates','Simon & Simon','Stampone Law','Stark & Stark','Stern & Cohen','Stoll Medical Group','Swartz Culleton','Wapner Neuman Weinerman'];
 function populateLawFirmDropdown(){var dl=document.getElementById('lawFirmList');dl.innerHTML='';LAW_FIRMS.forEach(f=>{var o=document.createElement('option');o.value=f;dl.appendChild(o)});}
@@ -1159,6 +1208,15 @@ function crmAlerts() {
         }
       }
     }
+    // Missing Patient Email — weekly reminder to scheduling team
+    var refAlerts = (r.alertType||'').split(' | ');
+    if (refAlerts.includes('Missing Patient Email') && !r.emailResolved) {
+      var lastEmailCheck = r.emailLastFollowUp || r.createdDate;
+      var daysSinceEmail = daysBtw(lastEmailCheck, now);
+      if (daysSinceEmail >= 7 || !r.emailLastFollowUp) {
+        alerts.push({ id:r.id, type:'missing_email', patientName:r.patientName, assignedTo:r.alertAssignedTo||getNextStaff(), location:r.location, caseType:r.caseType, phone:r.phone, daysSince:daysSinceEmail });
+      }
+    }
   });
   return alerts;
 }
@@ -1171,11 +1229,30 @@ function cmAlerts() {
   cases.forEach(c => {
     if (c.status !== 'Active') return;
     const dismissed = c.dismissedAlerts || [];
+    const missingParts = (c.missingInfo||'').split(' | ').filter(Boolean);
 
     // NEW PATIENT INTRO EMAIL — fires immediately if not sent
     if (!c.introEmailSentDate && c.apptDate) {
       const ds = daysBtw(c.createdDate, now);
       alerts.push({ type:'intro-email', severity:'red', title:'Send Attorney New Patient Introduction Email', message:'Attorney introduction email has not been sent yet. Send now and log the date.', caseId:c.id, patientName:c.patientName, assigned:c.assigned, location:c.location, daysSince:ds, requiresDate:true });
+    }
+
+    // MISSING ADJUSTER — prompt CM once assigned, remind 1x/week until resolved
+    if (missingParts.includes('Missing Adjuster') && !c.adjusterResolved) {
+      var lastAdjCheck = c.adjusterLastFollowUp || c.createdDate;
+      var daysSince = daysBtw(lastAdjCheck, now);
+      if (daysSince >= 7 || !c.adjusterLastFollowUp) {
+        alerts.push({ type:'missing-adjuster', severity:'red', title:'Missing Adjuster — Add to RXNT', message:'Adjuster info is missing. Obtain and update in RXNT. Remind weekly until resolved.', caseId:c.id, patientName:c.patientName, assigned:c.assigned, location:c.location, daysSince:daysSince });
+      }
+    }
+
+    // NEED PIP STATUS UPDATE — prompt CM once assigned, remind 1x/week until resolved
+    if (missingParts.includes('Need PIP Status Update') && !c.pipResolved) {
+      var lastPipCheck = c.pipLastFollowUp || c.createdDate;
+      var daysSincePip = daysBtw(lastPipCheck, now);
+      if (daysSincePip >= 7 || !c.pipLastFollowUp) {
+        alerts.push({ type:'pip-status', severity:'red', title:'PIP Status Update Needed — Update RXNT', message:'PIP status needs to be obtained and updated in RXNT. Remind weekly until resolved.', caseId:c.id, patientName:c.patientName, assigned:c.assigned, location:c.location, daysSince:daysSincePip });
+      }
     }
 
     // MISSING INFO ALERT — fires immediately if missingInfo is set, then re-alerts every 10 days after follow-up
@@ -1327,6 +1404,10 @@ function renderCrmAlertCard(a, i) {
     title='Records Still Needed Before Appointment!';
     desc='<strong>'+esc(a.patientName)+'</strong> appt on '+fmtDate(a.apptDate)+'. Outstanding: '+recList+contact;
     btn='<button class="btn-resolve" style="background:rgba(200,151,58,0.12);color:var(--gold);border-color:rgba(200,151,58,0.3)" onclick="openEditRefModal(\''+a.id+'\')">Update Records</button>';
+  } else if(a.type==='missing_email'){
+    title='Missing Patient Email — Obtain or Confirm N/A';
+    desc='<strong>'+esc(a.patientName)+'</strong> has no email on file. Contact to obtain or confirm patient has no email. '+a.daysSince+'d since last check.<br><span style="font-size:10px;color:var(--gray-600)">'+esc(a.phone||'')+'</span>';
+    btn='<button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="openEditRefModal(\''+a.id+'\')">Update</button>';
   } else if(a.type==='appt_confirm'){
     title='Confirm Appointment Outcome';
     desc='<strong>'+esc(a.patientName)+'</strong> appt on '+fmtDate(a.apptDate)+' ('+a.daysPastAppt+'d ago). Was it completed?'+contact;
@@ -1592,6 +1673,7 @@ function renderCrmMgrDash(el) {
   const srcCounts={};filteredRefs.forEach(r=>{const s=r.referralSource||'Unknown';srcCounts[s]=(srcCounts[s]||0)+1;});
   let h = renderManagerExecSummary();
   h+='<div class="page-title">Manager Analytics</div><div class="page-subtitle">Referral process overview.</div>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">'+downloadBtn('Export All Referrals','exportAllMetrics()')+downloadBtn('Export Cases','exportCases()')+'</div>';
   h+='<div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap"><span style="font-size:11px;font-weight:600;color:var(--navy)">Date Range:</span><input type="date" class="search-input" id="crmMgrFrom" value="'+crmMgrDateFrom+'" onchange="renderCrmMgrDash(document.getElementById(\'sec-crm-mgr-dashboard\'))" style="width:140px"><span style="font-size:11px;color:var(--gray-400)">to</span><input type="date" class="search-input" id="crmMgrTo" value="'+crmMgrDateTo+'" onchange="renderCrmMgrDash(document.getElementById(\'sec-crm-mgr-dashboard\'))" style="width:140px">';
   if(crmMgrDateFrom||crmMgrDateTo)h+='<button class="btn-resolve" onclick="crmMgrDateFrom=\'\';crmMgrDateTo=\'\';renderCrmMgrDash(document.getElementById(\'sec-crm-mgr-dashboard\'))" style="font-size:10px">Clear</button>';
   h+='</div>';
@@ -1776,7 +1858,7 @@ function getSelectedAlerts(){
 }
 
 function setAlertCheckboxes(alerts){
-  const known=['Missing Claim Info','Need LOP','Missing Attorney Info','Patient Needs Legal Representation'];
+  const known=['Missing Claim Info','Need LOP','Missing Attorney Info','Patient Needs Legal Representation','Missing Adjuster','Need PIP Status Update','Missing Patient Email'];
   document.querySelectorAll('.alertCb').forEach(cb=>{cb.checked=alerts.includes(cb.value)});
   const others=alerts.filter(a=>!known.includes(a));
   document.getElementById('fAlertOther').value=others.join(', ');
@@ -1819,8 +1901,19 @@ function openEditRefModal(id) {
 function closeRefModal(){document.getElementById('referralModal').classList.remove('show');editingRefId=null}
 
 function saveReferral() {
-  const name = document.getElementById('fName').value.trim();
-  if (!name) {alert('Enter patient name.');return;}
+  var nameRaw = document.getElementById('fName').value.trim();
+  if (!nameRaw) {alert('Enter patient name.');return;}
+  // Enforce Last, First format
+  if (!nameRaw.includes(',')) {
+    var parts = nameRaw.split(/\s+/);
+    if (parts.length >= 2) {
+      nameRaw = parts[parts.length-1] + ', ' + parts.slice(0,-1).join(' ');
+    }
+    if (!nameRaw.includes(',')) { alert('Please enter name as: Last Name, First Name'); return; }
+  }
+  // Capitalize properly
+  var name = nameRaw.split(',').map(function(p){return p.trim().split(/\s+/).map(function(w){return w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()}).join(' ')}).join(', ');
+  document.getElementById('fName').value = name;
   const dob = document.getElementById('fDOB').value;
 
   // Duplicate detection: check name+DOB against existing referrals
@@ -2511,15 +2604,15 @@ let editingCaseId=null;
 
 function cmAutoAssign(){const l=document.getElementById('cLocation').value;if(LOC_CM[l])document.getElementById('cAssigned').value=LOC_CM[l]}
 
-function openNewCaseModal(){editingCaseId=null;document.getElementById('caseModalTitle').textContent='New Case';document.getElementById('btnDeleteCase').style.display='none';['cPatient','cDOI','cApptDate','cRecordsSent','cMissingInfo','cFollowUp'].forEach(id=>document.getElementById(id).value='');document.getElementById('cCaseType').value='WC';document.getElementById('cLocation').value='';document.getElementById('cAssigned').value='Sean';document.getElementById('cStatus').value='Active';document.getElementById('caseModal').classList.add('show')}
+function openNewCaseModal(){editingCaseId=null;document.getElementById('caseModalTitle').textContent='New Case';document.getElementById('btnDeleteCase').style.display='none';['cPatient','cDOB','cDOI','cApptDate','cRecordsSent','cMissingInfo','cFollowUp'].forEach(id=>document.getElementById(id).value='');document.getElementById('cCaseType').value='WC';document.getElementById('cLocation').value='';document.getElementById('cAssigned').value='Sean';document.getElementById('cStatus').value='Active';document.getElementById('caseModal').classList.add('show')}
 
-function openEditCaseModal(id){const c=cases.find(x=>x.id===id);if(!c)return;editingCaseId=id;document.getElementById('caseModalTitle').textContent='Edit Case';document.getElementById('btnDeleteCase').style.display='block';document.getElementById('cPatient').value=c.patientName||'';document.getElementById('cDOI').value=c.doi||'';document.getElementById('cCaseType').value=c.caseType||'WC';document.getElementById('cLocation').value=c.location||'';document.getElementById('cAssigned').value=c.assigned||'Sean';document.getElementById('cApptDate').value=c.apptDate||'';document.getElementById('cRecordsSent').value=c.recordsSent||'';document.getElementById('cMissingInfo').value=c.missingInfo||'';document.getElementById('cFollowUp').value=c.followUpDate||'';document.getElementById('cStatus').value=c.status||'Active';document.getElementById('caseModal').classList.add('show')}
+function openEditCaseModal(id){const c=cases.find(x=>x.id===id);if(!c)return;editingCaseId=id;document.getElementById('caseModalTitle').textContent='Edit Case';document.getElementById('btnDeleteCase').style.display='block';document.getElementById('cPatient').value=c.patientName||'';document.getElementById('cDOB').value=c.dob||'';document.getElementById('cDOI').value=c.doi||'';document.getElementById('cCaseType').value=c.caseType||'WC';document.getElementById('cLocation').value=c.location||'';document.getElementById('cAssigned').value=c.assigned||'Sean';document.getElementById('cApptDate').value=c.apptDate||'';document.getElementById('cRecordsSent').value=c.recordsSent||'';document.getElementById('cMissingInfo').value=c.missingInfo||'';document.getElementById('cFollowUp').value=c.followUpDate||'';document.getElementById('cStatus').value=c.status||'Active';document.getElementById('caseModal').classList.add('show')}
 
 function closeCaseModal(){document.getElementById('caseModal').classList.remove('show');editingCaseId=null}
 
 function saveCase(){
   const name=document.getElementById('cPatient').value.trim();if(!name){alert('Enter patient name.');return;}
-  const data={patientName:name,doi:document.getElementById('cDOI').value,caseType:document.getElementById('cCaseType').value,location:document.getElementById('cLocation').value,assigned:document.getElementById('cAssigned').value,apptDate:document.getElementById('cApptDate').value,recordsSent:document.getElementById('cRecordsSent').value,missingInfo:document.getElementById('cMissingInfo').value,followUpDate:document.getElementById('cFollowUp').value,status:document.getElementById('cStatus').value};
+  const data={patientName:name,dob:document.getElementById('cDOB').value,doi:document.getElementById('cDOI').value,caseType:document.getElementById('cCaseType').value,location:document.getElementById('cLocation').value,assigned:document.getElementById('cAssigned').value,apptDate:document.getElementById('cApptDate').value,recordsSent:document.getElementById('cRecordsSent').value,missingInfo:document.getElementById('cMissingInfo').value,followUpDate:document.getElementById('cFollowUp').value,status:document.getElementById('cStatus').value};
   if(editingCaseId){const idx=cases.findIndex(c=>c.id===editingCaseId);if(idx!==-1){const prev=cases[idx];if(data.status==='Settled/Complete'&&prev.status==='Active'&&!prev.settledDate)data.settledDate=today();else data.settledDate=prev.settledDate||'';if(data.status==='Active')data.settledDate='';cases[idx]={...prev,...data};}}
   else{cases.push({id:genId(),...data,createdDate:today(),settledDate:data.status==='Settled/Complete'?today():'',dismissedAlerts:[],manualAlerts:[]});}
   saveCases();closeCaseModal();renderActiveModule();if(cmCurrentPage==='cm-detail'&&editingCaseId)showCmDetail(editingCaseId);
@@ -2844,6 +2937,7 @@ function renderMktAnalytics(el){
   mktConversions.sort(function(a,b){return b.refs-a.refs});
 
   var h='<div class="page-title">Marketing Analytics</div><div class="page-subtitle">Campaign performance, pipeline health, and referral conversion.</div>';
+  h+='<div style="margin-bottom:8px">'+downloadBtn('Export Marketing Data','exportMktData()')+'</div>';
 
   // Summary stats
   h+='<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('Total Initiatives',totalInitiatives,'teal')+stat('Active Relationships',activeRels,'teal')+stat('Referrals from Marketing',totalMktRefs,'gold')+stat('Conversion Rate',totalInitiatives>0?Math.round(mktConversions.filter(function(m){return m.refs>0}).length/totalInitiatives*100)+'%':'—','')+'</div>';
