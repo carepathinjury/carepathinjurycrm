@@ -309,10 +309,7 @@
       <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 002 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
       <div class="alert-count" id="topAlertCount">0</div>
     </div>
-    <button class="btn-primary" id="topNewBtn" onclick="topNewAction()" style="font-size:11px;padding:7px 14px">
-      <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
-      <span id="topNewLabel">New Referral</span>
-    </button>
+    </div>
   </div>
 </div>
 <button class="of-toggle" id="ofToggle" onclick="toggleOfficeFinder()">📍 Office Finder</button>
@@ -1135,12 +1132,7 @@ function switchModule(mod) {
   document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
   document.getElementById('module-'+mod).classList.add('active');
   document.querySelectorAll('.top-tab').forEach(t => t.classList.toggle('active', t.dataset.module === mod));
-  // Update new button label
-  const lbl = document.getElementById('topNewLabel');
-  if (mod === 'crm') { lbl.textContent = 'New Referral'; document.getElementById('topNewBtn').style.display = ''; }
-  else if (mod === 'cm') { lbl.textContent = 'New Case'; document.getElementById('topNewBtn').style.display = ''; }
-  else if (mod === 'mkt') { lbl.textContent = 'New Initiative'; document.getElementById('topNewBtn').style.display = ''; }
-  else if (mod === 'psr') { lbl.textContent = 'New Ticket'; document.getElementById('topNewBtn').style.display = ''; }
+  // Update module view
   renderActiveModule();
 }
 
