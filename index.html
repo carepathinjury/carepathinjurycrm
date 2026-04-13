@@ -497,7 +497,8 @@
   <div class="modal" style="width:720px;max-height:90vh;overflow-y:auto">
     <div class="modal-header"><h2 id="refModalTitle">Register New Referral</h2><button class="modal-close" onclick="closeRefModal()">&times;</button></div>
     <div class="modal-body"><div class="form-grid">
-      <div class="form-group"><label>Patient Name <span style="font-weight:400;color:var(--gray-400)">(Last, First)</span></label><input type="text" id="fName" placeholder="Last Name, First Name"></div>
+      <div class="form-group"><label>Patient Last Name</label><input type="text" id="fLastName" placeholder="Last Name"></div>
+      <div class="form-group"><label>Patient First Name</label><input type="text" id="fFirstName" placeholder="First Name"></div>
       <div class="form-group"><label>Patient DOB</label><input type="date" id="fDOB"></div>
       <div class="form-group"><label>Patient Phone</label><input type="tel" id="fPhone" placeholder="(555) 123-4567" oninput="formatPhone(this)"></div>
       <div class="form-group"><label>Patient Email</label><input type="email" id="fEmail" placeholder="patient@email.com"></div>
@@ -876,6 +877,8 @@ async function _loadFromSupabase(){
   robinIdx = parseInt(storeGet(K.robin)||'0');
   tickets = JSON.parse(storeGet(K.tickets)||'[]');
   psrMetrics = JSON.parse(storeGet(K.psrMet)||'{}');
+  customLawFirms = JSON.parse(storeGet('cp11_customLawFirms')||'[]');
+  customRefSources = JSON.parse(storeGet('cp11_customRefSources')||'[]');
   // Refresh whatever view is currently active
   if(typeof setupUIForRole === 'function') try { setupUIForRole(); } catch(e){}
 }
@@ -953,7 +956,54 @@ function exportMktData(){
 }
 // Law firm dropdown list
 const LAW_FIRMS=['10x Law','Altman Law','Bishop, Dorfman, Kroupa and Bishop','Brandon J Broderick','Brandon Swartz','Brett Tessler & Associates','Clearfield & Kofsky','Cohen, Feeley, Altemose and Rambo','Dashevsky, Horwitz, Kuhn, Novello & Shorr','Cordisco & Saile','Dion, Solomon & Shapiro','Eric Brauer Law','Fellerman Law','Foxworth Law Group','Fredsone, Statmore, and Bitterman','Galerman Law','Gibbons & Crighton','H. Rosen Law','Hourigan, Kluger & Quinn P.C.','J Fine Law','Jeffery S Gross, Esquire','Kavensky Law','Kitlay Law Offices','Kotlar Hernandez and Cohen Law Offices','Kwartler Manus','Lassiter & Associates','Law Offices of Jared S. Zafran LLC','Law Offices of Eric B. Brauer','Lundy Law','Malamut Law','Martin Law','Matt Breslin','Krasno Krasno','Mednick, Mezyk & Kredo','Morgan & Morgan','O\'Donnel Law Offices','Pearson Kutcher','Pond Lehocky','Pujlos Law Group','Robinson Law','Rodden, Rodden & Breslin Law','Rosenbaum & Associates','Simon & Simon','Stampone Law','Stark & Stark','Stern & Cohen','Stoll Medical Group','Swartz Culleton','Wapner Neuman Weinerman'];
-function populateLawFirmDropdown(){var dl=document.getElementById('lawFirmList');dl.innerHTML='';LAW_FIRMS.forEach(f=>{var o=document.createElement('option');o.value=f;dl.appendChild(o)});}
+var customLawFirms=[];
+var customRefSources=[];
+function getAllLawFirms(){var all=LAW_FIRMS.concat(customLawFirms);return all.filter(function(v,i,a){return a.indexOf(v)===i}).sort()}
+function populateLawFirmDropdown(){var dl=document.getElementById('lawFirmList');dl.innerHTML='';getAllLawFirms().forEach(f=>{var o=document.createElement('option');o.value=f;dl.appendChild(o)});}
+
+// Fuzzy match helper for duplicate detection
+function fuzzyMatch(a,b){
+  if(!a||!b)return false;
+  var na=a.toLowerCase().replace(/[^a-z0-9]/g,'');
+  var nb=b.toLowerCase().replace(/[^a-z0-9]/g,'');
+  if(na===nb)return true;
+  // Check if one contains the other
+  if(na.length>3&&nb.length>3&&(na.indexOf(nb)!==-1||nb.indexOf(na)!==-1))return true;
+  return false;
+}
+
+function checkAndAddLawFirm(firm){
+  if(!firm)return;
+  var allFirms=getAllLawFirms();
+  // Exact match exists — no action needed
+  if(allFirms.indexOf(firm)!==-1)return;
+  // Check for fuzzy duplicates
+  var matches=allFirms.filter(function(f){return fuzzyMatch(f,firm)});
+  if(matches.length>0){
+    var useExisting=confirm('Similar law firm found:\n\n"'+matches[0]+'"\n\nDid you mean this? Click OK to use the existing name, or Cancel to add "'+firm+'" as new.');
+    if(useExisting){document.getElementById('fLawFirm').value=matches[0];return;}
+  }
+  // Add as new
+  customLawFirms.push(firm);
+  storeSet('cp11_customLawFirms',JSON.stringify(customLawFirms));
+}
+
+function checkAndAddRefSource(source){
+  if(!source)return;
+  var allSources=REF_SOURCES.concat(customRefSources).concat(mktList.map(function(m){return m.name}));
+  allSources=allSources.concat(['Walk-in','Physician Referral','Self-Referral','Other']);
+  // Exact match exists
+  var unique=allSources.filter(function(v,i,a){return a.indexOf(v)===i});
+  if(unique.indexOf(source)!==-1)return;
+  // Fuzzy check
+  var matches=unique.filter(function(s){return fuzzyMatch(s,source)});
+  if(matches.length>0){
+    var useExisting=confirm('Similar referral source found:\n\n"'+matches[0]+'"\n\nDid you mean this? Click OK to use the existing name, or Cancel to add "'+source+'" as new.');
+    if(useExisting){document.getElementById('fRefSource').value=matches[0];return;}
+  }
+  customRefSources.push(source);
+  storeSet('cp11_customRefSources',JSON.stringify(customRefSources));
+}
 
 // Records needed rows
 var recordRowCounter=0;
@@ -1335,7 +1385,7 @@ function renderCrmDashboard(el) {
   const withSched = refs.filter(r => r.daysToSchedule != null);
   const avgDays = withSched.length > 0 ? Math.round(withSched.reduce((s,r) => s+r.daysToSchedule,0)/withSched.length) : '—';
 
-  let h = '<div class="page-title">Referral Dashboard</div><div class="page-subtitle">Overview of referrals, scheduling, and alerts.</div>';
+  let h = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">Referral Dashboard</div><div style="margin-left:auto"><button class="btn-primary" onclick="openNewRefModal()" style="font-size:11px;padding:7px 14px">+ New Referral</button></div></div><div class="page-subtitle">Overview of referrals, scheduling, and alerts.</div>';
   h += '<div class="stats-row" style="grid-template-columns:repeat(5,1fr)">' +
     stat('Active Referrals', active.length, 'teal') + stat('Pending Scheduling', pending.length, 'gold') +
     stat('Scheduling Alerts', schedAlerts, 'red') + stat('Appt Follow-Ups', apptAlerts, apptAlerts>0?'gold':'') +
@@ -1446,7 +1496,7 @@ function renderCrmReferrals(el) {
 
 function renderCrmAlerts(el) {
   const alerts = crmAlerts();
-  let h = '<div class="page-title">Scheduling Alerts</div><div class="page-subtitle">'+alerts.length+' active alerts.</div>';
+  let h = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">Scheduling Alerts</div><div style="margin-left:auto"><button class="btn-primary" onclick="openNewRefModal()" style="font-size:11px;padding:7px 14px">+ New Referral</button></div></div><div class="page-subtitle">'+alerts.length+' active alerts.</div>';
   if (alerts.length === 0) h += '<div style="padding:40px;text-align:center;color:var(--gray-400)">No active alerts.</div>';
   else {
     const my = CRM_STAFF.includes(currentUser) ? alerts.filter(a=>a.assignedTo===currentUser) : [];
@@ -1469,7 +1519,7 @@ function renderCrmStaff(el, staff) {
   const completed = registered.filter(r => r.status === 'Completed' || r.status === 'Active Treatment');
   const tab = crmStaffTab[staff] || 'all';
 
-  let h = '<div class="page-title">'+esc(staff)+'\'s Queue</div><div class="page-subtitle">Alerts, referrals, and activity for '+esc(staff)+'.</div>';
+  let h = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">'+esc(staff)+'\'s Queue</div><div style="margin-left:auto"><button class="btn-primary" onclick="openNewRefModal()" style="font-size:11px;padding:7px 14px">+ New Referral</button></div></div><div class="page-subtitle">Alerts, referrals, and activity for '+esc(staff)+'.</div>';
   h += '<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">' +
     stat('Active Alerts', allAlerts.length, 'red') +
     stat('Registered', registered.length, 'teal') +
@@ -1833,12 +1883,14 @@ const REF_SOURCES=['10x Law','Altman Law','Booth Chiro','Brach Eichler LLC','Bra
 function populateRefSourceDropdown() {
   const dl = document.getElementById('refSourceList');
   dl.innerHTML = '';
-  // Add marketing initiatives first
-  mktList.forEach(m => { const o = document.createElement('option'); o.value = m.name; dl.appendChild(o); });
-  // Add the master referral source list
-  REF_SOURCES.forEach(s => { const o = document.createElement('option'); o.value = s; dl.appendChild(o); });
-  // Add generic options
-  ['Walk-in','Physician Referral','Self-Referral','Other'].forEach(s => { const o = document.createElement('option'); o.value = s; dl.appendChild(o); });
+  var all=[];
+  mktList.forEach(m => { all.push(m.name); });
+  REF_SOURCES.forEach(s => { all.push(s); });
+  customRefSources.forEach(s => { all.push(s); });
+  ['Walk-in','Physician Referral','Self-Referral','Other'].forEach(s => { all.push(s); });
+  // Deduplicate and sort
+  all=all.filter(function(v,i,a){return a.indexOf(v)===i}).sort();
+  all.forEach(s => { const o = document.createElement('option'); o.value = s; dl.appendChild(o); });
 }
 
 function getSelectedAlerts(){
@@ -1859,7 +1911,7 @@ function openNewRefModal() {
   editingRefId = null;
   document.getElementById('refModalTitle').textContent = 'Register New Referral';
   document.getElementById('btnDeleteRef').style.display = 'none';
-  ['fName','fDOB','fPhone','fEmail','fDOI','fAttorney','fLawFirm','fLawContact','fApptDate','fNotes','fAlertOther'].forEach(id=>document.getElementById(id).value='');
+  ['fLastName','fFirstName','fDOB','fPhone','fEmail','fDOI','fAttorney','fLawFirm','fLawContact','fApptDate','fNotes','fAlertOther'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('fRegDate').value = today();
   document.getElementById('fPaperwork').value='no';
   document.getElementById('fCaseType').value='WC';document.getElementById('fLocation').value='';document.getElementById('fLanguage').value='English';document.getElementById('fStatus').value='Pending Scheduling';
@@ -1876,7 +1928,10 @@ function openEditRefModal(id) {
   editingRefId = id;
   document.getElementById('refModalTitle').textContent = 'Edit Referral';
   document.getElementById('btnDeleteRef').style.display = 'block';
-  document.getElementById('fName').value=r.patientName||'';document.getElementById('fDOB').value=r.dob||'';
+  var nameParts=(r.patientName||'').split(',');
+  document.getElementById('fLastName').value=(nameParts[0]||'').trim();
+  document.getElementById('fFirstName').value=(nameParts[1]||'').trim();
+  document.getElementById('fDOB').value=r.dob||'';
   document.getElementById('fPhone').value=r.phone||'';document.getElementById('fEmail').value=r.email||'';
   document.getElementById('fDOI').value=r.doi||'';document.getElementById('fCaseType').value=r.caseType||'WC';
   document.getElementById('fLocation').value=r.location||'';document.getElementById('fLanguage').value=r.language||'English';
@@ -1898,19 +1953,15 @@ function openEditRefModal(id) {
 function closeRefModal(){document.getElementById('referralModal').classList.remove('show');editingRefId=null}
 
 function saveReferral() {
-  var nameRaw = document.getElementById('fName').value.trim();
-  if (!nameRaw) {alert('Enter patient name.');return;}
-  // Enforce Last, First format
-  if (!nameRaw.includes(',')) {
-    var parts = nameRaw.split(/\s+/);
-    if (parts.length >= 2) {
-      nameRaw = parts[parts.length-1] + ', ' + parts.slice(0,-1).join(' ');
-    }
-    if (!nameRaw.includes(',')) { alert('Please enter name as: Last Name, First Name'); return; }
-  }
+  var lastName = document.getElementById('fLastName').value.trim();
+  var firstName = document.getElementById('fFirstName').value.trim();
+  if (!lastName) {alert('Enter patient last name.');return;}
+  if (!firstName) {alert('Enter patient first name.');return;}
   // Capitalize properly
-  var name = nameRaw.split(',').map(function(p){return p.trim().split(/\s+/).map(function(w){return w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()}).join(' ')}).join(', ');
-  document.getElementById('fName').value = name;
+  function capWord(w){return w.charAt(0).toUpperCase()+w.slice(1).toLowerCase();}
+  lastName = lastName.split(/\s+/).map(capWord).join(' ');
+  firstName = firstName.split(/\s+/).map(capWord).join(' ');
+  var name = lastName + ', ' + firstName;
   const dob = document.getElementById('fDOB').value;
 
   // Duplicate detection: check name+DOB against existing referrals
@@ -1925,7 +1976,16 @@ function saveReferral() {
   const selectedAlerts=getSelectedAlerts();
   const alertType=selectedAlerts.length>0?selectedAlerts.join(' | '):'';
 
-  const data = {patientName:name,dob:dob,phone:document.getElementById('fPhone').value.trim(),email:document.getElementById('fEmail').value.trim(),doi:document.getElementById('fDOI').value,caseType:document.getElementById('fCaseType').value,location:document.getElementById('fLocation').value,language:document.getElementById('fLanguage').value,attorney:document.getElementById('fAttorney').value.trim(),lawFirm:document.getElementById('fLawFirm').value.trim(),lawContact:document.getElementById('fLawContact').value.trim(),referralSource:document.getElementById('fRefSource').value,apptDate:document.getElementById('fApptDate').value,notes:document.getElementById('fNotes').value.trim(),status:document.getElementById('fStatus').value,alertType:alertType,paperworkCompleted:document.getElementById('fPaperwork').value,recordsNeeded:getRecordsData()};
+  // Check and auto-add new law firms and referral sources
+  var lawFirmVal=document.getElementById('fLawFirm').value.trim();
+  var refSourceVal=document.getElementById('fRefSource').value.trim();
+  if(lawFirmVal) checkAndAddLawFirm(lawFirmVal);
+  if(refSourceVal) checkAndAddRefSource(refSourceVal);
+  // Re-read values in case they were corrected by duplicate check
+  lawFirmVal=document.getElementById('fLawFirm').value.trim();
+  refSourceVal=document.getElementById('fRefSource').value.trim();
+
+  const data = {patientName:name,dob:dob,phone:document.getElementById('fPhone').value.trim(),email:document.getElementById('fEmail').value.trim(),doi:document.getElementById('fDOI').value,caseType:document.getElementById('fCaseType').value,location:document.getElementById('fLocation').value,language:document.getElementById('fLanguage').value,attorney:document.getElementById('fAttorney').value.trim(),lawFirm:lawFirmVal,lawContact:document.getElementById('fLawContact').value.trim(),referralSource:refSourceVal,apptDate:document.getElementById('fApptDate').value,notes:document.getElementById('fNotes').value.trim(),status:document.getElementById('fStatus').value,alertType:alertType,paperworkCompleted:document.getElementById('fPaperwork').value,recordsNeeded:getRecordsData()};
 
   if (editingRefId) {
     const idx=refs.findIndex(r=>r.id===editingRefId); if(idx===-1) return;
