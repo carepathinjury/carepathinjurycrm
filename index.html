@@ -309,7 +309,6 @@
       <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 002 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
       <div class="alert-count" id="topAlertCount">0</div>
     </div>
-    </div>
   </div>
 </div>
 <button class="of-toggle" id="ofToggle" onclick="toggleOfficeFinder()">📍 Office Finder</button>
@@ -1862,10 +1861,13 @@ function openNewRefModal() {
   document.getElementById('btnDeleteRef').style.display = 'none';
   ['fName','fDOB','fPhone','fEmail','fDOI','fAttorney','fLawFirm','fLawContact','fApptDate','fNotes','fAlertOther'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('fRegDate').value = today();
+  document.getElementById('fPaperwork').value='no';
   document.getElementById('fCaseType').value='WC';document.getElementById('fLocation').value='';document.getElementById('fLanguage').value='English';document.getElementById('fStatus').value='Pending Scheduling';
   document.querySelectorAll('.alertCb').forEach(cb=>{cb.checked=false});
   populateRefSourceDropdown();
+  populateLawFirmDropdown();
   document.getElementById('fRefSource').value = '';
+  loadRecordsData([]);
   document.getElementById('referralModal').classList.add('show');
 }
 
@@ -1881,12 +1883,15 @@ function openEditRefModal(id) {
   document.getElementById('fAttorney').value=r.attorney||'';document.getElementById('fLawFirm').value=r.lawFirm||'';
   document.getElementById('fLawContact').value=r.lawContact||'';document.getElementById('fApptDate').value=r.apptDate||'';
   document.getElementById('fRegDate').value=r.createdDate||'';
+  document.getElementById('fPaperwork').value=r.paperworkCompleted||'no';
   document.getElementById('fNotes').value=r.notes||'';document.getElementById('fStatus').value=r.status||'Pending Scheduling';
   // Load alert types
   const alerts=r.alertType?r.alertType.split(' | '):[];
   setAlertCheckboxes(alerts);
   populateRefSourceDropdown();
+  populateLawFirmDropdown();
   document.getElementById('fRefSource').value = r.referralSource || '';
+  loadRecordsData(r.recordsNeeded||[]);
   document.getElementById('referralModal').classList.add('show');
 }
 
