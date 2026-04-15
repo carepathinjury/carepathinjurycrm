@@ -355,6 +355,7 @@
     <div class="nav-item" data-page="crm-referrals" onclick="crmNav('crm-referrals')"><div class="nav-icon">📋</div> All Referrals</div>
     <div class="nav-item" data-page="crm-alerts" onclick="crmNav('crm-alerts')"><div class="nav-icon">⚠️</div> Alerts <span class="nav-badge" id="crmAlertBadge">0</span></div>
     <div class="nav-item" data-page="crm-contacts" onclick="crmNav('crm-contacts')"><div class="nav-icon">📇</div> Contacts</div>
+    <div class="nav-item" data-page="crm-lost" onclick="crmNav('crm-lost')"><div class="nav-icon">🚫</div> Lost Patients</div>
   </div>
   <div class="nav-section" id="crmSchedulerSection">
     <div class="nav-section-label">Schedulers</div>
@@ -376,6 +377,7 @@
   <div class="section" id="sec-crm-referrals"></div>
   <div class="section" id="sec-crm-alerts"></div>
   <div class="section" id="sec-crm-contacts"></div>
+  <div class="section" id="sec-crm-lost"></div>
   <div class="section" id="sec-crm-staff-Paola"></div>
   <div class="section" id="sec-crm-staff-Abigail"></div>
   <div class="section" id="sec-crm-staff-Maria"></div>
@@ -511,7 +513,7 @@
       <div class="form-group"><label>Law Firm Contact</label><input type="text" id="fLawContact" placeholder="Phone / Email"></div>
       <div class="form-group"><label>Referral Source</label><input type="text" id="fRefSource" list="refSourceList" placeholder="Type or select a source"><datalist id="refSourceList"></datalist></div>
       <div class="form-group"><label>Referred / Registered Date</label><input type="date" id="fRegDate"></div>
-      <div class="form-group"><label>Scheduled Appointment Date</label><input type="date" id="fApptDate"></div>
+      <div class="form-group"><label>Scheduled Appointment Date</label><input type="date" id="fApptDate" onchange="if(this.value&&document.getElementById('fStatus').value==='Pending Scheduling')document.getElementById('fStatus').value='Scheduled'"></div>
       <div class="form-group"><label>New Patient Paperwork Completed?</label><select id="fPaperwork"><option value="no">No</option><option value="yes">Yes</option></select></div>
       <div class="form-group"><label>Status</label><select id="fStatus"><option value="Pending Scheduling">Pending Scheduling</option><option value="Scheduled">Scheduled</option><option value="Active Treatment">Active Treatment</option><option value="Completed">Completed</option></select></div>
       <div class="form-group full"><label>Alerts / Missing Info (select all that apply)</label>
@@ -544,9 +546,10 @@
     <div class="modal-body">
       <p id="resolvePatientName" style="font-weight:600;font-size:14px;color:var(--navy);margin-bottom:14px"></p>
       <div class="form-grid" style="grid-template-columns:1fr">
-        <div class="form-group"><label>Outcome</label><select id="resolveOutcome" onchange="toggleResolveFields()"><option value="scheduled">Successfully Scheduled</option><option value="unable">Unable to Schedule</option></select></div>
+        <div class="form-group"><label>Outcome</label><select id="resolveOutcome" onchange="toggleResolveFields()"><option value="scheduled">Successfully Scheduled</option><option value="unable">Unable to Schedule — Keep Trying</option><option value="lost">Unable to Schedule — Patient Lost</option></select></div>
         <div class="form-group" id="resolveApptGroup"><label>Appointment Date</label><input type="date" id="resolveApptDate"></div>
         <div class="form-group" id="resolveContactGroup" style="display:none"><label>Last Date Contacted</label><input type="date" id="resolveContactDate"></div>
+        <div class="form-group" id="resolveLostReasonGroup" style="display:none"><label>Reason Patient Was Lost</label><select id="resolveLostReason"><option value="">— Select —</option><option>Patient declined treatment</option><option>Patient unreachable / no response</option><option>Wrong contact information</option><option>Patient chose another provider</option><option>Insurance issue / no coverage</option><option>Attorney advised against treatment</option><option>Patient moved / relocated</option><option>Patient no longer injured</option><option>Other</option></select></div>
         <div class="form-group"><label>Notes</label><textarea id="resolveNotes"></textarea></div>
       </div>
     </div>
@@ -1213,7 +1216,7 @@ function renderActiveModule() {
 function crmAlerts() {
   const now = today(), alerts = [];
   refs.forEach(r => {
-    if (r.status === 'Completed') return;
+    if (r.status === 'Completed' || r.status === 'Patient Lost') return;
     // Scheduling alert
     if (!r.apptDate && r.createdDate) {
       const ck = r.lastContactDate || r.createdDate;
@@ -1369,6 +1372,7 @@ function renderCrmPage(page) {
   else if (page === 'crm-referrals') renderCrmReferrals(el);
   else if (page === 'crm-alerts') renderCrmAlerts(el);
   else if (page === 'crm-contacts') renderCmContacts(el);
+  else if (page === 'crm-lost') renderCrmLostPatients(el);
   else if (page.startsWith('crm-staff-')) renderCrmStaff(el, page.replace('crm-staff-',''));
   else if (page === 'crm-my-metrics') renderCrmMyMetrics(el);
   else if (page === 'crm-mgr-dash') renderCrmMgrDash(el);
@@ -1505,6 +1509,32 @@ function renderCrmAlerts(el) {
     if (other.length > 0) { h += '<h3 style="font-family:DM Serif Display,serif;font-size:16px;color:var(--gray-400);margin:16px 0 10px">'+(my.length>0?'Other':'All')+' Alerts ('+other.length+')</h3>'; other.forEach((a,i)=>{h+=renderCrmAlertCard(a,i);}); }
   }
   el.innerHTML = h;
+}
+
+function renderCrmLostPatients(el){
+  var lost=refs.filter(function(r){return r.status==='Patient Lost'});
+  lost.sort(function(a,b){return(b.lostDate||b.createdDate||'').localeCompare(a.lostDate||a.createdDate||'')});
+  var h='<div class="page-title">Lost Patients — Unrecoverable Leakage</div><div class="page-subtitle">'+lost.length+' patient'+(lost.length!==1?'s':'')+' lost due to patient choices or inability to schedule.</div>';
+
+  // Summary by reason
+  var reasons={};lost.forEach(function(r){var rs=r.lostReason||'Unknown';reasons[rs]=(reasons[rs]||0)+1;});
+  if(Object.keys(reasons).length>0){
+    h+='<div class="table-card"><div class="table-header"><h3>Summary by Reason</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Reason</th><th>Count</th><th>%</th></tr></thead><tbody>';
+    Object.entries(reasons).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
+      h+='<tr><td style="font-weight:600">'+esc(e[0])+'</td><td>'+e[1]+'</td><td>'+(lost.length>0?Math.round(e[1]/lost.length*100):0)+'%</td></tr>';
+    });
+    h+='</tbody></table></div></div>';
+  }
+
+  // Full list
+  h+='<div class="table-card"><div class="table-header"><h3>All Lost Patients</h3></div><div class="table-scroll"><table class="tbl" style="min-width:800px"><thead><tr><th>Patient</th><th>Case Type</th><th>Location</th><th>Source</th><th>Reason Lost</th><th>Date Lost</th><th>Days in System</th><th>Notes</th></tr></thead><tbody>';
+  if(lost.length===0)h+='<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--gray-400)">No lost patients.</td></tr>';
+  lost.forEach(function(r){
+    var daysIn=r.createdDate&&r.lostDate?daysBtw(r.createdDate,r.lostDate):0;
+    h+='<tr><td><span class="patient-name" onclick="showCrmDetail(\''+r.id+'\')">'+esc(r.patientName)+'</span></td><td><span class="type-badge">'+esc(r.caseType)+'</span></td><td style="font-size:11px">'+esc(r.location||'—')+'</td><td style="font-size:11px">'+esc(r.referralSource||'—')+'</td><td style="font-size:11px;color:var(--red);font-weight:600">'+esc(r.lostReason||'—')+'</td><td style="font-size:11px">'+fmtDate(r.lostDate)+'</td><td style="font-size:11px">'+daysIn+'</td><td style="font-size:10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.lostNotes||'—')+'</td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  el.innerHTML=h;
 }
 
 let crmStaffTab = {};
@@ -2054,7 +2084,7 @@ let resolveRefId=null, apptConfirmRefId=null, updateLogRefId=null;
 
 function openResolveModal(id){resolveRefId=id;const r=refs.find(x=>x.id===id);document.getElementById('resolvePatientName').textContent=r?r.patientName:'';document.getElementById('resolveOutcome').value='scheduled';document.getElementById('resolveApptDate').value='';document.getElementById('resolveContactDate').value=today();document.getElementById('resolveNotes').value='';toggleResolveFields();document.getElementById('resolveModal').classList.add('show')}
 function closeResolveModal(){document.getElementById('resolveModal').classList.remove('show');resolveRefId=null}
-function toggleResolveFields(){const v=document.getElementById('resolveOutcome').value;document.getElementById('resolveApptGroup').style.display=v==='scheduled'?'flex':'none';document.getElementById('resolveContactGroup').style.display=v==='unable'?'flex':'none'}
+function toggleResolveFields(){const v=document.getElementById('resolveOutcome').value;document.getElementById('resolveApptGroup').style.display=v==='scheduled'?'flex':'none';document.getElementById('resolveContactGroup').style.display=v==='unable'?'flex':'none';document.getElementById('resolveLostReasonGroup').style.display=v==='lost'?'flex':'none'}
 
 function submitResolve(){
   const r=refs.find(x=>x.id===resolveRefId);if(!r)return;
@@ -2065,6 +2095,12 @@ function submitResolve(){
     if(r.status==='Pending Scheduling')r.status='Scheduled';
     if(notes){if(!r.updateLog)r.updateLog=[];r.updateLog.push({date:today(),method:'System',summary:'Scheduled for '+fmtDate(d)+'. '+notes})}
     if(!cases.find(c=>c.sourceRefId===r.id)) createCaseFromRef(r);
+  } else if(outcome==='lost'){
+    var reason=document.getElementById('resolveLostReason').value;
+    if(!reason){alert('Please select a reason.');return;}
+    r.status='Patient Lost';r.lostReason=reason;r.lostDate=today();r.lostNotes=notes;r.alertAssignedTo=null;
+    if(!r.updateLog)r.updateLog=[];
+    r.updateLog.push({date:today(),method:'System',summary:'Patient marked as lost. Reason: '+reason+(notes?'. '+notes:'')});
   } else {
     r.lastContactDate=document.getElementById('resolveContactDate').value||today();r.alertAssignedTo=null;
     if(notes){if(!r.updateLog)r.updateLog=[];r.updateLog.push({date:today(),method:'Phone Call',summary:'Unable to schedule. '+notes})}
