@@ -509,13 +509,14 @@
       <div class="form-group"><label>Clinic Location</label><select id="fLocation"><option value="">— Select —</option><option>Allentown</option><option>Wilkes Barre</option><option>Old City</option><option>Hazleton</option><option>Williamsport</option><option>Carlisle</option><option>Lansdale</option><option>Reading</option><option>Port Richmond</option><option>Germantown</option><option>NE Philly</option><option>Darby</option><option>Cherry Hill NJ</option></select></div>
       <div class="form-group"><label>Preferred Language</label><select id="fLanguage"><option>English</option><option>Spanish</option><option>Other</option></select></div>
       <div class="form-group"><label>Attorney Name</label><input type="text" id="fAttorney"></div>
-      <div class="form-group"><label>Law Firm</label><input type="text" id="fLawFirm" list="lawFirmList" placeholder="Select or type law firm"><datalist id="lawFirmList"></datalist></div>
+      <div class="form-group"><label>Law Firm</label><input type="text" id="fLawFirm" list="lawFirmList" placeholder="Select or type law firm" oninput="checkBlockedFirm()"><datalist id="lawFirmList"></datalist><div id="fLawFirmWarning" style="display:none;font-size:11px;font-weight:700;color:white;background:var(--red);padding:6px 10px;border-radius:var(--radius-sm);margin-top:4px">⚠️ DO NOT SCHEDULE — We do not participate with this law firm.</div></div>
       <div class="form-group"><label>Law Firm Contact</label><input type="text" id="fLawContact" placeholder="Phone / Email"></div>
       <div class="form-group"><label>Referral Source</label><input type="text" id="fRefSource" list="refSourceList" placeholder="Type or select a source"><datalist id="refSourceList"></datalist></div>
       <div class="form-group"><label>Referred / Registered Date</label><input type="date" id="fRegDate"></div>
       <div class="form-group"><label>Scheduled Appointment Date</label><input type="date" id="fApptDate" onchange="if(this.value&&document.getElementById('fStatus').value==='Pending Scheduling')document.getElementById('fStatus').value='Scheduled'"></div>
       <div class="form-group"><label>New Patient Paperwork Completed?</label><select id="fPaperwork"><option value="no">No</option><option value="yes">Yes</option></select></div>
-      <div class="form-group"><label>Status</label><select id="fStatus"><option value="Pending Scheduling">Pending Scheduling</option><option value="Scheduled">Scheduled</option><option value="Active Treatment">Active Treatment</option><option value="Completed">Completed</option></select></div>
+      <div class="form-group"><label>Status</label><select id="fStatus" onchange="toggleLostReasonReg()"><option value="Pending Scheduling">Pending Scheduling</option><option value="Scheduled">Scheduled</option><option value="Active Treatment">Active Treatment</option><option value="Completed">Completed</option><option value="Patient Lost">Patient Lost — Unable to Schedule</option></select></div>
+      <div class="form-group" id="fLostReasonGroup" style="display:none"><label>Reason Patient Was Lost</label><select id="fLostReason"><option value="">— Select —</option><option>Patient declined treatment</option><option>Patient unreachable / no response</option><option>Wrong contact information</option><option>Patient chose another provider</option><option>Insurance issue / no coverage</option><option>Attorney advised against treatment</option><option>Patient moved / relocated</option><option>Patient no longer injured</option><option>Other</option></select></div>
       <div class="form-group full"><label>Alerts / Missing Info (select all that apply)</label>
         <div id="fAlertCheckboxes" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">
           <label style="display:flex;align-items:center;gap:5px;font-size:12px;padding:5px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);background:var(--gray-100);cursor:pointer"><input type="checkbox" class="alertCb" value="Missing Claim Info" style="accent-color:var(--teal)"> Missing Claim Info</label>
@@ -1737,7 +1738,8 @@ function renderCrmMgrDash(el) {
   let filteredRefs=refs;
   if(crmMgrDateFrom)filteredRefs=filteredRefs.filter(r=>(r.createdDate||'')>=crmMgrDateFrom);
   if(crmMgrDateTo)filteredRefs=filteredRefs.filter(r=>(r.createdDate||'')<=crmMgrDateTo);
-  const total=filteredRefs.length, pending=filteredRefs.filter(r=>!r.apptDate&&r.status!=='Completed').length;
+  const total=filteredRefs.length, pending=filteredRefs.filter(r=>!r.apptDate&&r.status!=='Completed'&&r.status!=='Patient Lost').length;
+  const lostCount=filteredRefs.filter(r=>r.status==='Patient Lost').length;
   const alerts=crmAlerts().length;
   const caseTypes={};filteredRefs.forEach(r=>{var t=r.caseType||'Unknown';caseTypes[t]=(caseTypes[t]||0)+1;});
   const locCounts={};filteredRefs.forEach(r=>{const l=r.location||'Unknown';locCounts[l]=(locCounts[l]||0)+1;});
@@ -1750,7 +1752,8 @@ function renderCrmMgrDash(el) {
   h+='</div>';
   // Summary stats
   var ctSummary=Object.entries(caseTypes).map(function(e){return e[0]+': '+e[1]}).join(' · ');
-  h += '<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('Total Referrals',total,'teal')+stat('Pending Scheduling',pending,'gold')+stat('Active Alerts',alerts,'red')+stat('Case Mix',ctSummary||'—','')+'</div>';
+  var leakageRate=total>0?Math.round(lostCount/total*100):0;
+  h += '<div class="stats-row" style="grid-template-columns:repeat(5,1fr)">'+stat('Total Referrals',total,'teal')+stat('Pending Scheduling',pending,'gold')+stat('Active Alerts',alerts,'red')+stat('Patients Lost',lostCount+(leakageRate>0?' ('+leakageRate+'%)':''),'red')+stat('Case Mix',ctSummary||'—','')+'</div>';
 
   // Patients by Law Firm
   var firmCounts={};filteredRefs.forEach(function(r){var f=r.lawFirm||'No Firm';firmCounts[f]=(firmCounts[f]||0)+1;});
@@ -1785,19 +1788,20 @@ function renderCrmMgrDash(el) {
   // Attorney Referral Source Conversion
   var srcConv={};filteredRefs.forEach(function(r){
     var s=r.referralSource||'Unknown';
-    if(!srcConv[s])srcConv[s]={total:0,scheduled:0,completed:0,active:0,noShow:0};
+    if(!srcConv[s])srcConv[s]={total:0,scheduled:0,completed:0,active:0,noShow:0,lost:0};
     srcConv[s].total++;
     if(r.apptDate)srcConv[s].scheduled++;
     if(r.apptOutcome==='completed')srcConv[s].completed++;
     if(r.status==='Active Treatment')srcConv[s].active++;
     if(r.apptOutcome==='no_show')srcConv[s].noShow++;
+    if(r.status==='Patient Lost')srcConv[s].lost++;
   });
-  h += '<div class="table-card"><div class="table-header"><h3>Referral Source Conversion</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Source</th><th>Total Refs</th><th>Scheduled</th><th>Sched %</th><th>Completed</th><th>Conv %</th><th>Active Tx</th><th>No Shows</th></tr></thead><tbody>';
+  h += '<div class="table-card"><div class="table-header"><h3>Referral Source Conversion</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Source</th><th>Total Refs</th><th>Scheduled</th><th>Sched %</th><th>Completed</th><th>Conv %</th><th>Active Tx</th><th>No Shows</th><th>Lost</th></tr></thead><tbody>';
   Object.entries(srcConv).sort(function(a,b){return b[1].total-a[1].total}).forEach(function(e){
     var s=e[0],d=e[1];
     var schedPct=d.total>0?Math.round(d.scheduled/d.total*100):0;
     var convPct=d.total>0?Math.round(d.completed/d.total*100):0;
-    h+='<tr><td style="font-weight:600">'+esc(s)+'</td><td>'+d.total+'</td><td>'+d.scheduled+'</td><td>'+schedPct+'%</td><td>'+d.completed+'</td><td>'+convPct+'%</td><td>'+d.active+'</td><td>'+(d.noShow>0?'<span style="color:var(--red)">'+d.noShow+'</span>':'0')+'</td></tr>';
+    h+='<tr><td style="font-weight:600">'+esc(s)+'</td><td>'+d.total+'</td><td>'+d.scheduled+'</td><td>'+schedPct+'%</td><td>'+d.completed+'</td><td>'+convPct+'%</td><td>'+d.active+'</td><td>'+(d.noShow>0?'<span style="color:var(--red)">'+d.noShow+'</span>':'0')+'</td><td>'+(d.lost>0?'<span style="color:var(--red)">'+d.lost+'</span>':'0')+'</td></tr>';
   });
   h += '</tbody></table></div></div>';
 
@@ -1810,6 +1814,42 @@ function renderCrmMgrDash(el) {
   h += '<div class="table-card"><div class="table-header"><h3>Top Referral Sources</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Source</th><th>Count</th><th>%</th></tr></thead><tbody>';
   Object.entries(srcCounts).sort((a,b)=>b[1]-a[1]).slice(0,15).forEach(([s,c])=>{h+='<tr><td style="font-weight:600">'+esc(s)+'</td><td>'+c+'</td><td>'+(total>0?Math.round(c/total*100):0)+'%</td></tr>';});
   h += '</tbody></table></div></div>';
+  // Patient Leakage Analytics
+  var lostRefs=filteredRefs.filter(function(r){return r.status==='Patient Lost'});
+  if(lostRefs.length>0){
+    h+='<div class="table-card" style="border-left:4px solid var(--red)"><div class="table-header"><h3>Patient Leakage Analysis</h3></div>';
+    // By reason
+    var lostReasons={};lostRefs.forEach(function(r){var rs=r.lostReason||'Unknown';lostReasons[rs]=(lostReasons[rs]||0)+1;});
+    h+='<div class="table-scroll"><table class="tbl"><thead><tr><th>Reason</th><th>Count</th><th>% of Lost</th><th>% of Total Referrals</th></tr></thead><tbody>';
+    Object.entries(lostReasons).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
+      h+='<tr><td style="font-weight:600;color:var(--red)">'+esc(e[0])+'</td><td>'+e[1]+'</td><td>'+Math.round(e[1]/lostRefs.length*100)+'%</td><td>'+Math.round(e[1]/total*100)+'%</td></tr>';
+    });
+    h+='</tbody></table></div>';
+    // By source
+    var lostBySrc={};lostRefs.forEach(function(r){var s=r.referralSource||'Unknown';lostBySrc[s]=(lostBySrc[s]||0)+1;});
+    h+='<div class="table-scroll" style="border-top:2px solid var(--gray-100)"><table class="tbl"><thead><tr><th>Referral Source</th><th>Lost</th><th>Total from Source</th><th>Loss Rate</th></tr></thead><tbody>';
+    Object.entries(lostBySrc).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
+      var srcTotal=filteredRefs.filter(function(r){return(r.referralSource||'Unknown')===e[0]}).length;
+      var lossRate=srcTotal>0?Math.round(e[1]/srcTotal*100):0;
+      h+='<tr><td style="font-weight:600">'+esc(e[0])+'</td><td style="color:var(--red);font-weight:700">'+e[1]+'</td><td>'+srcTotal+'</td><td style="color:'+(lossRate>30?'var(--red)':lossRate>15?'var(--gold)':'var(--teal)')+';font-weight:700">'+lossRate+'%</td></tr>';
+    });
+    h+='</tbody></table></div>';
+    // By location
+    var lostByLoc={};lostRefs.forEach(function(r){var l=r.location||'Unknown';lostByLoc[l]=(lostByLoc[l]||0)+1;});
+    h+='<div class="table-scroll" style="border-top:2px solid var(--gray-100)"><table class="tbl"><thead><tr><th>Location</th><th>Lost</th><th>Total at Location</th><th>Loss Rate</th></tr></thead><tbody>';
+    Object.entries(lostByLoc).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
+      var locTotal=filteredRefs.filter(function(r){return(r.location||'Unknown')===e[0]}).length;
+      var lossRate=locTotal>0?Math.round(e[1]/locTotal*100):0;
+      h+='<tr><td style="font-weight:600">'+esc(e[0])+'</td><td style="color:var(--red);font-weight:700">'+e[1]+'</td><td>'+locTotal+'</td><td style="color:'+(lossRate>30?'var(--red)':lossRate>15?'var(--gold)':'var(--teal)')+';font-weight:700">'+lossRate+'%</td></tr>';
+    });
+    h+='</tbody></table></div>';
+    // Avg days before lost
+    var totalDays=0,countDays=0;lostRefs.forEach(function(r){if(r.createdDate&&r.lostDate){totalDays+=daysBtw(r.createdDate,r.lostDate);countDays++}});
+    var avgDaysLost=countDays>0?Math.round(totalDays/countDays):'—';
+    h+='<div style="padding:12px 18px;font-size:12px;color:var(--gray-600);border-top:2px solid var(--gray-100)">Average days in system before loss: <strong style="color:var(--navy)">'+avgDaysLost+'</strong></div>';
+    h+='</div>';
+  }
+
   h += renderMktConversionReport();
   el.innerHTML = h;
 }
@@ -1923,6 +1963,12 @@ function populateRefSourceDropdown() {
   all.forEach(s => { const o = document.createElement('option'); o.value = s; dl.appendChild(o); });
 }
 
+function toggleLostReasonReg(){document.getElementById('fLostReasonGroup').style.display=document.getElementById('fStatus').value==='Patient Lost'?'flex':'none'}
+
+var BLOCKED_FIRMS=['Win Big Law','HGSK','Haggerty, Goldberg, Schleifer & Kupersmith, P.C.','Haggerty Goldberg Schleifer & Kupersmith'];
+function isBlockedFirm(firm){if(!firm)return false;var f=firm.toLowerCase().replace(/[^a-z0-9]/g,'');return BLOCKED_FIRMS.some(function(b){return f===b.toLowerCase().replace(/[^a-z0-9]/g,'')||f.indexOf(b.toLowerCase().replace(/[^a-z0-9]/g,''))!==-1});}
+function checkBlockedFirm(){var w=document.getElementById('fLawFirmWarning');var v=document.getElementById('fLawFirm').value.trim();w.style.display=isBlockedFirm(v)?'block':'none';}
+
 function getSelectedAlerts(){
   const checked=Array.from(document.querySelectorAll('.alertCb:checked')).map(cb=>cb.value);
   const other=document.getElementById('fAlertOther').value.trim();
@@ -1944,6 +1990,8 @@ function openNewRefModal() {
   ['fLastName','fFirstName','fDOB','fPhone','fEmail','fDOI','fAttorney','fLawFirm','fLawContact','fApptDate','fNotes','fAlertOther'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('fRegDate').value = today();
   document.getElementById('fPaperwork').value='no';
+  document.getElementById('fLostReason').value='';
+  document.getElementById('fLostReasonGroup').style.display='none';
   document.getElementById('fCaseType').value='WC';document.getElementById('fLocation').value='';document.getElementById('fLanguage').value='English';document.getElementById('fStatus').value='Pending Scheduling';
   document.querySelectorAll('.alertCb').forEach(cb=>{cb.checked=false});
   populateRefSourceDropdown();
@@ -1969,7 +2017,9 @@ function openEditRefModal(id) {
   document.getElementById('fLawContact').value=r.lawContact||'';document.getElementById('fApptDate').value=r.apptDate||'';
   document.getElementById('fRegDate').value=r.createdDate||'';
   document.getElementById('fPaperwork').value=r.paperworkCompleted||'no';
+  document.getElementById('fLostReason').value=r.lostReason||'';
   document.getElementById('fNotes').value=r.notes||'';document.getElementById('fStatus').value=r.status||'Pending Scheduling';
+  toggleLostReasonReg();
   // Load alert types
   const alerts=r.alertType?r.alertType.split(' | '):[];
   setAlertCheckboxes(alerts);
@@ -2008,6 +2058,10 @@ function saveReferral() {
 
   // Check and auto-add new law firms and referral sources
   var lawFirmVal=document.getElementById('fLawFirm').value.trim();
+  var blockedFirm=isBlockedFirm(lawFirmVal);
+  if(blockedFirm){
+    if(!confirm('⚠️ DO NOT SCHEDULE\n\nCarePath does not participate with "'+lawFirmVal+'".\n\nThis patient will be saved as "Patient Lost — Non-Participating Law Firm."\n\nClick OK to confirm, or Cancel to go back and change the law firm.')) return;
+  }
   var refSourceVal=document.getElementById('fRefSource').value.trim();
   if(lawFirmVal) checkAndAddLawFirm(lawFirmVal);
   if(refSourceVal) checkAndAddRefSource(refSourceVal);
@@ -2016,6 +2070,15 @@ function saveReferral() {
   refSourceVal=document.getElementById('fRefSource').value.trim();
 
   const data = {patientName:name,dob:dob,phone:document.getElementById('fPhone').value.trim(),email:document.getElementById('fEmail').value.trim(),doi:document.getElementById('fDOI').value,caseType:document.getElementById('fCaseType').value,location:document.getElementById('fLocation').value,language:document.getElementById('fLanguage').value,attorney:document.getElementById('fAttorney').value.trim(),lawFirm:lawFirmVal,lawContact:document.getElementById('fLawContact').value.trim(),referralSource:refSourceVal,apptDate:document.getElementById('fApptDate').value,notes:document.getElementById('fNotes').value.trim(),status:document.getElementById('fStatus').value,alertType:alertType,paperworkCompleted:document.getElementById('fPaperwork').value,recordsNeeded:getRecordsData()};
+
+  // Handle Patient Lost status
+  if(blockedFirm){
+    data.status='Patient Lost';data.lostReason='Non-participating law firm';data.lostDate=today();data.lostNotes='Law firm "'+lawFirmVal+'" is not accepted. '+(data.notes||'');data.alertAssignedTo=null;data.apptDate='';
+  } else if(data.status==='Patient Lost'){
+    var lostReason=document.getElementById('fLostReason').value;
+    if(!lostReason){alert('Please select a reason for patient lost.');return;}
+    data.lostReason=lostReason;data.lostDate=today();data.lostNotes=data.notes;data.alertAssignedTo=null;
+  }
 
   if (editingRefId) {
     const idx=refs.findIndex(r=>r.id===editingRefId); if(idx===-1) return;
