@@ -1472,16 +1472,19 @@ function renderCrmAlertCard(a, i) {
 }
 
 var crmRefSort='newest';
+var crmRefSearchVal='';
 function renderCrmReferrals(el) {
+  var searchEl=document.getElementById('crmRefSearch');
+  if(searchEl)crmRefSearchVal=searchEl.value;
   let h = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">All Referrals</div><div style="margin-left:auto"><button class="btn-primary" onclick="openNewRefModal()" style="font-size:11px;padding:7px 14px">+ New Referral</button></div></div>';
   h += '<div class="page-subtitle">'+refs.length+' total referrals.</div>';
-  h += '<div class="table-card"><div class="table-header"><h3>Registry</h3><div class="table-controls"><select class="search-input" style="width:auto" onchange="crmRefSort=this.value;renderCrmReferrals(document.getElementById(\'sec-crm-referrals\'))"><option value="newest"'+(crmRefSort==='newest'?' selected':'')+'>Newest First</option><option value="oldest"'+(crmRefSort==='oldest'?' selected':'')+'>Oldest First</option><option value="name"'+(crmRefSort==='name'?' selected':'')+'>Name A–Z</option><option value="status"'+(crmRefSort==='status'?' selected':'')+'>By Status</option><option value="location"'+(crmRefSort==='location'?' selected':'')+'>By Location</option><option value="firm"'+(crmRefSort==='firm'?' selected':'')+'>By Law Firm</option></select><input class="search-input" id="crmRefSearch" placeholder="Search..." oninput="renderCrmReferrals(document.getElementById(\'sec-crm-referrals\'))"></div></div>';
+  h += '<div class="table-card"><div class="table-header"><h3>Registry</h3><div class="table-controls"><select class="search-input" style="width:auto" onchange="crmRefSort=this.value;renderCrmReferrals(document.getElementById(\'sec-crm-referrals\'))"><option value="newest"'+(crmRefSort==='newest'?' selected':'')+'>Newest First</option><option value="oldest"'+(crmRefSort==='oldest'?' selected':'')+'>Oldest First</option><option value="name"'+(crmRefSort==='name'?' selected':'')+'>Name A–Z</option><option value="status"'+(crmRefSort==='status'?' selected':'')+'>By Status</option><option value="location"'+(crmRefSort==='location'?' selected':'')+'>By Location</option><option value="firm"'+(crmRefSort==='firm'?' selected':'')+'>By Law Firm</option></select><input class="search-input" id="crmRefSearch" value="'+esc(crmRefSearchVal)+'" placeholder="Search..." oninput="renderCrmReferrals(document.getElementById(\'sec-crm-referrals\'))"></div></div>';
   h += '<div class="table-scroll"><table class="tbl" style="min-width:1000px"><thead><tr><th>Patient</th><th>Type</th><th>DOI</th><th>Location</th><th>Attorney/Firm</th><th>Source</th><th>Status</th><th>Days</th><th>Appt</th><th>Outcome</th></tr></thead><tbody>';
-  const search = (document.getElementById('crmRefSearch')?.value||'').toLowerCase();
+  const search = crmRefSearchVal.toLowerCase();
   let list = refs.slice();
   if(search) list = list.filter(r => (r.patientName||'').toLowerCase().includes(search)||(r.location||'').toLowerCase().includes(search)||(r.referralSource||'').toLowerCase().includes(search)||(r.lawFirm||'').toLowerCase().includes(search));
-  if(crmRefSort==='newest') list.sort((a,b)=>(b.createdDate||'').localeCompare(a.createdDate||''));
-  else if(crmRefSort==='oldest') list.sort((a,b)=>(a.createdDate||'').localeCompare(b.createdDate||''));
+  if(crmRefSort==='newest') list.sort((a,b)=>(b.enteredAt||b.createdDate||'').localeCompare(a.enteredAt||a.createdDate||''));
+  else if(crmRefSort==='oldest') list.sort((a,b)=>(a.enteredAt||a.createdDate||'').localeCompare(b.enteredAt||b.createdDate||''));
   else if(crmRefSort==='name') list.sort((a,b)=>(a.patientName||'').localeCompare(b.patientName||''));
   else if(crmRefSort==='status') list.sort((a,b)=>(a.status||'').localeCompare(b.status||''));
   else if(crmRefSort==='location') list.sort((a,b)=>(a.location||'').localeCompare(b.location||''));
@@ -1503,6 +1506,7 @@ function renderCrmReferrals(el) {
   });
   h += '</tbody></table></div></div>';
   el.innerHTML = h;
+  if(crmRefSearchVal){var inp=document.getElementById('crmRefSearch');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}}
 }
 
 function renderCrmAlerts(el) {
@@ -2108,7 +2112,7 @@ function saveReferral() {
       saveCases();
     }
   } else {
-    const nr={id:genId(),...data,createdDate:document.getElementById('fRegDate').value||today(),registeredBy:currentUser,updateLog:[],alertAssignedTo:getNextStaff(),lastContactDate:null,dateScheduledOn:null,daysToSchedule:null,apptOutcome:null,apptConfirmAssignedTo:null,lastApptFollowUp:null};
+    const nr={id:genId(),...data,createdDate:document.getElementById('fRegDate').value||today(),enteredAt:new Date().toISOString(),registeredBy:currentUser,updateLog:[],alertAssignedTo:getNextStaff(),lastContactDate:null,dateScheduledOn:null,daysToSchedule:null,apptOutcome:null,apptConfirmAssignedTo:null,lastApptFollowUp:null};
     if(data.apptDate){nr.dateScheduledOn=today();nr.daysToSchedule=0;if(nr.status==='Pending Scheduling')nr.status='Scheduled';nr.apptConfirmAssignedTo=nr.alertAssignedTo;}
     refs.push(nr);
     // Auto-create case if scheduled
