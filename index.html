@@ -1471,15 +1471,21 @@ function renderCrmAlertCard(a, i) {
     '<div class="alert-action"><button class="btn-resolve" onclick="showCrmDetail(\''+a.id+'\')">View</button>'+btn+'</div></div>';
 }
 
+var crmRefSort='newest';
 function renderCrmReferrals(el) {
   let h = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">All Referrals</div><div style="margin-left:auto"><button class="btn-primary" onclick="openNewRefModal()" style="font-size:11px;padding:7px 14px">+ New Referral</button></div></div>';
   h += '<div class="page-subtitle">'+refs.length+' total referrals.</div>';
-  h += '<div class="table-card"><div class="table-header"><h3>Registry</h3><div class="table-controls"><input class="search-input" id="crmRefSearch" placeholder="Search..." oninput="renderCrmReferrals(document.getElementById(\'sec-crm-referrals\'))"></div></div>';
+  h += '<div class="table-card"><div class="table-header"><h3>Registry</h3><div class="table-controls"><select class="search-input" style="width:auto" onchange="crmRefSort=this.value;renderCrmReferrals(document.getElementById(\'sec-crm-referrals\'))"><option value="newest"'+(crmRefSort==='newest'?' selected':'')+'>Newest First</option><option value="oldest"'+(crmRefSort==='oldest'?' selected':'')+'>Oldest First</option><option value="name"'+(crmRefSort==='name'?' selected':'')+'>Name A–Z</option><option value="status"'+(crmRefSort==='status'?' selected':'')+'>By Status</option><option value="location"'+(crmRefSort==='location'?' selected':'')+'>By Location</option><option value="firm"'+(crmRefSort==='firm'?' selected':'')+'>By Law Firm</option></select><input class="search-input" id="crmRefSearch" placeholder="Search..." oninput="renderCrmReferrals(document.getElementById(\'sec-crm-referrals\'))"></div></div>';
   h += '<div class="table-scroll"><table class="tbl" style="min-width:1000px"><thead><tr><th>Patient</th><th>Type</th><th>DOI</th><th>Location</th><th>Attorney/Firm</th><th>Source</th><th>Status</th><th>Days</th><th>Appt</th><th>Outcome</th></tr></thead><tbody>';
   const search = (document.getElementById('crmRefSearch')?.value||'').toLowerCase();
   let list = refs.slice();
   if(search) list = list.filter(r => (r.patientName||'').toLowerCase().includes(search)||(r.location||'').toLowerCase().includes(search)||(r.referralSource||'').toLowerCase().includes(search)||(r.lawFirm||'').toLowerCase().includes(search));
-  list.sort((a,b)=>(b.createdDate||'').localeCompare(a.createdDate||''));
+  if(crmRefSort==='newest') list.sort((a,b)=>(b.createdDate||'').localeCompare(a.createdDate||''));
+  else if(crmRefSort==='oldest') list.sort((a,b)=>(a.createdDate||'').localeCompare(b.createdDate||''));
+  else if(crmRefSort==='name') list.sort((a,b)=>(a.patientName||'').localeCompare(b.patientName||''));
+  else if(crmRefSort==='status') list.sort((a,b)=>(a.status||'').localeCompare(b.status||''));
+  else if(crmRefSort==='location') list.sort((a,b)=>(a.location||'').localeCompare(b.location||''));
+  else if(crmRefSort==='firm') list.sort((a,b)=>(a.lawFirm||'').localeCompare(b.lawFirm||''));
   list.forEach(r => {
     const days=r.createdDate?daysBtw(r.createdDate,today()):0;
     const dc=days>7&&!r.apptDate?'danger':days>3&&!r.apptDate?'warn':'';
