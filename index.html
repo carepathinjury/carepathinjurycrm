@@ -319,7 +319,7 @@
       <button onclick="toggleOfficeFinder()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray-400);padding:4px 8px">&times;</button>
     </div>
     <div class="of-input-row">
-      <input type="text" class="of-input" id="ofZip" placeholder="e.g. 19002" maxlength="5" inputmode="numeric" onkeydown="if(event.key==='Enter')ofFindOffices()">
+      <input type="text" class="of-input" id="ofZip" placeholder="ZIP code or City, State (e.g. 19002 or Philadelphia, PA)" onkeydown="if(event.key==='Enter')ofFindOffices()">
       <button class="of-search-btn" id="ofSearchBtn" onclick="ofFindOffices()">Find Offices</button>
     </div>
     <div class="of-error" id="ofError"></div>
@@ -3794,7 +3794,7 @@ function ofFormatTime(min){if(min>=60){var h=Math.floor(min/60),m=min%60;return 
 function ofMapsUrl(addr){return'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(addr)}
 
 function ofRenderResults(offices,label,portRichAlert){
-  document.getElementById('ofPatientAddr').textContent='ZIP: '+label.replace('ZIP ','');
+  document.getElementById('ofPatientAddr').textContent=label;
   var list=document.getElementById('ofList');list.innerHTML='';
   var alertEl=document.getElementById('ofPortRichAlert');
   alertEl.classList.toggle('show',!!portRichAlert);
@@ -3836,17 +3836,36 @@ function ofRenderResults(offices,label,portRichAlert){
   document.getElementById('ofResults').style.display='block';
 }
 
+// City/State coordinates lookup for PA, NJ, NY metro area
+var OF_CITIES={'philadelphia pa':[39.952,-75.164],'philly pa':[39.952,-75.164],'allentown pa':[40.608,-75.49],'reading pa':[40.336,-75.927],'wilkes-barre pa':[41.246,-75.881],'wilkes barre pa':[41.246,-75.881],'scranton pa':[41.409,-75.662],'hazleton pa':[40.958,-75.975],'lancaster pa':[40.038,-76.306],'york pa':[39.963,-76.728],'harrisburg pa':[40.274,-76.884],'bethlehem pa':[40.625,-75.37],'easton pa':[40.691,-75.211],'norristown pa':[40.122,-75.34],'pottstown pa':[40.245,-75.65],'west chester pa':[39.961,-75.607],'chester pa':[39.849,-75.356],'doylestown pa':[40.31,-75.13],'lansdale pa':[40.241,-75.284],'quakertown pa':[40.442,-75.34],'king of prussia pa':[40.089,-75.394],'media pa':[39.917,-75.388],'phoenixville pa':[40.131,-75.515],'coatesville pa':[39.983,-75.824],'pottsville pa':[40.686,-76.195],'williamsport pa':[41.241,-77.001],'carlisle pa':[40.202,-77.189],'chambersburg pa':[39.937,-77.661],'waynesboro pa':[39.757,-77.578],'stroudsburg pa':[41.006,-75.195],'east stroudsburg pa':[41.002,-75.181],'levittown pa':[40.155,-74.829],'bristol pa':[40.101,-74.861],'bensalem pa':[40.104,-74.942],'cherry hill nj':[39.935,-74.939],'camden nj':[39.926,-75.12],'trenton nj':[40.217,-74.743],'atlantic city nj':[39.364,-74.423],'vineland nj':[39.486,-75.026],'mount laurel nj':[39.934,-74.892],'moorestown nj':[39.969,-74.949],'marlton nj':[39.891,-74.922],'voorhees nj':[39.841,-74.951],'haddonfield nj':[39.892,-75.038],'collingswood nj':[39.918,-75.071],'woodbury nj':[39.838,-75.153],'glassboro nj':[39.703,-75.112],'new york ny':[40.713,-74.006],'newark nj':[40.736,-74.172],'jersey city nj':[40.728,-74.078],'paterson nj':[40.917,-74.171],'elizabeth nj':[40.664,-74.211],'new brunswick nj':[40.486,-74.451],'princeton nj':[40.349,-74.659],'morristown nj':[40.797,-74.481],'hackensack nj':[40.886,-74.043],'hoboken nj':[40.744,-74.032],'wilmington de':[39.746,-75.547],'dover de':[39.158,-75.525],'darby pa':[39.917,-75.259],'upper darby pa':[39.959,-75.26],'drexel hill pa':[39.948,-75.304],'havertown pa':[39.981,-75.316],'broomall pa':[39.969,-75.353],'springfield pa':[39.932,-75.32],'ridley park pa':[39.881,-75.321],'swarthmore pa':[39.902,-75.35],'ardmore pa':[40.007,-75.285],'bryn mawr pa':[40.022,-75.316],'wayne pa':[40.044,-75.388],'malvern pa':[40.036,-75.514],'exton pa':[40.029,-75.62],'downingtown pa':[40.006,-75.703],'collegeville pa':[40.186,-75.452],'conshohocken pa':[40.082,-75.302],'plymouth meeting pa':[40.102,-75.274],'blue bell pa':[40.153,-75.266],'fort washington pa':[40.137,-75.209],'ambler pa':[40.154,-75.221],'jenkintown pa':[40.096,-75.126],'abington pa':[40.114,-75.117],'cheltenham pa':[40.063,-75.133],'elkins park pa':[40.074,-75.127],'glenside pa':[40.089,-75.152],'wyncote pa':[40.088,-75.147],'willow grove pa':[40.144,-75.116],'warminster pa':[40.199,-75.089],'horsham pa':[40.178,-75.128],'north wales pa':[40.211,-75.279],'souderton pa':[40.312,-75.325],'sellersville pa':[40.354,-75.305],'chalfont pa':[40.289,-75.209],'warrington pa':[40.249,-75.156],'newtown pa':[40.228,-74.937],'yardley pa':[40.246,-74.839],'morrisville pa':[40.206,-74.787],'langhorne pa':[40.175,-74.923],'southampton pa':[40.187,-75.009],'feasterville pa':[40.149,-75.004],'hatboro pa':[40.175,-75.106],'old city philadelphia pa':[39.953,-75.145],'port richmond philadelphia pa':[39.988,-75.102],'germantown philadelphia pa':[40.034,-75.172],'ne philly pa':[40.068,-75.034],'northeast philadelphia pa':[40.068,-75.034],'kensington pa':[39.981,-75.127],'fishtown pa':[39.975,-75.133],'south philly pa':[39.929,-75.17],'north philly pa':[39.986,-75.153],'west philly pa':[39.955,-75.218],'center city pa':[39.952,-75.164],'manayunk pa':[40.026,-75.226],'roxborough pa':[40.037,-75.226],'chestnut hill pa':[40.072,-75.208],'mt airy pa':[40.058,-75.189],'olney pa':[40.034,-75.121],'frankford pa':[40.021,-75.082],'mayfair pa':[40.046,-75.062],'torresdale pa':[40.067,-75.001],'somerton pa':[40.105,-75.017],'bustleton pa':[40.085,-75.037],'bridesburg pa':[39.987,-75.072],'tacony pa':[40.021,-75.041]};
+
 function ofFindOffices(){
   var errEl=document.getElementById('ofError');errEl.style.display='none';
-  var zip=document.getElementById('ofZip').value.trim();
-  if(!zip||!/^\d{5}$/.test(zip)){errEl.textContent='Please enter a valid 5-digit ZIP code.';errEl.style.display='block';return}
+  var input=document.getElementById('ofZip').value.trim();
+  if(!input){errEl.textContent='Please enter a ZIP code or city name.';errEl.style.display='block';return}
 
-  var cleanZip=zip.replace(/\D/g,'').slice(0,5);
-  var coords=ofFindNearestZip(cleanZip);
-  if(!coords){errEl.textContent='ZIP code '+cleanZip+' was not found. It may be outside our coverage area.';errEl.style.display='block';return}
+  var coords=null, label='';
 
-  var exact=OF_ZIP_COORDS[cleanZip];
-  var label='ZIP '+cleanZip+(exact?'':' (approximate)');
+  // Check if it's a zip code (all digits, 5 chars)
+  var cleanZip=input.replace(/\D/g,'');
+  if(/^\d{5}$/.test(cleanZip)){
+    coords=ofFindNearestZip(cleanZip);
+    var exact=OF_ZIP_COORDS[cleanZip];
+    label='ZIP '+cleanZip+(exact?'':' (approximate)');
+    if(!coords){errEl.textContent='ZIP code '+cleanZip+' was not found. Try entering a city name instead.';errEl.style.display='block';return}
+  } else {
+    // Try city/state lookup
+    var cityKey=input.toLowerCase().replace(/[,\.]+/g,' ').replace(/\s+/g,' ').trim();
+    // Try exact match first
+    if(OF_CITIES[cityKey]){coords=OF_CITIES[cityKey];label=input;}
+    else {
+      // Try partial match
+      var matches=Object.keys(OF_CITIES).filter(function(k){return k.indexOf(cityKey)!==-1||cityKey.indexOf(k.split(' ').slice(0,-1).join(' '))!==-1});
+      if(matches.length>0){coords=OF_CITIES[matches[0]];label=matches[0].split(' ').map(function(w){return w.charAt(0).toUpperCase()+w.slice(1)}).join(' ');}
+    }
+    if(!coords){errEl.textContent='Could not find "'+input+'". Try a ZIP code or a city name like "Philadelphia, PA".';errEl.style.display='block';return}
+  }
+
   var patient={lat:coords[0],lng:coords[1]};
 
   var officesWithDist=OF_OFFICES.map(function(o){
@@ -3864,16 +3883,12 @@ function ofFindOffices(){
     return(a.minutes!=null?a.minutes:Infinity)-(b.minutes!=null?b.minutes:Infinity);
   });
 
-  // ── PORT RICHMOND / OLD CITY PREFERENTIAL RULE (FIXED) ──
-  // Only triggers when BOTH have valid drive times, BOTH are under 60 min away,
-  // AND they are within 5 min of each other
   var oldCityIdx=officesWithDist.findIndex(function(o){return o.name==='Old City'});
   var portRichIdx=officesWithDist.findIndex(function(o){return o.name==='Port Richmond'});
   var portRichAlert=false;
   if(oldCityIdx!==-1&&portRichIdx!==-1&&oldCityIdx<portRichIdx){
     var ocMin=officesWithDist[oldCityIdx].minutes;
     var prMin=officesWithDist[portRichIdx].minutes;
-    // Both must have real drive times (not null) and both must be reasonably close
     if(ocMin!=null&&prMin!=null&&ocMin<60&&prMin<60&&Math.abs(ocMin-prMin)<=5){
       var pr=officesWithDist.splice(portRichIdx,1)[0];
       officesWithDist.unshift(pr);
