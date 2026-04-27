@@ -499,20 +499,20 @@
   <div class="modal" style="width:720px;max-height:90vh;overflow-y:auto">
     <div class="modal-header"><h2 id="refModalTitle">Register New Referral</h2><button class="modal-close" onclick="closeRefModal()">&times;</button></div>
     <div class="modal-body"><div class="form-grid">
-      <div class="form-group"><label>Patient Last Name</label><input type="text" id="fLastName" placeholder="Last Name"></div>
-      <div class="form-group"><label>Patient First Name</label><input type="text" id="fFirstName" placeholder="First Name"></div>
+      <div class="form-group"><label>Patient Last Name <span style="color:var(--red)">*</span></label><input type="text" id="fLastName" placeholder="Last Name"></div>
+      <div class="form-group"><label>Patient First Name <span style="color:var(--red)">*</span></label><input type="text" id="fFirstName" placeholder="First Name"></div>
       <div class="form-group"><label>Patient DOB</label><input type="date" id="fDOB"></div>
       <div class="form-group"><label>Patient Phone</label><input type="tel" id="fPhone" placeholder="(555) 123-4567" oninput="formatPhone(this)"></div>
       <div class="form-group"><label>Patient Email</label><input type="email" id="fEmail" placeholder="patient@email.com"></div>
-      <div class="form-group"><label>Case Type</label><select id="fCaseType"><option value="WC">WC</option><option value="MVA">MVA</option><option value="NJ MVA">NJ MVA</option><option value="PI">PI</option></select></div>
-      <div class="form-group"><label>Date of Injury</label><input type="date" id="fDOI"></div>
-      <div class="form-group"><label>Clinic Location</label><select id="fLocation"><option value="">— Select —</option><option>Allentown</option><option>Wilkes Barre</option><option>Old City</option><option>Hazleton</option><option>Williamsport</option><option>Carlisle</option><option>Lansdale</option><option>Reading</option><option>Port Richmond</option><option>Germantown</option><option>NE Philly</option><option>Darby</option><option>Cherry Hill NJ</option></select></div>
+      <div class="form-group"><label>Case Type <span style="color:var(--red)">*</span></label><select id="fCaseType"><option value="WC">WC</option><option value="MVA">MVA</option><option value="NJ MVA">NJ MVA</option><option value="PI">PI</option></select></div>
+      <div class="form-group"><label>Date of Injury <span style="color:var(--red)">*</span></label><input type="date" id="fDOI"></div>
+      <div class="form-group"><label>Clinic Location <span style="color:var(--red)">*</span></label><select id="fLocation"><option value="">— Select —</option><option>Allentown</option><option>Wilkes Barre</option><option>Old City</option><option>Hazleton</option><option>Williamsport</option><option>Carlisle</option><option>Lansdale</option><option>Reading</option><option>Port Richmond</option><option>Germantown</option><option>NE Philly</option><option>Darby</option><option>Cherry Hill NJ</option></select></div>
       <div class="form-group"><label>Preferred Language</label><select id="fLanguage"><option>English</option><option>Spanish</option><option>Other</option></select></div>
       <div class="form-group"><label>Attorney Name</label><input type="text" id="fAttorney"></div>
       <div class="form-group"><label>Law Firm</label><input type="text" id="fLawFirm" list="lawFirmList" placeholder="Select or type law firm" oninput="checkBlockedFirm()"><datalist id="lawFirmList"></datalist><div id="fLawFirmWarning" style="display:none;font-size:11px;font-weight:700;color:white;background:var(--red);padding:6px 10px;border-radius:var(--radius-sm);margin-top:4px">⚠️ DO NOT SCHEDULE — We do not participate with this law firm.</div></div>
       <div class="form-group"><label>Law Firm Contact</label><input type="text" id="fLawContact" placeholder="Phone / Email"></div>
-      <div class="form-group"><label>Referral Source</label><input type="text" id="fRefSource" list="refSourceList" placeholder="Type or select a source"><datalist id="refSourceList"></datalist></div>
-      <div class="form-group"><label>Referred / Registered Date</label><input type="date" id="fRegDate"></div>
+      <div class="form-group"><label>Referral Source <span style="color:var(--red)">*</span></label><input type="text" id="fRefSource" list="refSourceList" placeholder="Type or select a source"><datalist id="refSourceList"></datalist></div>
+      <div class="form-group"><label>Referred / Registered Date <span style="color:var(--red)">*</span></label><input type="date" id="fRegDate"></div>
       <div class="form-group"><label>Scheduled Appointment Date</label><input type="date" id="fApptDate" onchange="if(this.value&&document.getElementById('fStatus').value==='Pending Scheduling')document.getElementById('fStatus').value='Scheduled'"></div>
       <div class="form-group"><label>New Patient Paperwork Completed?</label><select id="fPaperwork"><option value="no">No</option><option value="yes">Yes</option></select></div>
       <div class="form-group"><label>Status</label><select id="fStatus" onchange="toggleLostReasonReg()"><option value="Pending Scheduling">Pending Scheduling</option><option value="Scheduled">Scheduled</option><option value="Active Treatment">Active Treatment</option><option value="Completed">Completed</option><option value="Patient Lost">Patient Lost — Unable to Schedule</option></select></div>
@@ -619,7 +619,7 @@
       <div class="form-group"><label>Patient DOB</label><input type="date" id="cDOB"></div>
       <div class="form-group"><label>Date of Injury</label><input type="date" id="cDOI"></div>
       <div class="form-group"><label>Case Type</label><select id="cCaseType"><option value="WC">WC</option><option value="MVA">MVA</option><option value="NJ MVA">NJ MVA</option><option value="PI">PI</option></select></div>
-      <div class="form-group"><label>Clinic Location</label><select id="cLocation" onchange="cmAutoAssign()"><option value="">— Select —</option><option>Allentown</option><option>Wilkes Barre</option><option>Old City</option><option>Hazleton</option><option>Williamsport</option><option>Carlisle</option><option>Lansdale</option><option>Reading</option><option>Port Richmond</option><option>Germantown</option><option>NE Philly</option><option>Darby</option><option>Cherry Hill NJ</option></select></div>
+      <div class="form-group"><label>Clinic Location <span style="color:var(--red)">*</span></label><select id="cLocation" onchange="cmAutoAssign()"><option value="">— Select —</option><option>Allentown</option><option>Wilkes Barre</option><option>Old City</option><option>Hazleton</option><option>Williamsport</option><option>Carlisle</option><option>Lansdale</option><option>Reading</option><option>Port Richmond</option><option>Germantown</option><option>NE Philly</option><option>Darby</option><option>Cherry Hill NJ</option></select></div>
       <div class="form-group"><label>Assigned To</label><select id="cAssigned"><option>Sean</option><option>Sophia</option><option>Kent</option></select></div>
       <div class="form-group"><label>Upcoming Appointment</label><input type="date" id="cApptDate"></div>
       <div class="form-group"><label>Last Records Sent</label><input type="date" id="cRecordsSent"></div>
@@ -844,7 +844,9 @@ const CM_STAFF = ['Sean','Sophia','Kent'];
 const PSR_STAFF = ['Miguel','Samuel'];
 const STAFF_COLORS = {'Paola':'#1a7f7a','Abigail':'#c8973a','Maria':'#0f2240','Juan':'#6b5b95','Sean':'#1a7f7a','Sophia':'#c8973a','Kent':'#0f2240','Miguel':'#b5651d','Samuel':'#4a6741'};
 const LOCATIONS = ['Allentown','Wilkes Barre','Old City','Hazleton','Williamsport','Carlisle','Lansdale','Reading','Port Richmond','Germantown','NE Philly','Darby','Cherry Hill NJ'];
-const LOC_CM = {'Old City':'Sean','NE Philly':'Sean','Darby':'Sean','Cherry Hill NJ':'Sean','Reading':'Sean','Allentown':'Sophia','Lansdale':'Sophia','Germantown':'Sophia','Wilkes Barre':'Kent','Williamsport':'Kent','Carlisle':'Kent'};
+const LOC_CM = {}; // No longer used for assignment — kept for compatibility
+var cmRobinIdx = 0;
+function getNextCM(){const s=CM_STAFF[cmRobinIdx%CM_STAFF.length];cmRobinIdx++;return s;}
 
 const K = { refs:'cp11_refs', mkt:'cp11_mkt', cases:'cp11_cases', contacts:'cp11_contacts', mktContacts:'cp11_mktcontacts', crmMet:'cp11_crmmet', cmMet:'cp11_cmmet', callLog:'cp11_calllog', pin:'cp11_pin', robin:'cp11_robin', tickets:'cp11_tickets', psrMet:'cp11_psrmet' };
 
@@ -974,6 +976,130 @@ function exportMktData(){
     return[m.name,m.contact,m.type,m.stage,m.volume||'',m.effort||'',m.dateInitiated,m.nextFollowUp||'',refCount,roi.label];
   });
   downloadCSV('carepath-marketing-'+today()+'.csv',h,rows);
+}
+
+// Visual bar chart helper
+var CHART_COLORS=['#1a7f7a','#c8973a','#c0392b','#2c3e50','#3498db','#e67e22','#9b59b6','#27ae60','#e74c3c','#1abc9c'];
+function renderBarChart(data,maxWidth){
+  if(!data||data.length===0)return'';
+  var max=Math.max.apply(null,data.map(function(d){return d.value}))||1;
+  var h='<div style="margin:12px 0">';
+  data.forEach(function(d,i){
+    var pct=Math.round(d.value/max*100);
+    var color=d.color||CHART_COLORS[i%CHART_COLORS.length];
+    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">';
+    h+='<div style="width:120px;font-size:11px;font-weight:600;color:var(--navy);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(d.label)+'">'+esc(d.label)+'</div>';
+    h+='<div style="flex:1;background:var(--gray-100);border-radius:4px;height:22px;overflow:hidden">';
+    h+='<div style="width:'+pct+'%;background:'+color+';height:100%;border-radius:4px;min-width:'+(d.value>0?'2px':'0')+';transition:width 0.5s"></div>';
+    h+='</div>';
+    h+='<div style="font-size:11px;font-weight:700;color:var(--navy);min-width:30px">'+d.value+'</div>';
+    h+='</div>';
+  });
+  h+='</div>';
+  return h;
+}
+function renderPieChart(data){
+  if(!data||data.length===0)return'';
+  var total=data.reduce(function(s,d){return s+d.value},0);
+  if(total===0)return'';
+  var h='<div style="display:flex;align-items:center;gap:24px;margin:12px 0;flex-wrap:wrap">';
+  // SVG donut
+  var size=140,cx=70,cy=70,r=55,circ=2*Math.PI*r;
+  h+='<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'">';
+  var offset=0;
+  data.forEach(function(d,i){
+    var pct=d.value/total;
+    var dash=pct*circ;
+    var color=d.color||CHART_COLORS[i%CHART_COLORS.length];
+    h+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="24" stroke-dasharray="'+dash+' '+(circ-dash)+'" stroke-dashoffset="-'+offset+'" transform="rotate(-90 '+cx+' '+cy+')"/>';
+    offset+=dash;
+  });
+  h+='<text x="'+cx+'" y="'+cy+'" text-anchor="middle" dy="0.35em" style="font-family:DM Sans;font-size:18px;font-weight:700;fill:var(--navy)">'+total+'</text>';
+  h+='</svg>';
+  // Legend
+  h+='<div>';
+  data.forEach(function(d,i){
+    var color=d.color||CHART_COLORS[i%CHART_COLORS.length];
+    var pct=total>0?Math.round(d.value/total*100):0;
+    h+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:11px"><div style="width:10px;height:10px;border-radius:2px;background:'+color+'"></div><span style="font-weight:600;color:var(--navy)">'+esc(d.label)+'</span><span style="color:var(--gray-500)">'+d.value+' ('+pct+'%)</span></div>';
+  });
+  h+='</div></div>';
+  return h;
+}
+
+// Download visual report as printable HTML
+function downloadVisualReport(){
+  var w=window.open('','_blank');
+  var total=refs.length,pending=refs.filter(function(r){return!r.apptDate&&r.status!=='Completed'&&r.status!=='Patient Lost'}).length;
+  var lost=refs.filter(function(r){return r.status==='Patient Lost'}).length;
+  var scheduled=refs.filter(function(r){return r.apptDate}).length;
+  var completed=refs.filter(function(r){return r.apptOutcome==='completed'}).length;
+
+  var caseTypes={};refs.forEach(function(r){var t=r.caseType||'Unknown';caseTypes[t]=(caseTypes[t]||0)+1;});
+  var locCounts={};refs.forEach(function(r){var l=r.location||'Unknown';locCounts[l]=(locCounts[l]||0)+1;});
+  var firmCounts={};refs.forEach(function(r){var f=r.lawFirm||'No Firm';firmCounts[f]=(firmCounts[f]||0)+1;});
+  var srcCounts={};refs.forEach(function(r){var s=r.referralSource||'Unknown';srcCounts[s]=(srcCounts[s]||0)+1;});
+
+  var html='<!DOCTYPE html><html><head><title>CarePath Analytics Report — '+today()+'</title>';
+  html+='<style>body{font-family:Arial,sans-serif;max-width:900px;margin:0 auto;padding:20px;color:#1a2332}h1{color:#1a7f7a;border-bottom:3px solid #1a7f7a;padding-bottom:8px}h2{color:#1a2332;margin-top:28px;border-bottom:1px solid #ddd;padding-bottom:6px}.stat{display:inline-block;text-align:center;padding:14px 20px;margin:6px;background:#f8f9fa;border-radius:8px;min-width:120px}.stat-val{font-size:24px;font-weight:700;color:#1a7f7a}.stat-lbl{font-size:11px;color:#666;margin-top:2px}table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}th{background:#1a2332;color:white;padding:8px 10px;text-align:left}td{padding:6px 10px;border-bottom:1px solid #eee}.bar-wrap{background:#eee;height:18px;border-radius:4px;overflow:hidden}.bar{height:100%;border-radius:4px}@media print{body{padding:0}}</style></head><body>';
+  html+='<h1>CarePath Injury Centers — Analytics Report</h1>';
+  html+='<p style="color:#666;font-size:12px">Generated: '+new Date().toLocaleString()+'</p>';
+
+  html+='<div style="text-align:center;margin:16px 0">';
+  html+='<div class="stat"><div class="stat-val">'+total+'</div><div class="stat-lbl">Total Referrals</div></div>';
+  html+='<div class="stat"><div class="stat-val">'+scheduled+'</div><div class="stat-lbl">Scheduled</div></div>';
+  html+='<div class="stat"><div class="stat-val">'+completed+'</div><div class="stat-lbl">Completed</div></div>';
+  html+='<div class="stat"><div class="stat-val">'+pending+'</div><div class="stat-lbl">Pending</div></div>';
+  html+='<div class="stat"><div class="stat-val" style="color:#c0392b">'+lost+'</div><div class="stat-lbl">Lost</div></div>';
+  html+='</div>';
+
+  // Case type breakdown
+  html+='<h2>Case Type Breakdown</h2><table><tr><th>Case Type</th><th>Count</th><th>%</th><th>Chart</th></tr>';
+  Object.entries(caseTypes).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
+    var pct=Math.round(e[1]/total*100);
+    html+='<tr><td><strong>'+e[0]+'</strong></td><td>'+e[1]+'</td><td>'+pct+'%</td><td><div class="bar-wrap"><div class="bar" style="width:'+pct+'%;background:#1a7f7a"></div></div></td></tr>';
+  });
+  html+='</table>';
+
+  // By location
+  html+='<h2>Referrals by Location</h2><table><tr><th>Location</th><th>Count</th><th>%</th><th>Chart</th></tr>';
+  Object.entries(locCounts).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
+    var pct=Math.round(e[1]/total*100);
+    html+='<tr><td><strong>'+e[0]+'</strong></td><td>'+e[1]+'</td><td>'+pct+'%</td><td><div class="bar-wrap"><div class="bar" style="width:'+pct+'%;background:#c8973a"></div></div></td></tr>';
+  });
+  html+='</table>';
+
+  // By law firm
+  html+='<h2>Patients by Law Firm</h2><table><tr><th>Law Firm</th><th>Patients</th><th>%</th></tr>';
+  Object.entries(firmCounts).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
+    html+='<tr><td><strong>'+e[0]+'</strong></td><td>'+e[1]+'</td><td>'+Math.round(e[1]/total*100)+'%</td></tr>';
+  });
+  html+='</table>';
+
+  // Referral source conversion
+  html+='<h2>Referral Source Conversion</h2><table><tr><th>Source</th><th>Total</th><th>Scheduled</th><th>Completed</th><th>Lost</th></tr>';
+  var srcConv={};refs.forEach(function(r){var s=r.referralSource||'Unknown';if(!srcConv[s])srcConv[s]={t:0,sc:0,co:0,lo:0};srcConv[s].t++;if(r.apptDate)srcConv[s].sc++;if(r.apptOutcome==='completed')srcConv[s].co++;if(r.status==='Patient Lost')srcConv[s].lo++;});
+  Object.entries(srcConv).sort(function(a,b){return b[1].t-a[1].t}).forEach(function(e){
+    html+='<tr><td><strong>'+e[0]+'</strong></td><td>'+e[1].t+'</td><td>'+e[1].sc+'</td><td>'+e[1].co+'</td><td style="color:#c0392b">'+(e[1].lo||0)+'</td></tr>';
+  });
+  html+='</table>';
+
+  // Lost patients
+  if(lost>0){
+    html+='<h2>Patient Leakage</h2>';
+    var reasons={};refs.filter(function(r){return r.status==='Patient Lost'}).forEach(function(r){var rs=r.lostReason||'Unknown';reasons[rs]=(reasons[rs]||0)+1;});
+    html+='<table><tr><th>Reason</th><th>Count</th><th>%</th></tr>';
+    Object.entries(reasons).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
+      html+='<tr><td><strong>'+e[0]+'</strong></td><td>'+e[1]+'</td><td>'+Math.round(e[1]/lost*100)+'%</td></tr>';
+    });
+    html+='</table>';
+  }
+
+  html+='<hr style="margin-top:28px"><p style="font-size:10px;color:#999;text-align:center">CarePath Injury Centers CRM — Confidential Report</p>';
+  html+='</body></html>';
+  w.document.write(html);
+  w.document.close();
+  w.print();
 }
 // Law firm dropdown list
 const LAW_FIRMS=['10x Law','Altman Law','Bishop, Dorfman, Kroupa and Bishop','Brandon J Broderick','Brandon Swartz','Brett Tessler & Associates','Clearfield & Kofsky','Cohen, Feeley, Altemose and Rambo','Dashevsky, Horwitz, Kuhn, Novello & Shorr','Cordisco & Saile','Dion, Solomon & Shapiro','Eric Brauer Law','Fellerman Law','Foxworth Law Group','Fredsone, Statmore, and Bitterman','Galerman Law','Gibbons & Crighton','H. Rosen Law','Hourigan, Kluger & Quinn P.C.','J Fine Law','Jeffery S Gross, Esquire','Kavensky Law','Kitlay Law Offices','Kotlar Hernandez and Cohen Law Offices','Kwartler Manus','Lassiter & Associates','Law Offices of Jared S. Zafran LLC','Law Offices of Eric B. Brauer','Lundy Law','Malamut Law','Martin Law','Matt Breslin','Krasno Krasno','Mednick, Mezyk & Kredo','Morgan & Morgan','O\'Donnel Law Offices','Pearson Kutcher','Pond Lehocky','Pujlos Law Group','Robinson Law','Rodden, Rodden & Breslin Law','Rosenbaum & Associates','Simon & Simon','Stampone Law','Stark & Stark','Stern & Cohen','Stoll Medical Group','Swartz Culleton','Wapner Neuman Weinerman'];
@@ -1233,6 +1359,7 @@ function renderActiveModule() {
 // ══════════════════════════════════════════════════════════════════════
 function crmAlerts() {
   const now = today(), alerts = [];
+  var needsSave = false;
   refs.forEach(r => {
     try {
     if (r.status === 'Completed' || r.status === 'Patient Lost') return;
@@ -1240,7 +1367,7 @@ function crmAlerts() {
     if (!r.apptDate && r.createdDate) {
       const ck = r.lastContactDate || r.createdDate;
       if (daysBtw(ck, now) >= 2) {
-        if (!r.alertAssignedTo) { r.alertAssignedTo = getNextStaff(); saveRefs(); }
+        if (!r.alertAssignedTo) { r.alertAssignedTo = getNextStaff(); needsSave = true; }
         alerts.push({ id:r.id, type:'scheduling', patientName:r.patientName, assignedTo:r.alertAssignedTo, daysSinceReg:daysBtw(r.createdDate,now), daysSinceContact:daysBtw(ck,now), location:r.location, caseType:r.caseType, phone:r.phone, email:r.email, referralSource:r.referralSource });
       }
     }
@@ -1262,11 +1389,11 @@ function crmAlerts() {
         if (r.apptOutcome === 'no_show' || r.apptOutcome === 'cancelled') {
           const ck2 = r.lastApptFollowUp || r.apptDate;
           if (daysBtw(ck2, now) >= 2) {
-            if (!r.apptConfirmAssignedTo) { r.apptConfirmAssignedTo = getNextStaff(); saveRefs(); }
+            if (!r.apptConfirmAssignedTo) { r.apptConfirmAssignedTo = getNextStaff(); needsSave = true; }
             alerts.push({ id:r.id, type:'reschedule', patientName:r.patientName, assignedTo:r.apptConfirmAssignedTo, apptDate:r.apptDate, daysPastAppt:past, daysSinceFollowUp:daysBtw(ck2,now), previousOutcome:r.apptOutcome, location:r.location, caseType:r.caseType, phone:r.phone, email:r.email });
           }
         } else if (!r.apptOutcome) {
-          if (!r.apptConfirmAssignedTo) { r.apptConfirmAssignedTo = getNextStaff(); saveRefs(); }
+          if (!r.apptConfirmAssignedTo) { r.apptConfirmAssignedTo = getNextStaff(); needsSave = true; }
           alerts.push({ id:r.id, type:'appt_confirm', patientName:r.patientName, assignedTo:r.apptConfirmAssignedTo, apptDate:r.apptDate, daysPastAppt:past, location:r.location, caseType:r.caseType, phone:r.phone, email:r.email });
         }
       }
@@ -1277,7 +1404,7 @@ function crmAlerts() {
       var lastEmailCheck = r.emailLastFollowUp || r.createdDate;
       var daysSinceEmail = daysBtw(lastEmailCheck, now);
       if (daysSinceEmail >= 7 || !r.emailLastFollowUp) {
-        alerts.push({ id:r.id, type:'missing_email', patientName:r.patientName, assignedTo:r.alertAssignedTo||getNextStaff(), location:r.location, caseType:r.caseType, phone:r.phone, daysSince:daysSinceEmail });
+        alerts.push({ id:r.id, type:'missing_email', patientName:r.patientName, assignedTo:r.alertAssignedTo, location:r.location, caseType:r.caseType, phone:r.phone, daysSince:daysSinceEmail });
       }
     }
     // Custom alerts / reminders
@@ -1290,6 +1417,7 @@ function crmAlerts() {
     });
     } catch(e){console.error('CRM alert error for',r.patientName,e);}
   });
+  if(needsSave) saveRefs();
   return alerts;
 }
 
@@ -1368,6 +1496,7 @@ function updateAllBadges() {
   const ca = crmAlerts(), cma = cmAlerts();
   const openTk = tickets.filter(t=>t.status!=='Resolved').length;
   const total = ca.length + cma.length + openTk;
+  console.log('Badge update — CRM alerts:',ca.length,'CM alerts:',cma.length,'Tickets:',openTk,'Total:',total);
   document.getElementById('topAlertCount').textContent = total;
   document.getElementById('topAlertCount').style.display = total > 0 ? 'flex' : 'none';
   document.getElementById('crmAlertBadge').textContent = ca.length;
@@ -1791,14 +1920,39 @@ function renderCrmMgrDash(el) {
   const srcCounts={};filteredRefs.forEach(r=>{const s=r.referralSource||'Unknown';srcCounts[s]=(srcCounts[s]||0)+1;});
   let h = renderManagerExecSummary();
   h+='<div class="page-title">Manager Analytics</div><div class="page-subtitle">Referral process overview.</div>';
-  h+='<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">'+downloadBtn('Export All Referrals','exportAllMetrics()')+downloadBtn('Export Cases','exportCases()')+'</div>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">'+downloadBtn('Export All Referrals','exportAllMetrics()')+downloadBtn('Export Cases','exportCases()')+downloadBtn('📊 Print Visual Report','downloadVisualReport()')+'</div>';
+
   h+='<div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap"><span style="font-size:11px;font-weight:600;color:var(--navy)">Date Range:</span><input type="date" class="search-input" id="crmMgrFrom" value="'+crmMgrDateFrom+'" onchange="renderCrmMgrDash(document.getElementById(\'sec-crm-mgr-dashboard\'))" style="width:140px"><span style="font-size:11px;color:var(--gray-400)">to</span><input type="date" class="search-input" id="crmMgrTo" value="'+crmMgrDateTo+'" onchange="renderCrmMgrDash(document.getElementById(\'sec-crm-mgr-dashboard\'))" style="width:140px">';
   if(crmMgrDateFrom||crmMgrDateTo)h+='<button class="btn-resolve" onclick="crmMgrDateFrom=\'\';crmMgrDateTo=\'\';renderCrmMgrDash(document.getElementById(\'sec-crm-mgr-dashboard\'))" style="font-size:10px">Clear</button>';
   h+='</div>';
   // Summary stats
   var ctSummary=Object.entries(caseTypes).map(function(e){return e[0]+': '+e[1]}).join(' · ');
   var leakageRate=total>0?Math.round(lostCount/total*100):0;
+  var scheduledCount=filteredRefs.filter(function(r){return r.apptDate}).length;
+  var completedCount=filteredRefs.filter(function(r){return r.apptOutcome==='completed'}).length;
   h += '<div class="stats-row" style="grid-template-columns:repeat(5,1fr)">'+stat('Total Referrals',total,'teal')+stat('Pending Scheduling',pending,'gold')+stat('Active Alerts',alerts,'red')+stat('Patients Lost',lostCount+(leakageRate>0?' ('+leakageRate+'%)':''),'red')+stat('Case Mix',ctSummary||'—','')+'</div>';
+
+  // Visual overview — case type donut + status breakdown
+  h+='<div class="table-card"><div class="table-header"><h3>Visual Overview</h3></div><div style="padding:16px 18px;display:flex;gap:32px;flex-wrap:wrap">';
+  // Case type pie
+  h+='<div><div style="font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin-bottom:8px">Case Types</div>';
+  var ctData=Object.entries(caseTypes).map(function(e,i){return{label:e[0],value:e[1],color:CHART_COLORS[i%CHART_COLORS.length]}});
+  h+=renderPieChart(ctData);
+  h+='</div>';
+  // Status pie
+  var statuses={};filteredRefs.forEach(function(r){var s=r.status||'Unknown';statuses[s]=(statuses[s]||0)+1;});
+  h+='<div><div style="font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin-bottom:8px">Patient Status</div>';
+  var stColors={'Pending Scheduling':'#c8973a','Scheduled':'#3498db','Active Treatment':'#1a7f7a','Completed':'#27ae60','Patient Lost':'#c0392b'};
+  var stData=Object.entries(statuses).map(function(e){return{label:e[0],value:e[1],color:stColors[e[0]]||'#95a5a6'}});
+  h+=renderPieChart(stData);
+  h+='</div>';
+  h+='</div></div>';
+
+  // Location bar chart
+  h+='<div class="table-card"><div class="table-header"><h3>Referrals by Location</h3></div><div style="padding:8px 18px">';
+  var locData=Object.entries(locCounts).sort(function(a,b){return b[1]-a[1]}).map(function(e,i){return{label:e[0],value:e[1],color:CHART_COLORS[i%CHART_COLORS.length]}});
+  h+=renderBarChart(locData);
+  h+='</div></div>';
 
   // Patients by Law Firm
   var firmCounts={};filteredRefs.forEach(function(r){var f=r.lawFirm||'No Firm';firmCounts[f]=(firmCounts[f]||0)+1;});
@@ -1850,15 +2004,6 @@ function renderCrmMgrDash(el) {
   });
   h += '</tbody></table></div></div>';
 
-  // By Location
-  h += '<div class="table-card"><div class="table-header"><h3>By Location</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Location</th><th>Count</th><th>%</th></tr></thead><tbody>';
-  Object.entries(locCounts).sort((a,b)=>b[1]-a[1]).forEach(([l,c])=>{h+='<tr><td style="font-weight:600">'+esc(l)+'</td><td>'+c+'</td><td>'+(total>0?Math.round(c/total*100):0)+'%</td></tr>';});
-  h += '</tbody></table></div></div>';
-
-  // Top Referral Sources
-  h += '<div class="table-card"><div class="table-header"><h3>Top Referral Sources</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Source</th><th>Count</th><th>%</th></tr></thead><tbody>';
-  Object.entries(srcCounts).sort((a,b)=>b[1]-a[1]).slice(0,15).forEach(([s,c])=>{h+='<tr><td style="font-weight:600">'+esc(s)+'</td><td>'+c+'</td><td>'+(total>0?Math.round(c/total*100):0)+'%</td></tr>';});
-  h += '</tbody></table></div></div>';
   // Patient Leakage Analytics
   var lostRefs=filteredRefs.filter(function(r){return r.status==='Patient Lost'});
   if(lostRefs.length>0){
@@ -2105,14 +2250,21 @@ function closeRefModal(){document.getElementById('referralModal').classList.remo
 function saveReferral() {
   var lastName = document.getElementById('fLastName').value.trim();
   var firstName = document.getElementById('fFirstName').value.trim();
-  if (!lastName) {alert('Enter patient last name.');return;}
-  if (!firstName) {alert('Enter patient first name.');return;}
+  if (!lastName) {alert('Last Name is required.');return;}
+  if (!firstName) {alert('First Name is required.');return;}
   // Capitalize properly
   function capWord(w){return w.charAt(0).toUpperCase()+w.slice(1).toLowerCase();}
   lastName = lastName.split(/\s+/).map(capWord).join(' ');
   firstName = firstName.split(/\s+/).map(capWord).join(' ');
   var name = lastName + ', ' + firstName;
   const dob = document.getElementById('fDOB').value;
+
+  // Required fields
+  if (!document.getElementById('fCaseType').value) {alert('Case Type is required.');return;}
+  if (!document.getElementById('fDOI').value) {alert('Date of Injury is required.');return;}
+  if (!document.getElementById('fLocation').value) {alert('Clinic Location is required.');return;}
+  if (!document.getElementById('fRefSource').value.trim()) {alert('Referral Source is required.');return;}
+  if (!document.getElementById('fRegDate').value) {alert('Referred / Registered Date is required.');return;}
 
   // Duplicate detection: check name+DOB against existing referrals
   if (!editingRefId) {
@@ -2186,7 +2338,7 @@ function deleteReferral(){if(!editingRefId||!confirm('Delete?'))return;refs=refs
 
 // ── Auto-create case from referral ──
 function createCaseFromRef(r) {
-  const assigned = LOC_CM[r.location] || CM_STAFF[0]; // Use location mapping or default
+  const assigned = getNextCM();
   const alertInfo = r.alertType || '';
   cases.push({
     id: genId(),
@@ -2828,7 +2980,7 @@ function deleteCmManualAlert(){
 // Case CRUD
 let editingCaseId=null;
 
-function cmAutoAssign(){const l=document.getElementById('cLocation').value;if(LOC_CM[l])document.getElementById('cAssigned').value=LOC_CM[l]}
+function cmAutoAssign(){document.getElementById('cAssigned').value=getNextCM()}
 
 function openNewCaseModal(){editingCaseId=null;document.getElementById('caseModalTitle').textContent='New Case';document.getElementById('btnDeleteCase').style.display='none';['cPatient','cDOB','cDOI','cApptDate','cRecordsSent','cMissingInfo','cFollowUp'].forEach(id=>document.getElementById(id).value='');document.getElementById('cCaseType').value='WC';document.getElementById('cLocation').value='';document.getElementById('cAssigned').value='Sean';document.getElementById('cStatus').value='Active';document.getElementById('caseModal').classList.add('show')}
 
@@ -4017,7 +4169,14 @@ function verifyPIN(){var pin=storeGet(K.pin)||'0824';if(pin.charAt(0)==='"')pin=
 // SEED DATA
 // ══════════════════════════════════════════════════════════════════════
 function seed(){
-  // No test data — production system
+  // One-time redistribution of cases to even round-robin
+  if(cases.length>0 && !storeGet('cp11_redistributed')){
+    var activeCases=cases.filter(function(c){return c.status==='Active'});
+    activeCases.forEach(function(c,i){c.assigned=CM_STAFF[i%CM_STAFF.length];});
+    saveCases();
+    storeSet('cp11_redistributed','true');
+    console.log('Cases redistributed evenly among CM staff');
+  }
 }
 
 
