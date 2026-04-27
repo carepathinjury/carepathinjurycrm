@@ -676,6 +676,23 @@
   </div>
 </div>
 
+<!-- Add Custom Alert Modal -->
+<div class="modal-overlay" id="addAlertModal">
+  <div class="modal" style="width:480px">
+    <div class="modal-header"><h2>Add Alert / Reminder</h2><button class="modal-close" onclick="document.getElementById('addAlertModal').classList.remove('show')">&times;</button></div>
+    <div class="modal-body">
+      <p id="addAlertPatientName" style="font-weight:600;font-size:14px;color:var(--navy);margin-bottom:14px"></p>
+      <div class="form-grid" style="grid-template-columns:1fr">
+        <div class="form-group"><label>Alert Title</label><input type="text" id="aaTitle" placeholder="e.g. Follow up with attorney on records"></div>
+        <div class="form-group"><label>Reminder Date</label><input type="date" id="aaDate"></div>
+        <div class="form-group"><label>Assign To</label><select id="aaAssign"></select></div>
+        <div class="form-group"><label>Notes (optional)</label><textarea id="aaNotes" placeholder="Additional details..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="document.getElementById('addAlertModal').classList.remove('show')">Cancel</button><button class="btn-save" onclick="saveCustomAlert()">Add Alert</button></div>
+  </div>
+</div>
+
 <!-- Call Log Modal -->
 <div class="modal-overlay" id="callLogModal">
   <div class="modal" style="width:520px">
@@ -1217,6 +1234,7 @@ function renderActiveModule() {
 function crmAlerts() {
   const now = today(), alerts = [];
   refs.forEach(r => {
+    try {
     if (r.status === 'Completed' || r.status === 'Patient Lost') return;
     // Scheduling alert
     if (!r.apptDate && r.createdDate) {
@@ -1262,6 +1280,15 @@ function crmAlerts() {
         alerts.push({ id:r.id, type:'missing_email', patientName:r.patientName, assignedTo:r.alertAssignedTo||getNextStaff(), location:r.location, caseType:r.caseType, phone:r.phone, daysSince:daysSinceEmail });
       }
     }
+    // Custom alerts / reminders
+    (r.customAlerts||[]).forEach(function(ca){
+      if(ca.completed)return;
+      var daysUntil=daysBtw(now,ca.reminderDate);
+      if(daysUntil<=0){
+        alerts.push({ id:r.id, type:'custom_alert', patientName:r.patientName, assignedTo:ca.assignedTo||r.alertAssignedTo, location:r.location, caseType:r.caseType, phone:r.phone, email:r.email, alertTitle:ca.title, alertNote:ca.note, alertId:ca.id, daysPast:Math.abs(daysUntil) });
+      }
+    });
+    } catch(e){console.error('CRM alert error for',r.patientName,e);}
   });
   return alerts;
 }
@@ -1272,6 +1299,7 @@ function crmAlerts() {
 function cmAlerts() {
   const now = today(), alerts = [];
   cases.forEach(c => {
+    try {
     if (c.status !== 'Active') return;
     const dismissed = c.dismissedAlerts || [];
     const missingParts = (c.missingInfo||'').split(' | ').filter(Boolean);
@@ -1330,11 +1358,13 @@ function cmAlerts() {
         alerts.push({ type:'manual-'+ma.id, severity:'red', title:ma.title||'Custom Reminder', message:ma.note||'', caseId:c.id, patientName:c.patientName, assigned:c.assigned, location:c.location, daysSince:daysBtw(ma.reminderDate,now), isManual:true, manualId:ma.id });
       }
     });
+    } catch(e){console.error('CM alert error for',c.patientName,e);}
   });
   return alerts;
 }
 
 function updateAllBadges() {
+  try {
   const ca = crmAlerts(), cma = cmAlerts();
   const openTk = tickets.filter(t=>t.status!=='Resolved').length;
   const total = ca.length + cma.length + openTk;
@@ -1344,9 +1374,10 @@ function updateAllBadges() {
   document.getElementById('crmAlertBadge').style.display = ca.length > 0 ? 'inline' : 'none';
   document.getElementById('cmAlertBadge').textContent = cma.length;
   document.getElementById('cmAlertBadge').style.display = cma.length > 0 ? 'inline' : 'none';
-  CRM_STAFF.forEach(s => { const b=document.getElementById('crmBadge-'+s); const n=ca.filter(a=>a.assignedTo===s).length; b.textContent=n; b.style.display=n>0?'inline':'none'; });
-  CM_STAFF.forEach(s => { const b=document.getElementById('cmBadge-'+s); const n=cma.filter(a=>a.assigned===s).length; b.textContent=n; b.style.display=n>0?'inline':'none'; });
+  CRM_STAFF.forEach(s => { const b=document.getElementById('crmBadge-'+s); if(b){const n=ca.filter(a=>a.assignedTo===s).length; b.textContent=n; b.style.display=n>0?'inline':'none';} });
+  CM_STAFF.forEach(s => { const b=document.getElementById('cmBadge-'+s); if(b){const n=cma.filter(a=>a.assigned===s).length; b.textContent=n; b.style.display=n>0?'inline':'none';} });
   const tkBadge=document.getElementById('psrTicketBadge');if(tkBadge){tkBadge.textContent=openTk;tkBadge.style.display=openTk>0?'inline':'none';}
+  } catch(e){console.error('Badge update error:',e);}
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -1450,6 +1481,10 @@ function renderCrmAlertCard(a, i) {
     title='Records Still Needed Before Appointment!';
     desc='<strong>'+esc(a.patientName)+'</strong> appt on '+fmtDate(a.apptDate)+'. Outstanding: '+recList+contact;
     btn='<button class="btn-resolve" style="background:rgba(200,151,58,0.12);color:var(--gold);border-color:rgba(200,151,58,0.3)" onclick="openEditRefModal(\''+a.id+'\')">Update Records</button>';
+  } else if(a.type==='custom_alert'){
+    title=a.alertTitle||'Custom Reminder';
+    desc='<strong>'+esc(a.patientName)+'</strong>'+(a.alertNote?' — '+esc(a.alertNote):'')+(a.daysPast>0?' · '+a.daysPast+'d overdue':'  · Due today');
+    btn='<button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="completeCustomAlert(\''+a.id+'\',\''+a.alertId+'\')">Complete</button>';
   } else if(a.type==='missing_email'){
     title='Missing Patient Email — Obtain or Confirm N/A';
     desc='<strong>'+esc(a.patientName)+'</strong> has no email on file. Contact to obtain or confirm patient has no email. '+a.daysSince+'d since last check.<br><span style="font-size:10px;color:var(--gray-600)">'+esc(a.phone||'')+'</span>';
@@ -1918,7 +1953,32 @@ function showCrmDetail(id) {
   if (!r.apptDate && r.status !== 'Completed') h += '<button class="btn-cancel" style="border-color:var(--teal);color:var(--teal)" onclick="openResolveModal(\''+r.id+'\')">Schedule Patient</button>';
   h += '<button class="btn-primary" onclick="openUpdateLogModal(\''+r.id+'\')" style="font-size:11px;padding:7px 14px">Log Update</button>';
   h += '<button class="btn-primary" onclick="openCallLogModal(\''+r.id+'\',\''+(linked?linked.id:'')+'\')" style="font-size:11px;padding:7px 14px;background:var(--gold)">📞 Log Call</button>';
+  h += '<button class="btn-primary" onclick="openAddAlertModal(\''+r.id+'\')" style="font-size:11px;padding:7px 14px;background:var(--red)">🔔 Add Alert</button>';
   h += '</div></div>';
+
+  // Custom alerts section
+  var customAlerts=(r.customAlerts||[]).filter(function(a){return !a.completed});
+  var completedAlerts=(r.customAlerts||[]).filter(function(a){return a.completed});
+  if(r.customAlerts&&r.customAlerts.length>0){
+    h+='<div class="detail-card"><div class="detail-header" style="background:var(--red);padding:14px 20px"><h3 style="font-size:14px">Custom Alerts / Reminders ('+customAlerts.length+' active)</h3></div><div style="padding:14px 18px">';
+    customAlerts.forEach(function(a){
+      var daysUntil=daysBtw(today(),a.reminderDate);
+      var urgency=daysUntil<0?'<span style="color:var(--red);font-weight:700">OVERDUE ('+Math.abs(daysUntil)+'d)</span>':daysUntil===0?'<span style="color:var(--red);font-weight:700">TODAY</span>':'<span style="color:var(--gold)">In '+daysUntil+' days</span>';
+      h+='<div style="padding:10px 0;border-bottom:1px solid var(--gray-200);display:flex;gap:12px;align-items:flex-start">';
+      h+='<div style="flex:1"><div style="font-weight:700;font-size:13px;color:var(--navy)">'+esc(a.title)+'</div>';
+      if(a.note)h+='<div style="font-size:11px;color:var(--gray-600);margin-top:3px">'+esc(a.note)+'</div>';
+      h+='<div style="font-size:10px;margin-top:4px">Remind: '+fmtDate(a.reminderDate)+' · '+urgency+' · Assigned: <strong>'+esc(a.assignedTo||'—')+'</strong> · Created by '+esc(a.createdBy||'—')+' on '+fmtDate(a.createdDate)+'</div></div>';
+      h+='<button onclick="completeCustomAlert(\''+r.id+'\',\''+a.id+'\')" style="font-size:10px;padding:5px 10px;background:var(--teal);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-family:DM Sans;font-weight:600;white-space:nowrap">✓ Done</button></div>';
+    });
+    if(completedAlerts.length>0){
+      h+='<div style="margin-top:12px;padding-top:10px;border-top:2px solid var(--gray-200)"><div style="font-size:10px;font-weight:700;color:var(--gray-400);text-transform:uppercase;margin-bottom:6px">Completed ('+completedAlerts.length+')</div>';
+      completedAlerts.forEach(function(a){
+        h+='<div style="padding:4px 0;font-size:11px;color:var(--gray-400);text-decoration:line-through">'+esc(a.title)+' — completed '+fmtDate(a.completedDate)+'</div>';
+      });
+      h+='</div>';
+    }
+    h+='</div></div>';
+  }
 
   // Update log
   if(r.updateLog&&r.updateLog.length>0){
@@ -3163,6 +3223,54 @@ function renderMktAnalytics(el){
 
 let callLogRefId=null, callLogCaseId=null;
 
+var addAlertRefId=null;
+function openAddAlertModal(refId){
+  addAlertRefId=refId;
+  var r=refs.find(function(x){return x.id===refId});
+  if(!r)return;
+  document.getElementById('addAlertPatientName').textContent=r.patientName;
+  document.getElementById('aaTitle').value='';
+  document.getElementById('aaDate').value='';
+  document.getElementById('aaNotes').value='';
+  // Populate assign dropdown with all staff
+  var sel=document.getElementById('aaAssign');sel.innerHTML='';
+  var assignedTo=r.alertAssignedTo||r.apptConfirmAssignedTo||currentUser;
+  var allStaff=CRM_STAFF.concat(CM_STAFF).filter(function(v,i,a){return a.indexOf(v)===i});
+  allStaff.forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;if(s===assignedTo)o.selected=true;sel.appendChild(o);});
+  document.getElementById('addAlertModal').classList.add('show');
+}
+function saveCustomAlert(){
+  if(!addAlertRefId)return;
+  var title=document.getElementById('aaTitle').value.trim();
+  var date=document.getElementById('aaDate').value;
+  var assignTo=document.getElementById('aaAssign').value;
+  var notes=document.getElementById('aaNotes').value.trim();
+  if(!title){alert('Please enter an alert title.');return;}
+  if(!date){alert('Please select a reminder date.');return;}
+  var r=refs.find(function(x){return x.id===addAlertRefId});
+  if(!r)return;
+  if(!r.customAlerts)r.customAlerts=[];
+  r.customAlerts.push({id:genId(),title:title,reminderDate:date,assignedTo:assignTo,note:notes,createdBy:currentUser,createdDate:today(),completed:false});
+  saveRefs();
+  // Also add to linked case if exists
+  var linked=cases.find(function(c){return c.sourceRefId===addAlertRefId});
+  if(linked){
+    if(!linked.manualAlerts)linked.manualAlerts=[];
+    linked.manualAlerts.push({id:genId(),title:title+' (from CRM)',note:notes,reminderDate:date,createdDate:today(),completed:false});
+    saveCases();
+  }
+  document.getElementById('addAlertModal').classList.remove('show');
+  showCrmDetail(addAlertRefId);
+}
+function completeCustomAlert(refId,alertId){
+  var r=refs.find(function(x){return x.id===refId});
+  if(!r||!r.customAlerts)return;
+  var a=r.customAlerts.find(function(x){return x.id===alertId});
+  if(a){a.completed=true;a.completedDate=today();a.completedBy=currentUser;}
+  saveRefs();
+  showCrmDetail(refId);
+}
+
 function openCallLogModal(refId, caseId){
   callLogRefId=refId;callLogCaseId=caseId;
   document.getElementById('clDate').value=today();
@@ -3931,7 +4039,7 @@ document.addEventListener('click', function(e) {
 });
 
 // Modal close on overlay
-['referralModal','resolveModal','apptConfirmModal','updateLogModal','marketingModal','caseModal','callLogModal','ticketModal','recordsBillingModal','missingInfoModal','introEmailModal','cmAlertModal','mktActivityModal','mktContactModal','pinModal','changePwModal'].forEach(id=>{
+['referralModal','resolveModal','apptConfirmModal','updateLogModal','marketingModal','caseModal','callLogModal','ticketModal','recordsBillingModal','missingInfoModal','introEmailModal','cmAlertModal','mktActivityModal','mktContactModal','pinModal','changePwModal','addAlertModal'].forEach(id=>{
   document.getElementById(id).addEventListener('click',function(e){if(e.target===this){this.classList.remove('show');if(id==='pinModal'&&currentUser==='Manager'&&!managerUnlocked)logout();}});
 });
 </script>
