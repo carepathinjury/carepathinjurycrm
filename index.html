@@ -612,20 +612,38 @@
 
 <!-- Case Modal -->
 <div class="modal-overlay" id="caseModal">
-  <div class="modal" style="width:680px">
+  <div class="modal" style="width:720px;max-height:90vh;overflow-y:auto">
     <div class="modal-header"><h2 id="caseModalTitle">New Case</h2><button class="modal-close" onclick="closeCaseModal()">&times;</button></div>
     <div class="modal-body"><div class="form-grid">
-      <div class="form-group"><label>Patient Name</label><input type="text" id="cPatient" placeholder="Last, First"></div>
+      <div class="form-group"><label>Patient Last Name <span style="color:var(--red)">*</span></label><input type="text" id="cLastName" placeholder="Last Name"></div>
+      <div class="form-group"><label>Patient First Name <span style="color:var(--red)">*</span></label><input type="text" id="cFirstName" placeholder="First Name"></div>
       <div class="form-group"><label>Patient DOB</label><input type="date" id="cDOB"></div>
-      <div class="form-group"><label>Date of Injury</label><input type="date" id="cDOI"></div>
-      <div class="form-group"><label>Case Type</label><select id="cCaseType"><option value="WC">WC</option><option value="MVA">MVA</option><option value="NJ MVA">NJ MVA</option><option value="PI">PI</option><option value="PHI">PHI</option></select></div>
-      <div class="form-group"><label>Clinic Location <span style="color:var(--red)">*</span></label><select id="cLocation" onchange="cmAutoAssign()"><option value="">— Select —</option><option>Allentown</option><option>Wilkes Barre</option><option>Old City</option><option>Hazleton</option><option>Williamsport</option><option>Carlisle</option><option>Lansdale</option><option>Reading</option><option>Port Richmond</option><option>Germantown</option><option>NE Philly</option><option>Darby</option><option>Cherry Hill NJ</option></select></div>
+      <div class="form-group"><label>Patient Phone</label><input type="tel" id="cPhone" placeholder="(555) 123-4567" oninput="formatPhone(this)"></div>
+      <div class="form-group"><label>Patient Email</label><input type="email" id="cEmail" placeholder="patient@email.com"></div>
+      <div class="form-group"><label>Case Type <span style="color:var(--red)">*</span></label><select id="cCaseType"><option value="WC">WC</option><option value="MVA">MVA</option><option value="NJ MVA">NJ MVA</option><option value="PI">PI</option><option value="PHI">PHI</option></select></div>
+      <div class="form-group"><label>Date of Injury <span style="color:var(--red)">*</span></label><input type="date" id="cDOI"></div>
+      <div class="form-group"><label>Clinic Location <span style="color:var(--red)">*</span></label><select id="cLocation"><option value="">— Select —</option><option>Allentown</option><option>Wilkes Barre</option><option>Old City</option><option>Hazleton</option><option>Williamsport</option><option>Carlisle</option><option>Lansdale</option><option>Reading</option><option>Port Richmond</option><option>Germantown</option><option>NE Philly</option><option>Darby</option><option>Cherry Hill NJ</option></select></div>
+      <div class="form-group"><label>Preferred Language</label><select id="cLanguage"><option>English</option><option>Spanish</option><option>Other</option></select></div>
+      <div class="form-group"><label>Attorney Name</label><input type="text" id="cAttorney"></div>
+      <div class="form-group"><label>Law Firm</label><input type="text" id="cLawFirm" list="lawFirmList" placeholder="Select or type law firm"></div>
+      <div class="form-group"><label>Law Firm Contact</label><input type="text" id="cLawContact" placeholder="Phone / Email"></div>
+      <div class="form-group"><label>Referral Source</label><input type="text" id="cRefSource" list="refSourceList" placeholder="Type or select a source"></div>
       <div class="form-group"><label>Assigned To</label><select id="cAssigned"><option>Sean</option><option>Sophia</option><option>Kent</option></select></div>
-      <div class="form-group"><label>Upcoming Appointment</label><input type="date" id="cApptDate"></div>
+      <div class="form-group"><label>Next Scheduled Appointment</label><input type="date" id="cApptDate"></div>
       <div class="form-group"><label>Last Records Sent</label><input type="date" id="cRecordsSent"></div>
       <div class="form-group"><label>Status</label><select id="cStatus"><option value="Active">Active</option><option value="Settled/Complete">Settled / Complete</option></select></div>
+      <div class="form-group full"><label>Alerts / Missing Info (select all that apply)</label>
+        <div id="cAlertCheckboxes" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;padding:5px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);background:var(--gray-100);cursor:pointer"><input type="checkbox" class="caseAlertCb" value="Missing Claim Info" style="accent-color:var(--teal)"> Missing Claim Info</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;padding:5px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);background:var(--gray-100);cursor:pointer"><input type="checkbox" class="caseAlertCb" value="Need LOP" style="accent-color:var(--teal)"> Need LOP</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;padding:5px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);background:var(--gray-100);cursor:pointer"><input type="checkbox" class="caseAlertCb" value="Missing Attorney Info" style="accent-color:var(--teal)"> Missing Attorney Info</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;padding:5px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);background:var(--gray-100);cursor:pointer"><input type="checkbox" class="caseAlertCb" value="Missing Adjuster" style="accent-color:var(--teal)"> Missing Adjuster</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;padding:5px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);background:var(--gray-100);cursor:pointer"><input type="checkbox" class="caseAlertCb" value="Need PIP Status Update" style="accent-color:var(--teal)"> Need PIP Status Update</label>
+        </div>
+      </div>
       <div class="form-group full"><label>Missing Info Notes</label><textarea id="cMissingInfo"></textarea></div>
       <div class="form-group"><label>Last Follow-Up for Missing Info</label><input type="date" id="cFollowUp"></div>
+      <div class="form-group full"><label>Notes</label><textarea id="cNotes"></textarea></div>
     </div></div>
     <div class="modal-footer"><button class="btn-delete" id="btnDeleteCase" style="display:none" onclick="deleteCase()">Delete</button><button class="btn-cancel" onclick="closeCaseModal()">Cancel</button><button class="btn-save" onclick="saveCase()">Save Case</button></div>
   </div>
@@ -3075,15 +3093,32 @@ let editingCaseId=null;
 
 function cmAutoAssign(){document.getElementById('cAssigned').value=getNextCM()}
 
-function openNewCaseModal(){editingCaseId=null;document.getElementById('caseModalTitle').textContent='New Case';document.getElementById('btnDeleteCase').style.display='none';['cPatient','cDOB','cDOI','cApptDate','cRecordsSent','cMissingInfo','cFollowUp'].forEach(id=>document.getElementById(id).value='');document.getElementById('cCaseType').value='WC';document.getElementById('cLocation').value='';document.getElementById('cAssigned').value='Sean';document.getElementById('cStatus').value='Active';document.getElementById('caseModal').classList.add('show')}
+function openNewCaseModal(){editingCaseId=null;document.getElementById('caseModalTitle').textContent='New Case';document.getElementById('btnDeleteCase').style.display='none';['cLastName','cFirstName','cDOB','cPhone','cEmail','cDOI','cAttorney','cLawFirm','cLawContact','cRefSource','cApptDate','cRecordsSent','cMissingInfo','cFollowUp','cNotes'].forEach(id=>document.getElementById(id).value='');document.getElementById('cCaseType').value='WC';document.getElementById('cLocation').value='';document.getElementById('cLanguage').value='English';document.getElementById('cAssigned').value=getNextCM();document.getElementById('cStatus').value='Active';document.querySelectorAll('.caseAlertCb').forEach(cb=>{cb.checked=false});populateLawFirmDropdown();populateRefSourceDropdown();document.getElementById('caseModal').classList.add('show')}
 
-function openEditCaseModal(id){const c=cases.find(x=>x.id===id);if(!c)return;editingCaseId=id;document.getElementById('caseModalTitle').textContent='Edit Case';document.getElementById('btnDeleteCase').style.display='block';document.getElementById('cPatient').value=c.patientName||'';document.getElementById('cDOB').value=c.dob||'';document.getElementById('cDOI').value=c.doi||'';document.getElementById('cCaseType').value=c.caseType||'WC';document.getElementById('cLocation').value=c.location||'';document.getElementById('cAssigned').value=c.assigned||'Sean';document.getElementById('cApptDate').value=c.apptDate||'';document.getElementById('cRecordsSent').value=c.recordsSent||'';document.getElementById('cMissingInfo').value=c.missingInfo||'';document.getElementById('cFollowUp').value=c.followUpDate||'';document.getElementById('cStatus').value=c.status||'Active';document.getElementById('caseModal').classList.add('show')}
+function openEditCaseModal(id){const c=cases.find(x=>x.id===id);if(!c)return;editingCaseId=id;document.getElementById('caseModalTitle').textContent='Edit Case';document.getElementById('btnDeleteCase').style.display='block';var nameParts=(c.patientName||'').split(',');document.getElementById('cLastName').value=(nameParts[0]||'').trim();document.getElementById('cFirstName').value=(nameParts[1]||'').trim();document.getElementById('cDOB').value=c.dob||'';document.getElementById('cPhone').value=c.phone||'';document.getElementById('cEmail').value=c.email||'';document.getElementById('cDOI').value=c.doi||'';document.getElementById('cCaseType').value=c.caseType||'WC';document.getElementById('cLocation').value=c.location||'';document.getElementById('cLanguage').value=c.language||'English';document.getElementById('cAttorney').value=c.attorney||'';document.getElementById('cLawFirm').value=c.lawFirm||'';document.getElementById('cLawContact').value=c.lawContact||'';document.getElementById('cRefSource').value=c.referralSource||'';document.getElementById('cAssigned').value=c.assigned||'Sean';document.getElementById('cApptDate').value=c.apptDate||'';document.getElementById('cRecordsSent').value=c.recordsSent||'';document.getElementById('cMissingInfo').value=c.missingInfo||'';document.getElementById('cFollowUp').value=c.followUpDate||'';document.getElementById('cNotes').value=c.notes||'';document.getElementById('cStatus').value=c.status||'Active';var alerts=(c.missingInfo||'').split(' | ').filter(Boolean);document.querySelectorAll('.caseAlertCb').forEach(cb=>{cb.checked=alerts.includes(cb.value)});populateLawFirmDropdown();populateRefSourceDropdown();document.getElementById('caseModal').classList.add('show')}
 
 function closeCaseModal(){document.getElementById('caseModal').classList.remove('show');editingCaseId=null}
 
 function saveCase(){
-  const name=document.getElementById('cPatient').value.trim();if(!name){alert('Enter patient name.');return;}
-  const data={patientName:name,dob:document.getElementById('cDOB').value,doi:document.getElementById('cDOI').value,caseType:document.getElementById('cCaseType').value,location:document.getElementById('cLocation').value,assigned:document.getElementById('cAssigned').value,apptDate:document.getElementById('cApptDate').value,recordsSent:document.getElementById('cRecordsSent').value,missingInfo:document.getElementById('cMissingInfo').value,followUpDate:document.getElementById('cFollowUp').value,status:document.getElementById('cStatus').value};
+  var lastName=document.getElementById('cLastName').value.trim();
+  var firstName=document.getElementById('cFirstName').value.trim();
+  if(!lastName){alert('Last Name is required.');return;}
+  if(!firstName){alert('First Name is required.');return;}
+  function capWord(w){return w.charAt(0).toUpperCase()+w.slice(1).toLowerCase();}
+  lastName=lastName.split(/\s+/).map(capWord).join(' ');
+  firstName=firstName.split(/\s+/).map(capWord).join(' ');
+  var name=lastName+', '+firstName;
+  if(!document.getElementById('cCaseType').value){alert('Case Type is required.');return;}
+  if(!document.getElementById('cDOI').value){alert('Date of Injury is required.');return;}
+  if(!document.getElementById('cLocation').value){alert('Clinic Location is required.');return;}
+  // Build missing info from checkboxes + notes
+  var checkedAlerts=[];document.querySelectorAll('.caseAlertCb').forEach(function(cb){if(cb.checked)checkedAlerts.push(cb.value)});
+  var missingInfoNotes=document.getElementById('cMissingInfo').value.trim();
+  var missingInfo=checkedAlerts.length>0?checkedAlerts.join(' | '):'';
+  if(missingInfoNotes&&!missingInfo)missingInfo=missingInfoNotes;
+  else if(missingInfoNotes&&missingInfo)missingInfo=missingInfo+' | '+missingInfoNotes;
+
+  const data={patientName:name,dob:document.getElementById('cDOB').value,phone:document.getElementById('cPhone').value.trim(),email:document.getElementById('cEmail').value.trim(),doi:document.getElementById('cDOI').value,caseType:document.getElementById('cCaseType').value,location:document.getElementById('cLocation').value,language:document.getElementById('cLanguage').value,attorney:document.getElementById('cAttorney').value.trim(),lawFirm:document.getElementById('cLawFirm').value.trim(),lawContact:document.getElementById('cLawContact').value.trim(),referralSource:document.getElementById('cRefSource').value.trim(),assigned:document.getElementById('cAssigned').value,apptDate:document.getElementById('cApptDate').value,recordsSent:document.getElementById('cRecordsSent').value,missingInfo:missingInfo,followUpDate:document.getElementById('cFollowUp').value,notes:document.getElementById('cNotes').value.trim(),status:document.getElementById('cStatus').value};
   if(editingCaseId){const idx=cases.findIndex(c=>c.id===editingCaseId);if(idx!==-1){const prev=cases[idx];if(data.status==='Settled/Complete'&&prev.status==='Active'&&!prev.settledDate)data.settledDate=today();else data.settledDate=prev.settledDate||'';if(data.status==='Active')data.settledDate='';cases[idx]={...prev,...data};}}
   else{cases.push({id:genId(),...data,createdDate:today(),settledDate:data.status==='Settled/Complete'?today():'',dismissedAlerts:[],manualAlerts:[]});}
   saveCases();closeCaseModal();renderActiveModule();if(cmCurrentPage==='cm-detail'&&editingCaseId)showCmDetail(editingCaseId);
