@@ -698,6 +698,7 @@
   <div class="modal" style="width:520px">
     <div class="modal-header"><h2>Log Call</h2><button class="modal-close" onclick="closeCallLogModal()">&times;</button></div>
     <div class="modal-body"><div class="form-grid">
+      <div class="form-group full"><label>Attach to Patient (optional)</label><div style="position:relative"><input type="text" id="clPatientSearch" placeholder="Type patient name to search..." oninput="searchCallLogPatient()" autocomplete="off"><input type="hidden" id="clPatientId"><div id="clPatientResults" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:2px solid var(--gray-200);border-radius:var(--radius-sm);max-height:150px;overflow-y:auto;z-index:10;box-shadow:var(--shadow-sm)"></div></div><div id="clPatientAttached" style="display:none;margin-top:4px;font-size:11px;padding:5px 10px;background:rgba(26,127,122,0.08);border-radius:var(--radius-sm);color:var(--teal);font-weight:600"></div></div>
       <div class="form-group"><label>Date</label><input type="date" id="clDate"></div>
       <div class="form-group"><label>Direction</label><select id="clDirection"><option>Inbound</option><option>Outbound</option></select></div>
       <div class="form-group"><label>Party Contacted</label><select id="clParty"><option>Patient</option><option>Attorney</option><option>Law Firm Staff</option><option>Insurance Carrier</option><option>Physician Office</option><option>Family Member</option><option>Other</option></select></div>
@@ -3499,12 +3500,63 @@ function openCallLogModal(refId, caseId){
   document.getElementById('clDuration').value='';
   document.getElementById('clFlag').value='';
   document.getElementById('clFlagNoteGroup').style.display='none';
-  // Pre-fill phone from referral if available
-  if(refId){const r=refs.find(x=>x.id===refId);if(r&&r.phone)document.getElementById('clPhone').value=r.phone;}
-  else if(caseId){const c=cases.find(x=>x.id===caseId);if(c&&c.sourceRefId){const r=refs.find(x=>x.id===c.sourceRefId);if(r&&r.phone)document.getElementById('clPhone').value=r.phone;}}
+  document.getElementById('clPatientSearch').value='';
+  document.getElementById('clPatientId').value='';
+  document.getElementById('clPatientResults').style.display='none';
+  document.getElementById('clPatientAttached').style.display='none';
+  // Pre-fill from referral if available
+  if(refId){
+    var r=refs.find(x=>x.id===refId);
+    if(r){
+      if(r.phone)document.getElementById('clPhone').value=r.phone;
+      document.getElementById('clPatientId').value=refId;
+      document.getElementById('clPatientSearch').value=r.patientName;
+      document.getElementById('clPatientAttached').textContent='✓ Attached to: '+r.patientName;
+      document.getElementById('clPatientAttached').style.display='block';
+    }
+  } else if(caseId){
+    var c=cases.find(x=>x.id===caseId);
+    if(c&&c.sourceRefId){var r2=refs.find(x=>x.id===c.sourceRefId);if(r2){
+      if(r2.phone)document.getElementById('clPhone').value=r2.phone;
+      document.getElementById('clPatientId').value=c.sourceRefId;
+      document.getElementById('clPatientSearch').value=r2.patientName;
+      document.getElementById('clPatientAttached').textContent='✓ Attached to: '+r2.patientName;
+      document.getElementById('clPatientAttached').style.display='block';
+    }}
+  }
   document.getElementById('callLogModal').classList.add('show');
 }
-function closeCallLogModal(){document.getElementById('callLogModal').classList.remove('show');callLogRefId=null;callLogCaseId=null;}
+
+function searchCallLogPatient(){
+  var q=document.getElementById('clPatientSearch').value.trim().toLowerCase();
+  var results=document.getElementById('clPatientResults');
+  if(q.length<2){results.style.display='none';return;}
+  var matches=refs.filter(function(r){
+    return (r.patientName||'').toLowerCase().includes(q)||(r.phone||'').includes(q)||(r.dob||'').includes(q);
+  }).slice(0,8);
+  if(matches.length===0){results.innerHTML='<div style="padding:8px 12px;font-size:11px;color:var(--gray-400)">No patients found</div>';results.style.display='block';return;}
+  var h='';
+  matches.forEach(function(r){
+    h+='<div onclick="attachCallLogPatient(\''+r.id+'\')" style="padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--gray-100);display:flex;justify-content:space-between" onmouseover="this.style.background=\'var(--gray-100)\'" onmouseout="this.style.background=\'white\'">';
+    h+='<span style="font-weight:600;color:var(--navy)">'+esc(r.patientName)+'</span>';
+    h+='<span style="color:var(--gray-500);font-size:10px">'+esc(r.caseType||'')+' · '+esc(r.location||'')+' · '+fmtDate(r.dob)+'</span>';
+    h+='</div>';
+  });
+  results.innerHTML=h;results.style.display='block';
+}
+function attachCallLogPatient(refId){
+  var r=refs.find(function(x){return x.id===refId});if(!r)return;
+  callLogRefId=refId;
+  var c=cases.find(function(x){return x.sourceRefId===refId});
+  if(c)callLogCaseId=c.id;
+  document.getElementById('clPatientId').value=refId;
+  document.getElementById('clPatientSearch').value=r.patientName;
+  document.getElementById('clPatientResults').style.display='none';
+  document.getElementById('clPatientAttached').textContent='✓ Attached to: '+r.patientName;
+  document.getElementById('clPatientAttached').style.display='block';
+  if(r.phone&&!document.getElementById('clPhone').value)document.getElementById('clPhone').value=r.phone;
+}
+function closeCallLogModal(){document.getElementById('callLogModal').classList.remove('show');callLogRefId=null;callLogCaseId=null;document.getElementById('clPatientResults').style.display='none';}
 
 document.getElementById('clFlag').addEventListener('change',function(){document.getElementById('clFlagNoteGroup').style.display=this.value?'flex':'none'});
 
