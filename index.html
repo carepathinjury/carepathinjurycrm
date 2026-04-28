@@ -634,7 +634,7 @@
       <div class="form-group"><label>Date Case Opened</label><input type="date" id="cDateOpened"></div>
       <div class="form-group"><label>Next Scheduled Appointment</label><input type="date" id="cApptDate"></div>
       <div class="form-group"><label>Last Records Sent</label><input type="date" id="cRecordsSent"></div>
-      <div class="form-group"><label>Status</label><select id="cStatus"><option value="Active">Active</option><option value="Settled/Complete">Settled / Complete</option></select></div>
+      <div class="form-group"><label>Status</label><select id="cStatus"><option value="Active">Active</option><option value="In Litigation">In Litigation</option><option value="Settled/Closed">Settled / Closed</option><option value="Dropped">Dropped</option></select></div>
       <div class="form-group full"><label>Alerts / Missing Info (select all that apply)</label>
         <div id="cAlertCheckboxes" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">
           <label style="display:flex;align-items:center;gap:5px;font-size:12px;padding:5px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);background:var(--gray-100);cursor:pointer"><input type="checkbox" class="caseAlertCb" value="Missing Claim Info" style="accent-color:var(--teal)"> Missing Claim Info</label>
@@ -1545,7 +1545,13 @@ function cmAlerts() {
   const now = today(), alerts = [];
   cases.forEach(c => {
     try {
-    if (c.status !== 'Active') return;
+    if (c.status !== 'Active' && c.status !== 'In Litigation') {
+      // Settlement email alert for Settled/Closed cases
+      if(c.status==='Settled/Closed' && !c.settlementEmailSent){
+        alerts.push({ type:'settlement-email', severity:'gold', title:'Send Settlement Update Email', message:'Case has been settled/closed. Send settlement update email to attorney.', caseId:c.id, patientName:c.patientName, assigned:c.assigned, location:c.location, daysSince:daysBtw(c.settledDate||c.createdDate,now) });
+      }
+      return;
+    }
     const dismissed = c.dismissedAlerts || [];
     const missingParts = (c.missingInfo||'').split(' | ').filter(Boolean);
 
@@ -2618,16 +2624,29 @@ function renderCmPage(page) {
 }
 
 function renderCmDashboard(el) {
-  const active=cases.filter(c=>c.status==='Active'), settled=cases.filter(c=>c.status==='Settled/Complete');
+  const active=cases.filter(c=>c.status==='Active'), inLit=cases.filter(c=>c.status==='In Litigation'), settled=cases.filter(c=>c.status==='Settled/Closed'), dropped=cases.filter(c=>c.status==='Dropped');
   const alerts=cmAlerts();
   let h='<div class="page-title">Case Management</div><div class="page-subtitle">Overview of active cases, alerts, and workloads.</div>';
-  h+='<div class="stats-row">'+stat('Active Cases',active.length,'teal')+stat('Alerts',alerts.length,'red')+stat('Settled',settled.length,'')+stat('Total',cases.length,'gold')+'</div>';
+  h+='<div class="stats-row" style="grid-template-columns:repeat(6,1fr)">'+stat('Active',active.length,'teal')+stat('In Litigation',inLit.length,'gold')+stat('Alerts',alerts.length,'red')+stat('Settled/Closed',settled.length,'')+stat('Dropped',dropped.length,'red')+stat('Total',cases.length,'')+'</div>';
   if(alerts.length>0) alerts.slice(0,5).forEach((a,i)=>{h+=renderCmAlertCard(a,i);});
+  // Staff workload summary
+  h+='<div class="table-card"><div class="table-header"><h3>Staff Workload</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Case Manager</th><th>Active</th><th>In Litigation</th><th>Alerts</th><th>Settled</th><th>Dropped</th><th>Total</th></tr></thead><tbody>';
+  CM_STAFF.forEach(function(s){
+    var sc=cases.filter(function(c){return c.assigned===s});
+    var sa=sc.filter(function(c){return c.status==='Active'}).length;
+    var sl=sc.filter(function(c){return c.status==='In Litigation'}).length;
+    var ss=sc.filter(function(c){return c.status==='Settled/Closed'}).length;
+    var sd=sc.filter(function(c){return c.status==='Dropped'}).length;
+    var sal=alerts.filter(function(a){return a.assigned===s}).length;
+    h+='<tr><td style="font-weight:600">'+esc(s)+'</td><td>'+sa+'</td><td>'+sl+'</td><td>'+(sal>0?'<span style="color:var(--red);font-weight:700">'+sal+'</span>':'0')+'</td><td>'+ss+'</td><td>'+sd+'</td><td style="font-weight:700">'+sc.length+'</td></tr>';
+  });
+  h+='</tbody></table></div></div>';
   h+='<div class="table-card"><div class="table-header"><h3>Recent Cases</h3></div><div class="table-scroll"><table class="tbl" style="min-width:700px"><thead><tr><th>Patient</th><th>Type</th><th>Location</th><th>Assigned</th><th>Status</th><th>Days</th><th>Appt</th></tr></thead><tbody>';
-  cases.slice().sort((a,b)=>(b.createdDate||'').localeCompare(a.createdDate||'')).slice(0,8).forEach(c=>{
+  cases.slice().sort((a,b)=>(b.createdDate||'').localeCompare(a.createdDate||'')).slice(0,10).forEach(c=>{
     const days=c.createdDate?daysBtw(c.createdDate,c.settledDate||today()):0;const dc=days>90?'danger':days>45?'warn':'';
-    const al=cmAlerts().filter(a=>a.caseId===c.id).length>0;
-    h+='<tr class="'+(al?'has-alert':'')+'"><td><span class="patient-name" onclick="showCmDetail(\''+c.id+'\')">'+(al?'<span class="alert-dot"></span>':'')+esc(c.patientName)+'</span></td><td><span class="type-badge">'+esc(c.caseType)+'</span></td><td style="font-size:11px">'+esc(c.location||'—')+'</td><td style="font-size:11px">'+esc(c.assigned)+'</td><td><span class="status-badge '+(c.status==='Active'?'status-active':'status-settled')+'">'+esc(c.status)+'</span></td><td><span class="days-count '+dc+'">'+days+'</span></td><td style="font-size:11px">'+fmtDate(c.apptDate)+'</td></tr>';
+    var al=false;try{al=cmAlerts().filter(a=>a.caseId===c.id).length>0}catch(e){}
+    var stClass=c.status==='Active'?'status-active':c.status==='In Litigation'?'status-pending':'status-settled';
+    h+='<tr class="'+(al?'has-alert':'')+'"><td><span class="patient-name" onclick="showCmDetail(\''+c.id+'\')">'+(al?'<span class="alert-dot"></span>':'')+esc(c.patientName)+'</span></td><td><span class="type-badge">'+esc(c.caseType)+'</span></td><td style="font-size:11px">'+esc(c.location||'—')+'</td><td style="font-size:11px">'+esc(c.assigned)+'</td><td><span class="status-badge '+stClass+'">'+esc(c.status)+'</span></td><td><span class="days-count '+dc+'">'+days+'</span></td><td style="font-size:11px">'+fmtDate(c.apptDate)+'</td></tr>';
   });
   h+='</tbody></table></div></div>';
   el.innerHTML=h;
@@ -2644,6 +2663,8 @@ function renderCmAlertCard(a,i) {
     actionBtns+='<button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="openAdjusterResolveModal(\''+a.caseId+'\')">📋 Resolve</button>';
   } else if(a.type==='pip-status'){
     actionBtns+='<button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="openPipResolveModal(\''+a.caseId+'\')">📋 Resolve</button>';
+  } else if(a.type==='settlement-email'){
+    actionBtns+='<button class="btn-resolve" style="background:rgba(200,151,58,0.12);color:var(--gold);border-color:rgba(200,151,58,0.3)" onclick="markSettlementEmailSent(\''+a.caseId+'\')">✉ Mark Sent</button>';
   } else if(a.type==='records-billing'){
     actionBtns+='<button class="btn-resolve" style="background:rgba(200,151,58,0.12);color:var(--gold);border-color:rgba(200,151,58,0.3)" onclick="openRecordsBillingModal(\''+a.caseId+'\')">📄 Mark Sent</button>';
   } else {
@@ -2793,6 +2814,59 @@ function submitPipResolve(){
   if(cmCurrentPage==='cm-detail')showCmDetail(pipCaseId);
 }
 
+// ── UPDATE CASE STATUS ──
+function openCaseStatusModal(caseId){
+  var c=cases.find(function(x){return x.id===caseId});if(!c)return;
+  var html='<div class="modal-overlay show" id="caseStatusModal" style="z-index:300">';
+  html+='<div class="modal" style="width:460px"><div class="modal-header"><h2>Update Case Status</h2><button class="modal-close" onclick="document.getElementById(\'caseStatusModal\').remove()">&times;</button></div>';
+  html+='<div class="modal-body"><p style="font-weight:600;font-size:14px;color:var(--navy);margin-bottom:14px">'+esc(c.patientName)+'</p>';
+  html+='<p style="font-size:12px;color:var(--gray-600);margin-bottom:14px">Current Status: <strong>'+esc(c.status)+'</strong></p>';
+  html+='<div class="form-grid" style="grid-template-columns:1fr">';
+  html+='<div class="form-group"><label>New Status</label><select id="csNewStatus"><option value="Active">Active</option><option value="In Litigation">In Litigation</option><option value="Settled/Closed">Settled / Closed</option><option value="Dropped">Dropped</option></select></div>';
+  html+='<div class="form-group"><label>Date of Status Change</label><input type="date" id="csDate" value="'+today()+'"></div>';
+  html+='<div class="form-group"><label>Notes (optional)</label><textarea id="csNotes" placeholder="Reason for status change..."></textarea></div>';
+  html+='</div></div>';
+  html+='<div class="modal-footer"><button class="btn-cancel" onclick="document.getElementById(\'caseStatusModal\').remove()">Cancel</button><button class="btn-save" onclick="submitCaseStatus(\''+caseId+'\')">Update Status</button></div>';
+  html+='</div></div>';
+  document.body.insertAdjacentHTML('beforeend',html);
+  document.getElementById('csNewStatus').value=c.status;
+}
+function submitCaseStatus(caseId){
+  var c=cases.find(function(x){return x.id===caseId});if(!c)return;
+  var newStatus=document.getElementById('csNewStatus').value;
+  var dateStr=document.getElementById('csDate').value;
+  var notes=document.getElementById('csNotes').value.trim();
+  if(!dateStr){alert('Please enter a date.');return;}
+  var oldStatus=c.status;
+  c.status=newStatus;
+  c.statusChangeDate=dateStr;
+  if(newStatus==='Settled/Closed'||newStatus==='Dropped'){
+    c.settledDate=dateStr;
+    c.settlementEmailSent=false;
+  }
+  if(newStatus==='In Litigation'){
+    c.inLitigation=true;
+  }
+  if(newStatus==='Active'){
+    c.settledDate='';c.inLitigation=false;
+  }
+  // Log the status change
+  if(!c.statusHistory)c.statusHistory=[];
+  c.statusHistory.push({from:oldStatus,to:newStatus,date:dateStr,notes:notes,changedBy:currentUser});
+  saveCases();
+  document.getElementById('caseStatusModal').remove();
+  renderActiveModule();
+  showCmDetail(caseId);
+}
+function markSettlementEmailSent(caseId){
+  var c=cases.find(function(x){return x.id===caseId});if(!c)return;
+  if(confirm('Confirm that the settlement update email has been sent?')){
+    c.settlementEmailSent=true;
+    c.settlementEmailDate=today();
+    saveCases();renderActiveModule();showCmDetail(caseId);
+  }
+}
+
 // ── FAX LOG ──
 var faxLog=[];
 function saveFaxLog(){storeSet('cp11_faxlog',JSON.stringify(faxLog))}
@@ -2907,21 +2981,24 @@ function setCmStaffTab(staff, tab) { cmStaffTab[staff] = tab; renderCmStaff(docu
 function renderCmStaff(el,staff){
   const staffCases=cases.filter(c=>c.assigned===staff);
   const active=staffCases.filter(c=>c.status==='Active');
-  const settled=staffCases.filter(c=>c.status==='Settled/Complete');
-  const missingClaim=staffCases.filter(function(c){return c.status==='Active'&&c.missingInfo&&c.missingInfo.indexOf('Missing Claim Info')!==-1&&(!c.followUpDate||daysBtw(c.followUpDate,today())>=0)});
+  const inLitigation=staffCases.filter(c=>c.status==='In Litigation');
+  const settled=staffCases.filter(c=>c.status==='Settled/Closed');
+  const dropped=staffCases.filter(c=>c.status==='Dropped');
+  const missingClaim=staffCases.filter(function(c){return(c.status==='Active'||c.status==='In Litigation')&&c.missingInfo&&c.missingInfo.indexOf('Missing Claim Info')!==-1&&(!c.followUpDate||daysBtw(c.followUpDate,today())>=0)});
   const alerts=cmAlerts().filter(a=>a.assigned===staff);
   const tab = cmStaffTab[staff] || 'all';
 
   let h='<div class="page-title">'+esc(staff)+'\'s Caseload</div><div class="page-subtitle">Cases and alerts assigned to '+esc(staff)+'.</div>';
-  h+='<div class="stats-row" style="grid-template-columns:repeat(5,1fr)">'+stat('Active Cases',active.length,'teal')+stat('Alerts',alerts.length,'red')+stat('Missing Claim',missingClaim.length,'gold')+stat('Settled',settled.length,'')+stat('Total',staffCases.length,'')+'</div>';
+  h+='<div class="stats-row" style="grid-template-columns:repeat(6,1fr)">'+stat('Active',active.length,'teal')+stat('In Litigation',inLitigation.length,'gold')+stat('Alerts',alerts.length,'red')+stat('Missing Claim',missingClaim.length,'gold')+stat('Settled',settled.length,'')+stat('Dropped',dropped.length,'red')+'</div>';
 
-  // Tab bar
   h += '<div style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap">' +
     '<button class="filter-btn '+(tab==='all'?'active':'')+'" onclick="setCmStaffTab(\''+staff+'\',\'all\')">All ('+staffCases.length+')</button>' +
     '<button class="filter-btn '+(tab==='alerts'?'active':'')+'" onclick="setCmStaffTab(\''+staff+'\',\'alerts\')" style="position:relative">Alerts'+(alerts.length>0?' <span style="background:var(--red-light);color:white;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:3px">'+alerts.length+'</span>':'')+'</button>' +
-    '<button class="filter-btn '+(tab==='missing_claim'?'active':'')+'" onclick="setCmStaffTab(\''+staff+'\',\'missing_claim\')" style="position:relative">Missing Claim Info'+(missingClaim.length>0?' <span style="background:var(--gold);color:white;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:3px">'+missingClaim.length+'</span>':'')+'</button>' +
+    '<button class="filter-btn '+(tab==='missing_claim'?'active':'')+'" onclick="setCmStaffTab(\''+staff+'\',\'missing_claim\')" style="position:relative">Missing Claim'+(missingClaim.length>0?' <span style="background:var(--gold);color:white;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:3px">'+missingClaim.length+'</span>':'')+'</button>' +
     '<button class="filter-btn '+(tab==='active'?'active':'')+'" onclick="setCmStaffTab(\''+staff+'\',\'active\')">Active ('+active.length+')</button>' +
+    '<button class="filter-btn '+(tab==='litigation'?'active':'')+'" onclick="setCmStaffTab(\''+staff+'\',\'litigation\')">In Litigation ('+inLitigation.length+')</button>' +
     '<button class="filter-btn '+(tab==='settled'?'active':'')+'" onclick="setCmStaffTab(\''+staff+'\',\'settled\')">Settled ('+settled.length+')</button>' +
+    '<button class="filter-btn '+(tab==='dropped'?'active':'')+'" onclick="setCmStaffTab(\''+staff+'\',\'dropped\')">Dropped ('+dropped.length+')</button>' +
   '</div>';
 
   // Alerts tab
@@ -2963,7 +3040,9 @@ function renderCmStaff(el,staff){
   // Determine cases to show
   let displayCases, tableTitle;
   if (tab === 'active') { displayCases = active; tableTitle = 'Active Cases'; }
-  else if (tab === 'settled') { displayCases = settled; tableTitle = 'Settled / Complete'; }
+  else if (tab === 'litigation') { displayCases = inLitigation; tableTitle = 'In Litigation'; }
+  else if (tab === 'settled') { displayCases = settled; tableTitle = 'Settled / Closed'; }
+  else if (tab === 'dropped') { displayCases = dropped; tableTitle = 'Dropped Cases'; }
   else { displayCases = staffCases; tableTitle = esc(staff)+'\'s Cases'; }
 
   h+='<div class="table-card"><div class="table-header"><h3>'+tableTitle+'</h3><div class="table-controls"><input class="search-input" placeholder="Search..." oninput="cmStaffSearch(this,\''+staff+'\')"></div></div>';
@@ -3215,17 +3294,22 @@ function showCmDetail(id){
   let h='<div class="back-link" onclick="cmNav(\''+bp+'\')">&larr; Back</div>';
   const alerts=cmAlerts().filter(a=>a.caseId===c.id);
   alerts.forEach((a,i)=>{h+=renderCmAlertCard(a,i);});
-  h+='<div class="detail-card"><div class="detail-header"><h3>'+esc(c.patientName)+'</h3><div class="detail-type">'+esc(c.caseType)+'</div><span class="status-badge '+(c.status==='Active'?'status-active':'status-settled')+'" style="margin-left:auto">'+esc(c.status)+'</span></div>';
+  h+='<div class="detail-card"><div class="detail-header"><h3>'+esc(c.patientName)+'</h3><div class="detail-type">'+esc(c.caseType)+'</div><span class="status-badge '+(c.status==='Active'?'status-active':c.status==='In Litigation'?'status-pending':'status-settled')+'" style="margin-left:auto">'+esc(c.status)+'</span></div>';
   const introEmailDisplay = c.introEmailSentDate
     ? '<span style="color:var(--teal);font-weight:700">✓ Sent '+fmtDate(c.introEmailSentDate)+'</span>'
     : '<span style="color:var(--red);font-weight:700;cursor:pointer" onclick="resolveIntroEmail(\''+c.id+'\')">✗ Not Sent — click to resolve</span>';
-  h+='<div class="detail-grid">'+dcell('Date of Injury',fmtDate(c.doi))+dcell('Location',c.location||'—')+dcell('Assigned To',c.assigned)+dcell('Days Active','<span class="days-count">'+days+'</span> days')+dcell('Appointment',fmtDate(c.apptDate))+dcell('Intro Email',introEmailDisplay)+dcell('Records Sent',fmtDate(c.recordsSent))+dcell('Follow-Up',fmtDate(c.followUpDate))+dcell('Case Opened',fmtDate(c.createdDate))+dcell('Settled',fmtDate(c.settledDate));
+  var settlementEmailDisplay = '';
+  if(c.status==='Settled/Closed'){
+    settlementEmailDisplay = c.settlementEmailSent ? '<span style="color:var(--teal);font-weight:700">✓ Sent '+fmtDate(c.settlementEmailDate)+'</span>' : '<span style="color:var(--red);font-weight:700;cursor:pointer" onclick="markSettlementEmailSent(\''+c.id+'\')">✗ Not Sent — click to mark sent</span>';
+  }
+  h+='<div class="detail-grid">'+dcell('Date of Injury',fmtDate(c.doi))+dcell('Location',c.location||'—')+dcell('Assigned To',c.assigned)+dcell('Days Active','<span class="days-count">'+days+'</span> days')+dcell('Appointment',fmtDate(c.apptDate))+dcell('Intro Email',introEmailDisplay)+dcell('Records Sent',fmtDate(c.recordsSent))+dcell('Follow-Up',fmtDate(c.followUpDate))+dcell('Case Opened',fmtDate(c.createdDate))+dcell('Settled/Closed',fmtDate(c.settledDate));
+  if(settlementEmailDisplay)h+=dcell('Settlement Update Email',settlementEmailDisplay);
   // Attorney info from linked referral
   const srcRef=c.sourceRefId?refs.find(x=>x.id===c.sourceRefId):null;
   if(srcRef){h+=dcell('Attorney',srcRef.attorney||'—')+dcell('Law Firm',srcRef.lawFirm||'—')+dcell('Firm Contact',srcRef.lawContact||'—')+dcell('Referral Source',srcRef.referralSource||'—');}
   h+='</div>';
   if(c.missingInfo) h+='<div class="detail-notes"><div class="detail-cell-label">Missing Info</div><div class="detail-cell-value" style="font-size:12px">'+esc(c.missingInfo)+'</div></div>';
-  h+='<div class="detail-actions"><button class="btn-cancel" onclick="openEditCaseModal(\''+c.id+'\')">Edit Case</button><button class="btn-primary" onclick="addCmManualAlert(\''+c.id+'\')" style="font-size:11px;padding:7px 14px">+ Add Reminder</button><button class="btn-primary" onclick="openCallLogModal(\''+(c.sourceRefId||'')+'\',\''+c.id+'\')" style="font-size:11px;padding:7px 14px;background:var(--gold)">📞 Log Call</button></div></div>';
+  h+='<div class="detail-actions"><button class="btn-cancel" onclick="openEditCaseModal(\''+c.id+'\')">Edit Case</button><button class="btn-primary" onclick="openCaseStatusModal(\''+c.id+'\')" style="font-size:11px;padding:7px 14px;background:var(--navy)">⚡ Update Case Status</button><button class="btn-primary" onclick="addCmManualAlert(\''+c.id+'\')" style="font-size:11px;padding:7px 14px">+ Add Reminder</button><button class="btn-primary" onclick="openCallLogModal(\''+(c.sourceRefId||'')+'\',\''+c.id+'\')" style="font-size:11px;padding:7px 14px;background:var(--gold)">📞 Log Call</button></div></div>';
 
   // Upcoming manual alerts (not yet triggered)
   const upcoming=(c.manualAlerts||[]).filter(ma=>!ma.completed&&daysBtw(today(),ma.reminderDate)>0);
@@ -3339,7 +3423,7 @@ function saveCase(){
   else if(missingInfoNotes&&missingInfo)missingInfo=missingInfo+' | '+missingInfoNotes;
 
   const data={patientName:name,dob:document.getElementById('cDOB').value,phone:document.getElementById('cPhone').value.trim(),email:document.getElementById('cEmail').value.trim(),doi:document.getElementById('cDOI').value,caseType:document.getElementById('cCaseType').value,location:document.getElementById('cLocation').value,language:document.getElementById('cLanguage').value,attorney:document.getElementById('cAttorney').value.trim(),lawFirm:document.getElementById('cLawFirm').value.trim(),lawContact:document.getElementById('cLawContact').value.trim(),referralSource:document.getElementById('cRefSource').value.trim(),assigned:document.getElementById('cAssigned').value,apptDate:document.getElementById('cApptDate').value,recordsSent:document.getElementById('cRecordsSent').value,missingInfo:missingInfo,followUpDate:document.getElementById('cFollowUp').value,notes:document.getElementById('cNotes').value.trim(),status:document.getElementById('cStatus').value};
-  if(editingCaseId){const idx=cases.findIndex(c=>c.id===editingCaseId);if(idx!==-1){const prev=cases[idx];var updatedOpenDate=document.getElementById('cDateOpened').value||prev.createdDate;if(data.status==='Settled/Complete'&&prev.status==='Active'&&!prev.settledDate)data.settledDate=today();else data.settledDate=prev.settledDate||'';if(data.status==='Active')data.settledDate='';cases[idx]={...prev,...data,createdDate:updatedOpenDate};}}
+  if(editingCaseId){const idx=cases.findIndex(c=>c.id===editingCaseId);if(idx!==-1){const prev=cases[idx];var updatedOpenDate=document.getElementById('cDateOpened').value||prev.createdDate;if((data.status==='Settled/Closed'||data.status==='Dropped')&&prev.status==='Active'&&!prev.settledDate)data.settledDate=today();else data.settledDate=prev.settledDate||'';if(data.status==='Active')data.settledDate='';cases[idx]={...prev,...data,createdDate:updatedOpenDate};}}
   else{cases.push({id:genId(),...data,createdDate:document.getElementById('cDateOpened').value||today(),settledDate:data.status==='Settled/Complete'?today():'',dismissedAlerts:[],manualAlerts:[]});}
   saveCases();
   // Sync to linked referral
