@@ -504,7 +504,7 @@
       <div class="form-group"><label>Patient DOB</label><input type="date" id="fDOB"></div>
       <div class="form-group"><label>Patient Phone</label><input type="tel" id="fPhone" placeholder="(555) 123-4567" oninput="formatPhone(this)"></div>
       <div class="form-group"><label>Patient Email</label><input type="email" id="fEmail" placeholder="patient@email.com"></div>
-      <div class="form-group"><label>Case Type <span style="color:var(--red)">*</span></label><select id="fCaseType"><option value="WC">WC</option><option value="MVA">MVA</option><option value="NJ MVA">NJ MVA</option><option value="PI">PI</option></select></div>
+      <div class="form-group"><label>Case Type <span style="color:var(--red)">*</span></label><select id="fCaseType"><option value="WC">WC</option><option value="MVA">MVA</option><option value="NJ MVA">NJ MVA</option><option value="PI">PI</option><option value="PHI">PHI</option></select></div>
       <div class="form-group"><label>Date of Injury <span style="color:var(--red)">*</span></label><input type="date" id="fDOI"></div>
       <div class="form-group"><label>Clinic Location <span style="color:var(--red)">*</span></label><select id="fLocation"><option value="">— Select —</option><option>Allentown</option><option>Wilkes Barre</option><option>Old City</option><option>Hazleton</option><option>Williamsport</option><option>Carlisle</option><option>Lansdale</option><option>Reading</option><option>Port Richmond</option><option>Germantown</option><option>NE Philly</option><option>Darby</option><option>Cherry Hill NJ</option></select></div>
       <div class="form-group"><label>Preferred Language</label><select id="fLanguage"><option>English</option><option>Spanish</option><option>Other</option></select></div>
@@ -618,7 +618,7 @@
       <div class="form-group"><label>Patient Name</label><input type="text" id="cPatient" placeholder="Last, First"></div>
       <div class="form-group"><label>Patient DOB</label><input type="date" id="cDOB"></div>
       <div class="form-group"><label>Date of Injury</label><input type="date" id="cDOI"></div>
-      <div class="form-group"><label>Case Type</label><select id="cCaseType"><option value="WC">WC</option><option value="MVA">MVA</option><option value="NJ MVA">NJ MVA</option><option value="PI">PI</option></select></div>
+      <div class="form-group"><label>Case Type</label><select id="cCaseType"><option value="WC">WC</option><option value="MVA">MVA</option><option value="NJ MVA">NJ MVA</option><option value="PI">PI</option><option value="PHI">PHI</option></select></div>
       <div class="form-group"><label>Clinic Location <span style="color:var(--red)">*</span></label><select id="cLocation" onchange="cmAutoAssign()"><option value="">— Select —</option><option>Allentown</option><option>Wilkes Barre</option><option>Old City</option><option>Hazleton</option><option>Williamsport</option><option>Carlisle</option><option>Lansdale</option><option>Reading</option><option>Port Richmond</option><option>Germantown</option><option>NE Philly</option><option>Darby</option><option>Cherry Hill NJ</option></select></div>
       <div class="form-group"><label>Assigned To</label><select id="cAssigned"><option>Sean</option><option>Sophia</option><option>Kent</option></select></div>
       <div class="form-group"><label>Upcoming Appointment</label><input type="date" id="cApptDate"></div>
@@ -721,6 +721,7 @@
       <div class="form-group"><label>Priority</label><select id="tkPriority"><option>Normal</option><option>High</option><option>Urgent</option></select></div>
       <div class="form-group"><label>Assigned To</label><select id="tkAssigned"><option>Miguel</option><option>Samuel</option></select></div>
       <div class="form-group"><label>Category</label><select id="tkCategory"><option>Scheduling Issue</option><option>Billing Question</option><option>Records Request</option><option>Attorney Inquiry</option><option>Insurance Issue</option><option>Patient Complaint</option><option>General Inquiry</option><option>Other</option></select></div>
+      <div class="form-group"><label>Contacted Department</label><select id="tkDepartment"><option value="">— Select —</option><option>Clinical</option><option>Case Management</option><option>Scheduling</option><option>Providers</option><option>Specific Office</option><option>Other</option></select></div>
       <div class="form-group"><label>Status</label><select id="tkStatus"><option>Open</option><option>In Progress</option><option>Waiting on External</option><option>Resolved</option></select></div>
       <div class="form-group full"><label>Description / Notes</label><textarea id="tkNotes" placeholder="Full details of the issue, what was attempted, what needs to happen next..."></textarea></div>
     </div></div>
@@ -1371,8 +1372,7 @@ function setupUIForRole() {
     tabs.querySelector('[data-module="psr"]').style.display = 'none';
   }
   if (userRole === 'psr') {
-    tabs.querySelector('[data-module="crm"]').style.display = 'none';
-    tabs.querySelector('[data-module="cm"]').style.display = 'none';
+    // PSR can access CRM and CM for reference — no tabs hidden
   }
   const showMgr = userRole === 'manager' || managerUnlocked;
   document.getElementById('crmNavMgrDash').style.display = showMgr ? 'flex' : 'none';
@@ -1780,26 +1780,29 @@ function setCrmStaffTab(staff, tab) { crmStaffTab[staff] = tab; renderCrmStaff(d
 function renderCrmStaff(el, staff) {
   const allAlerts = crmAlerts().filter(a => a.assignedTo === staff);
   const staffRefs = refs.filter(r => r.registeredBy === staff || r.alertAssignedTo === staff || r.apptConfirmAssignedTo === staff);
-  const registered = refs.filter(r => r.registeredBy === staff);
-  const pending = registered.filter(r => !r.apptDate && r.status !== 'Completed');
-  const scheduled = registered.filter(r => r.apptDate && r.status !== 'Completed');
-  const completed = registered.filter(r => r.status === 'Completed' || r.status === 'Active Treatment');
+  const pending = staffRefs.filter(r => !r.apptDate && r.status !== 'Completed' && r.status !== 'Patient Lost');
+  const scheduled = staffRefs.filter(r => r.apptDate && r.status !== 'Completed' && r.status !== 'Patient Lost' && r.status !== 'Active Treatment');
+  const activeTx = staffRefs.filter(r => r.status === 'Active Treatment');
+  const completed = staffRefs.filter(r => r.status === 'Completed');
+  const lost = staffRefs.filter(r => r.status === 'Patient Lost');
   const tab = crmStaffTab[staff] || 'all';
 
   let h = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">'+esc(staff)+'\'s Queue</div><div style="margin-left:auto"><button class="btn-primary" onclick="openNewRefModal()" style="font-size:11px;padding:7px 14px">+ New Referral</button></div></div><div class="page-subtitle">Alerts, referrals, and activity for '+esc(staff)+'.</div>';
-  h += '<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">' +
+  h += '<div class="stats-row" style="grid-template-columns:repeat(5,1fr)">' +
     stat('Active Alerts', allAlerts.length, 'red') +
-    stat('Registered', registered.length, 'teal') +
-    stat('Pending Scheduling', pending.length, 'gold') +
-    stat('Scheduled', scheduled.length, '') + '</div>';
+    stat('Total Assigned', staffRefs.length, 'teal') +
+    stat('Pending', pending.length, 'gold') +
+    stat('Scheduled', scheduled.length, '') +
+    stat('Active Tx', activeTx.length, 'teal') + '</div>';
 
   // Tab bar
   h += '<div style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap">' +
-    '<button class="filter-btn '+(tab==='all'?'active':'')+'" onclick="setCrmStaffTab(\''+staff+'\',\'all\')">All</button>' +
+    '<button class="filter-btn '+(tab==='all'?'active':'')+'" onclick="setCrmStaffTab(\''+staff+'\',\'all\')">All ('+staffRefs.length+')</button>' +
     '<button class="filter-btn '+(tab==='alerts'?'active':'')+'" onclick="setCrmStaffTab(\''+staff+'\',\'alerts\')" style="position:relative">Alerts'+(allAlerts.length>0?' <span style="background:var(--red-light);color:white;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:3px">'+allAlerts.length+'</span>':'')+'</button>' +
-    '<button class="filter-btn '+(tab==='pending'?'active':'')+'" onclick="setCrmStaffTab(\''+staff+'\',\'pending\')">Pending</button>' +
-    '<button class="filter-btn '+(tab==='scheduled'?'active':'')+'" onclick="setCrmStaffTab(\''+staff+'\',\'scheduled\')">Scheduled</button>' +
-    '<button class="filter-btn '+(tab==='completed'?'active':'')+'" onclick="setCrmStaffTab(\''+staff+'\',\'completed\')">Completed</button>' +
+    '<button class="filter-btn '+(tab==='pending'?'active':'')+'" onclick="setCrmStaffTab(\''+staff+'\',\'pending\')">Pending ('+pending.length+')</button>' +
+    '<button class="filter-btn '+(tab==='scheduled'?'active':'')+'" onclick="setCrmStaffTab(\''+staff+'\',\'scheduled\')">Scheduled ('+scheduled.length+')</button>' +
+    '<button class="filter-btn '+(tab==='active'?'active':'')+'" onclick="setCrmStaffTab(\''+staff+'\',\'active\')">Active Tx ('+activeTx.length+')</button>' +
+    '<button class="filter-btn '+(tab==='completed'?'active':'')+'" onclick="setCrmStaffTab(\''+staff+'\',\'completed\')">Completed ('+completed.length+')</button>' +
   '</div>';
 
   // Alerts tab
@@ -1818,8 +1821,9 @@ function renderCrmStaff(el, staff) {
   let displayRefs, tableTitle;
   if (tab === 'pending') { displayRefs = pending; tableTitle = 'Pending Scheduling'; }
   else if (tab === 'scheduled') { displayRefs = scheduled; tableTitle = 'Scheduled Referrals'; }
-  else if (tab === 'completed') { displayRefs = completed; tableTitle = 'Completed / In Treatment'; }
-  else { displayRefs = registered; tableTitle = esc(staff)+'\'s Referrals'; }
+  else if (tab === 'active') { displayRefs = activeTx; tableTitle = 'Active Treatment'; }
+  else if (tab === 'completed') { displayRefs = completed; tableTitle = 'Completed'; }
+  else { displayRefs = staffRefs; tableTitle = esc(staff)+'\'s Referrals'; }
 
   h += '<div class="table-card"><div class="table-header"><h3>'+tableTitle+'</h3><div class="table-controls"><input class="search-input" placeholder="Search..." oninput="crmStaffSearch(this,\''+staff+'\')"></div></div>';
   h += '<div class="table-scroll"><table class="tbl" style="min-width:750px"><thead><tr><th>Patient</th><th>Type</th><th>Location</th><th>Source</th><th>Status</th><th>Days</th><th>Appt</th><th>Outcome</th></tr></thead><tbody id="crmStaffTbody-'+staff+'">';
@@ -3725,7 +3729,7 @@ function openNewTicketModal(refId,caseId){
   document.getElementById('ticketModalTitle').textContent='Create Ticket';
   document.getElementById('btnDeleteTicket').style.display='none';
   document.getElementById('tkSubject').value='';document.getElementById('tkNotes').value='';
-  document.getElementById('tkPriority').value='Normal';document.getElementById('tkCategory').value='General Inquiry';document.getElementById('tkStatus').value='Open';
+  document.getElementById('tkPriority').value='Normal';document.getElementById('tkCategory').value='General Inquiry';document.getElementById('tkDepartment').value='';document.getElementById('tkStatus').value='Open';
   document.getElementById('tkAssigned').value=PSR_STAFF.includes(currentUser)?currentUser:PSR_STAFF[0];
   openNewTicketModal._refId=refId||'';openNewTicketModal._caseId=caseId||'';
   document.getElementById('ticketModal').classList.add('show');
@@ -3739,6 +3743,7 @@ function openEditTicketModal(id){
   document.getElementById('tkPriority').value=t.priority||'Normal';
   document.getElementById('tkAssigned').value=t.assignedTo||PSR_STAFF[0];
   document.getElementById('tkCategory').value=t.category||'General Inquiry';
+  document.getElementById('tkDepartment').value=t.department||'';
   document.getElementById('tkStatus').value=t.status||'Open';
   document.getElementById('tkNotes').value='';
   openNewTicketModal._refId=t.refId||'';openNewTicketModal._caseId=t.caseId||'';
@@ -3750,7 +3755,7 @@ function saveTicket(){
   const subject=document.getElementById('tkSubject').value.trim();
   if(!subject){alert('Please enter a subject.');return;}
   const notes=document.getElementById('tkNotes').value.trim();
-  const data={subject:subject,priority:document.getElementById('tkPriority').value,assignedTo:document.getElementById('tkAssigned').value,category:document.getElementById('tkCategory').value,status:document.getElementById('tkStatus').value};
+  const data={subject:subject,priority:document.getElementById('tkPriority').value,assignedTo:document.getElementById('tkAssigned').value,category:document.getElementById('tkCategory').value,department:document.getElementById('tkDepartment').value,status:document.getElementById('tkStatus').value};
   if(editingTicketId){
     const idx=tickets.findIndex(t=>t.id===editingTicketId);if(idx===-1)return;
     const prev=tickets[idx];
