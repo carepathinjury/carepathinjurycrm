@@ -400,6 +400,7 @@
     <div class="nav-item" data-page="cm-cases" onclick="cmNav('cm-cases')"><div class="nav-icon">📋</div> All Cases</div>
     <div class="nav-item" data-page="cm-alerts" onclick="cmNav('cm-alerts')"><div class="nav-icon">⚠️</div> Alerts <span class="nav-badge" id="cmAlertBadge">0</span></div>
     <div class="nav-item" data-page="cm-contacts" onclick="cmNav('cm-contacts')"><div class="nav-icon">📇</div> Contacts</div>
+    <div class="nav-item" data-page="cm-faxlog" onclick="cmNav('cm-faxlog')"><div class="nav-icon">📠</div> Fax Log</div>
   </div>
   <div class="nav-section">
     <div class="nav-section-label">Case Managers</div>
@@ -419,6 +420,7 @@
   <div class="section" id="sec-cm-cases"></div>
   <div class="section" id="sec-cm-alerts"></div>
   <div class="section" id="sec-cm-contacts"></div>
+  <div class="section" id="sec-cm-faxlog"></div>
   <div class="section" id="sec-cm-staff-Sean"></div>
   <div class="section" id="sec-cm-staff-Sophia"></div>
   <div class="section" id="sec-cm-staff-Kent"></div>
@@ -785,6 +787,7 @@
           <label>Outcome</label>
           <select id="miOutcome" onchange="toggleMiFields()">
             <option value="followed_up">Followed Up — Still Waiting (re-alert in 10 days)</option>
+            <option value="litigation">Case in Litigation — Longer Follow Up (re-alert in 3 weeks)</option>
             <option value="resolved">Resolved — Info Obtained</option>
           </select>
         </div>
@@ -799,6 +802,38 @@
       </div>
     </div>
     <div class="modal-footer"><button class="btn-cancel" onclick="closeMissingInfoModal()">Cancel</button><button class="btn-save" onclick="submitMissingInfo()">Submit</button></div>
+  </div>
+</div>
+
+<!-- Adjuster Resolve Modal -->
+<div class="modal-overlay" id="adjusterResolveModal">
+  <div class="modal" style="width:460px">
+    <div class="modal-header"><h2>Resolve Missing Adjuster</h2><button class="modal-close" onclick="document.getElementById('adjusterResolveModal').classList.remove('show')">&times;</button></div>
+    <div class="modal-body">
+      <p id="adjPatientName" style="font-weight:600;font-size:14px;color:var(--navy);margin-bottom:14px"></p>
+      <div class="form-grid" style="grid-template-columns:1fr">
+        <div class="form-group"><label>Outcome</label><select id="adjOutcome" onchange="document.getElementById('adjKeepGroup').style.display=this.value==='keep'?'block':'none'"><option value="resolved">Information Obtained & Updated in RXNT</option><option value="keep">Information Not Obtained — Keep Trying</option></select></div>
+        <div class="form-group"><label>Date</label><input type="date" id="adjDate"></div>
+        <div id="adjKeepGroup" style="display:none"><div class="form-group"><label>Notes</label><textarea id="adjNotes" placeholder="Who did you contact? What happened?"></textarea></div></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="document.getElementById('adjusterResolveModal').classList.remove('show')">Cancel</button><button class="btn-save" onclick="submitAdjusterResolve()">Submit</button></div>
+  </div>
+</div>
+
+<!-- PIP Resolve Modal -->
+<div class="modal-overlay" id="pipResolveModal">
+  <div class="modal" style="width:460px">
+    <div class="modal-header"><h2>Resolve PIP Status</h2><button class="modal-close" onclick="document.getElementById('pipResolveModal').classList.remove('show')">&times;</button></div>
+    <div class="modal-body">
+      <p id="pipPatientName" style="font-weight:600;font-size:14px;color:var(--navy);margin-bottom:14px"></p>
+      <div class="form-grid" style="grid-template-columns:1fr">
+        <div class="form-group"><label>Outcome</label><select id="pipOutcome" onchange="document.getElementById('pipKeepGroup').style.display=this.value==='keep'?'block':'none'"><option value="resolved">PIP Status Obtained & Updated in RXNT</option><option value="keep">PIP Status Not Obtained — Try Again</option><option value="exhausted">Case Too Old — PIP Exhausted & RXNT Updated</option></select></div>
+        <div class="form-group"><label>Date</label><input type="date" id="pipDate"></div>
+        <div id="pipKeepGroup" style="display:none"><div class="form-group"><label>Notes</label><textarea id="pipNotes" placeholder="Details of attempt..."></textarea></div></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="document.getElementById('pipResolveModal').classList.remove('show')">Cancel</button><button class="btn-save" onclick="submitPipResolve()">Submit</button></div>
   </div>
 </div>
 
@@ -922,6 +957,7 @@ async function _loadFromSupabase(){
   psrMetrics = JSON.parse(storeGet(K.psrMet)||'{}');
   customLawFirms = JSON.parse(storeGet('cp11_customLawFirms')||'[]');
   customRefSources = JSON.parse(storeGet('cp11_customRefSources')||'[]');
+  faxLog = JSON.parse(storeGet('cp11_faxlog')||'[]');
   // Refresh whatever view is currently active
   if(typeof setupUIForRole === 'function') try { setupUIForRole(); } catch(e){}
 }
@@ -1527,12 +1563,12 @@ function cmAlerts() {
       }
     }
 
-    // NEED PIP STATUS UPDATE — prompt CM once assigned, remind 1x/week until resolved
+    // NEED PIP STATUS UPDATE — prompt CM once assigned, remind every 2 days until resolved
     if (missingParts.includes('Need PIP Status Update') && !c.pipResolved) {
       var lastPipCheck = c.pipLastFollowUp || c.createdDate;
       var daysSincePip = daysBtw(lastPipCheck, now);
-      if (daysSincePip >= 7 || !c.pipLastFollowUp) {
-        alerts.push({ type:'pip-status', severity:'red', title:'PIP Status Update Needed — Update RXNT', message:'PIP status needs to be obtained and updated in RXNT. Remind weekly until resolved.', caseId:c.id, patientName:c.patientName, assigned:c.assigned, location:c.location, daysSince:daysSincePip });
+      if (daysSincePip >= 2 || !c.pipLastFollowUp) {
+        alerts.push({ type:'pip-status', severity:'red', title:'PIP Status Update Needed — Update RXNT', message:'PIP status needs to be obtained and updated in RXNT. Remind every 2 days until resolved.', caseId:c.id, patientName:c.patientName, assigned:c.assigned, location:c.location, daysSince:daysSincePip });
       }
     }
 
@@ -1545,10 +1581,11 @@ function cmAlerts() {
           alerts.push({ type:'missing-info', severity:'red', title:'Action Required: '+c.missingInfo, message:'This was flagged at registration. Follow up to obtain the required information and update the referring party.', caseId:c.id, patientName:c.patientName, assigned:c.assigned, location:c.location, daysSince:ds });
         }
       } else {
-        // Has follow-up date — re-alert after 10 days
+        // Has follow-up date — re-alert after 10 days (or 21 for litigation)
         const ds = daysBtw(c.followUpDate, now);
-        if (ds >= 10 && !dismissed.includes('missing-info'))
-          alerts.push({ type:'missing-info', severity:'red', title:'Missing Info Follow-Up Overdue: '+c.missingInfo, message:'Last follow-up was '+fmtDate(c.followUpDate)+' ('+ds+' days ago). Follow up again now.', caseId:c.id, patientName:c.patientName, assigned:c.assigned, location:c.location, daysSince:ds });
+        var reAlertDays = c.inLitigation ? 21 : 10;
+        if (ds >= reAlertDays && !dismissed.includes('missing-info'))
+          alerts.push({ type:'missing-info', severity:'red', title:'Missing Info Follow-Up Overdue: '+c.missingInfo+(c.inLitigation?' (In Litigation)':''), message:'Last follow-up was '+fmtDate(c.followUpDate)+' ('+ds+' days ago). '+(c.inLitigation?'Case in litigation — follow up every 3 weeks.':'Follow up again now.'), caseId:c.id, patientName:c.patientName, assigned:c.assigned, location:c.location, daysSince:ds });
       }
     }
     // Records/billing — 7+ days after appt, and records haven't been sent since that appt
@@ -2573,6 +2610,7 @@ function renderCmPage(page) {
   else if(page==='cm-alerts')renderCmAlertsPage(el);
   else if(page.startsWith('cm-staff-'))renderCmStaff(el,page.replace('cm-staff-',''));
   else if(page==='cm-contacts')renderCmContacts(el);
+  else if(page==='cm-faxlog')renderCmFaxLog(el);
   else if(page==='cm-my-metrics')renderCmMyMetrics(el);
   else if(page==='cm-mgr-dash')renderCmMgrDash(el);
   else if(page==='cm-detail'&&cmDetailId)showCmDetail(cmDetailId);
@@ -2600,7 +2638,11 @@ function renderCmAlertCard(a,i) {
   if(a.type==='intro-email'){
     actionBtns+='<button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="resolveIntroEmail(\''+a.caseId+'\')">✉ Mark Sent</button>';
   } else if(a.type==='missing-info'){
-    actionBtns+='<button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="openMissingInfoModal(\''+a.caseId+'\')">📋 Follow Up</button>';
+    actionBtns+='<button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="openMissingInfoModal(\''+a.caseId+'\')">📋 Resolve</button>';
+  } else if(a.type==='missing-adjuster'){
+    actionBtns+='<button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="openAdjusterResolveModal(\''+a.caseId+'\')">📋 Resolve</button>';
+  } else if(a.type==='pip-status'){
+    actionBtns+='<button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="openPipResolveModal(\''+a.caseId+'\')">📋 Resolve</button>';
   } else if(a.type==='records-billing'){
     actionBtns+='<button class="btn-resolve" style="background:rgba(200,151,58,0.12);color:var(--gold);border-color:rgba(200,151,58,0.3)" onclick="openRecordsBillingModal(\''+a.caseId+'\')">📄 Mark Sent</button>';
   } else {
@@ -2653,17 +2695,19 @@ function submitMissingInfo(){
   const notes=document.getElementById('miNotes').value.trim();
 
   if(outcome==='resolved'){
-    // Info was obtained — clear the missingInfo field entirely
     c.missingInfo='';
     c.followUpDate=dateStr;
     c.missingInfoResolvedDate=dateStr;
-    // Also clear on the linked referral
+    c.inLitigation=false;
     const linkedRef=refs.find(r=>r.id===c.sourceRefId);
     if(linkedRef){linkedRef.alertType='';saveRefs();}
-  } else {
-    // Followed up but still waiting — set followUpDate to today, alert re-fires in 10 days
+  } else if(outcome==='litigation'){
     c.followUpDate=dateStr;
-    // Clear any dismissal so the 14-day cadence is clean
+    c.inLitigation=true;
+    c.dismissedAlerts=(c.dismissedAlerts||[]).filter(d=>d!=='missing-info');
+  } else {
+    c.followUpDate=dateStr;
+    c.inLitigation=false;
     c.dismissedAlerts=(c.dismissedAlerts||[]).filter(d=>d!=='missing-info');
   }
 
@@ -2698,6 +2742,104 @@ function submitRecordsBilling(){
   if(cmCurrentPage==='cm-detail')showCmDetail(rbCaseId);
 }
 
+// ── ADJUSTER RESOLVE ──
+var adjCaseId=null;
+function openAdjusterResolveModal(caseId){
+  adjCaseId=caseId;var c=cases.find(function(x){return x.id===caseId});if(!c)return;
+  document.getElementById('adjPatientName').textContent=c.patientName;
+  document.getElementById('adjOutcome').value='resolved';
+  document.getElementById('adjDate').value=today();
+  document.getElementById('adjNotes').value='';
+  document.getElementById('adjKeepGroup').style.display='none';
+  document.getElementById('adjusterResolveModal').classList.add('show');
+}
+function submitAdjusterResolve(){
+  var c=cases.find(function(x){return x.id===adjCaseId});if(!c)return;
+  var outcome=document.getElementById('adjOutcome').value;
+  var dateStr=document.getElementById('adjDate').value;
+  if(!dateStr){alert('Please enter a date.');return;}
+  if(outcome==='resolved'){
+    c.adjusterResolved=true;c.adjusterResolvedDate=dateStr;
+  } else {
+    c.adjusterLastFollowUp=dateStr;c.adjusterResolved=false;
+  }
+  saveCases();document.getElementById('adjusterResolveModal').classList.remove('show');renderActiveModule();
+  if(cmCurrentPage==='cm-detail')showCmDetail(adjCaseId);
+}
+
+// ── PIP RESOLVE ──
+var pipCaseId=null;
+function openPipResolveModal(caseId){
+  pipCaseId=caseId;var c=cases.find(function(x){return x.id===caseId});if(!c)return;
+  document.getElementById('pipPatientName').textContent=c.patientName;
+  document.getElementById('pipOutcome').value='resolved';
+  document.getElementById('pipDate').value=today();
+  document.getElementById('pipNotes').value='';
+  document.getElementById('pipKeepGroup').style.display='none';
+  document.getElementById('pipResolveModal').classList.add('show');
+}
+function submitPipResolve(){
+  var c=cases.find(function(x){return x.id===pipCaseId});if(!c)return;
+  var outcome=document.getElementById('pipOutcome').value;
+  var dateStr=document.getElementById('pipDate').value;
+  if(!dateStr){alert('Please enter a date.');return;}
+  if(outcome==='resolved'||outcome==='exhausted'){
+    c.pipResolved=true;c.pipResolvedDate=dateStr;c.pipExhausted=(outcome==='exhausted');
+  } else {
+    c.pipLastFollowUp=dateStr;c.pipResolved=false;
+  }
+  saveCases();document.getElementById('pipResolveModal').classList.remove('show');renderActiveModule();
+  if(cmCurrentPage==='cm-detail')showCmDetail(pipCaseId);
+}
+
+// ── FAX LOG ──
+var faxLog=[];
+function saveFaxLog(){storeSet('cp11_faxlog',JSON.stringify(faxLog))}
+function renderCmFaxLog(el){
+  var h='<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">Fax Log</div><div style="margin-left:auto"><button class="btn-primary" onclick="openFaxLogModal()" style="font-size:11px;padding:7px 14px">+ Log Fax</button></div></div>';
+  h+='<div class="page-subtitle">'+faxLog.length+' faxes logged.</div>';
+  h+='<div class="table-card"><div class="table-header"><h3>Fax History</h3></div><div class="table-scroll"><table class="tbl" style="min-width:800px"><thead><tr><th>Date</th><th>Sent By</th><th>Recipient</th><th>Recipient Type</th><th>Content Type</th><th>Order/Invoice #</th><th>Notes</th></tr></thead><tbody>';
+  var sorted=faxLog.slice().sort(function(a,b){return(b.date||'').localeCompare(a.date||'')});
+  if(sorted.length===0)h+='<tr><td colspan="7" style="text-align:center;color:var(--gray-400);padding:24px">No faxes logged yet.</td></tr>';
+  sorted.forEach(function(f){
+    h+='<tr><td style="font-size:11px">'+fmtDate(f.date)+'</td><td style="font-size:11px;font-weight:600">'+esc(f.sentBy||'—')+'</td><td style="font-size:11px">'+esc(f.recipient||'—')+'</td><td style="font-size:11px">'+esc(f.recipientType||'—')+'</td><td style="font-size:11px">'+esc(f.contentType||'—')+'</td><td style="font-size:11px">'+esc(f.orderNum||'—')+'</td><td style="font-size:10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(f.notes||'—')+'</td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  el.innerHTML=h;
+}
+function openFaxLogModal(){
+  var html='<div class="modal-overlay show" id="faxLogModal" style="z-index:300">';
+  html+='<div class="modal" style="width:520px"><div class="modal-header"><h2>Log Fax</h2><button class="modal-close" onclick="document.getElementById(\'faxLogModal\').remove()">&times;</button></div>';
+  html+='<div class="modal-body"><div class="form-grid">';
+  html+='<div class="form-group"><label>Date Sent</label><input type="date" id="fxDate" value="'+today()+'"></div>';
+  html+='<div class="form-group"><label>Recipient Name / Party</label><input type="text" id="fxRecipient" placeholder="e.g. Smith & Associates"></div>';
+  html+='<div class="form-group"><label>Recipient Type</label><select id="fxRecipientType"><option>Attorney</option><option>Doctor Office</option><option>Patient</option><option>Hospital</option><option>Insurance</option><option>Other</option></select></div>';
+  html+='<div class="form-group"><label>Fax Content Type</label><select id="fxContentType"><option>Records</option><option>Invoice</option><option>LOP</option><option>Authorization</option><option>Other</option></select></div>';
+  html+='<div class="form-group"><label>Order / Invoice # (optional)</label><input type="text" id="fxOrderNum" placeholder="Optional"></div>';
+  html+='<div class="form-group full"><label>Notes (optional)</label><textarea id="fxNotes" placeholder="Additional details..."></textarea></div>';
+  html+='</div></div>';
+  html+='<div class="modal-footer"><button class="btn-cancel" onclick="document.getElementById(\'faxLogModal\').remove()">Cancel</button><button class="btn-save" onclick="saveFaxEntry()">Save Fax</button></div>';
+  html+='</div></div>';
+  document.body.insertAdjacentHTML('beforeend',html);
+}
+function saveFaxEntry(){
+  var recipient=document.getElementById('fxRecipient').value.trim();
+  if(!recipient){alert('Please enter a recipient.');return;}
+  faxLog.push({
+    id:genId(),
+    date:document.getElementById('fxDate').value,
+    sentBy:currentUser,
+    recipient:recipient,
+    recipientType:document.getElementById('fxRecipientType').value,
+    contentType:document.getElementById('fxContentType').value,
+    orderNum:document.getElementById('fxOrderNum').value.trim(),
+    notes:document.getElementById('fxNotes').value.trim()
+  });
+  saveFaxLog();
+  document.getElementById('faxLogModal').remove();
+  renderActiveModule();
+}
+
 function dismissCmAlert(caseId,type){const c=cases.find(x=>x.id===caseId);if(!c)return;
   if(type.startsWith('manual-')){const mid=type.replace('manual-','');const ma=(c.manualAlerts||[]).find(m=>m.id===mid);if(ma){ma.completed=true;ma.completedDate=today();}}
   else{if(!c.dismissedAlerts)c.dismissedAlerts=[];if(!c.dismissedAlerts.includes(type))c.dismissedAlerts.push(type);}
@@ -2709,20 +2851,31 @@ function restoreCmAlert(caseId,type){const c=cases.find(x=>x.id===caseId);if(!c)
   else{if(c.dismissedAlerts)c.dismissedAlerts=c.dismissedAlerts.filter(t=>t!==type);}
   saveCases();renderActiveModule();if(cmCurrentPage==='cm-detail')showCmDetail(caseId);}
 
+var cmCaseSort='newest';
+var cmCaseSearchVal='';
 function renderCmCases(el) {
+  var searchEl=document.getElementById('cmCaseSearch');
+  if(searchEl)cmCaseSearchVal=searchEl.value;
   let h='<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">All Cases</div><div style="margin-left:auto"><button class="btn-primary" onclick="openNewCaseModal()" style="font-size:11px;padding:7px 14px">+ New Case</button></div></div><div class="page-subtitle">'+cases.length+' total cases.</div>';
-  h+='<div class="table-card"><div class="table-header"><h3>Case Registry</h3><div class="table-controls"><input class="search-input" id="cmCaseSearch" placeholder="Search..." oninput="renderCmCases(document.getElementById(\'sec-cm-cases\'))"></div></div>';
+  h+='<div class="table-card"><div class="table-header"><h3>Case Registry</h3><div class="table-controls"><select class="search-input" style="width:auto" onchange="cmCaseSort=this.value;renderCmCases(document.getElementById(\'sec-cm-cases\'))"><option value="newest"'+(cmCaseSort==='newest'?' selected':'')+'>Newest First</option><option value="oldest"'+(cmCaseSort==='oldest'?' selected':'')+'>Oldest First</option><option value="name"'+(cmCaseSort==='name'?' selected':'')+'>Name A–Z</option><option value="assigned"'+(cmCaseSort==='assigned'?' selected':'')+'>By Assigned</option><option value="status"'+(cmCaseSort==='status'?' selected':'')+'>By Status</option><option value="location"'+(cmCaseSort==='location'?' selected':'')+'>By Location</option></select><input class="search-input" id="cmCaseSearch" value="'+esc(cmCaseSearchVal)+'" placeholder="Search..." oninput="renderCmCases(document.getElementById(\'sec-cm-cases\'))"></div></div>';
   h+='<div class="table-scroll"><table class="tbl" style="min-width:800px"><thead><tr><th>Patient</th><th>DOI</th><th>Type</th><th>Location</th><th>Assigned</th><th>Status</th><th>Days</th><th>Appt</th><th>Alerts</th></tr></thead><tbody>';
-  const search=(document.getElementById('cmCaseSearch')?.value||'').toLowerCase();
-  let list=cases.slice();if(search)list=list.filter(c=>(c.patientName||'').toLowerCase().includes(search)||(c.location||'').toLowerCase().includes(search)||(c.assigned||'').toLowerCase().includes(search));
-  list.sort((a,b)=>{if(a.status==='Active'&&b.status!=='Active')return -1;if(a.status!=='Active'&&b.status==='Active')return 1;return(b.createdDate||'').localeCompare(a.createdDate||'');});
-  list.forEach(c=>{
+  const search=cmCaseSearchVal.toLowerCase();
+  let list=cases.slice();
+  if(search)list=list.filter(function(c){return(c.patientName||'').toLowerCase().includes(search)||(c.location||'').toLowerCase().includes(search)||(c.assigned||'').toLowerCase().includes(search)||(c.lawFirm||'').toLowerCase().includes(search)||(c.caseType||'').toLowerCase().includes(search)});
+  if(cmCaseSort==='newest')list.sort(function(a,b){return(b.createdDate||'').localeCompare(a.createdDate||'')});
+  else if(cmCaseSort==='oldest')list.sort(function(a,b){return(a.createdDate||'').localeCompare(b.createdDate||'')});
+  else if(cmCaseSort==='name')list.sort(function(a,b){return(a.patientName||'').localeCompare(b.patientName||'')});
+  else if(cmCaseSort==='assigned')list.sort(function(a,b){return(a.assigned||'').localeCompare(b.assigned||'')});
+  else if(cmCaseSort==='status')list.sort(function(a,b){var ord={'Active':0,'Settled/Complete':1};return(ord[a.status]||0)-(ord[b.status]||0)});
+  else if(cmCaseSort==='location')list.sort(function(a,b){return(a.location||'').localeCompare(b.location||'')});
+  list.forEach(function(c){
     const days=c.createdDate?daysBtw(c.createdDate,c.settledDate||today()):0;const dc=days>90?'danger':days>45?'warn':'';
-    const al=cmAlerts().filter(a=>a.caseId===c.id);
+    var al=[];try{al=cmAlerts().filter(function(a){return a.caseId===c.id})}catch(e){}
     h+='<tr class="'+(al.length>0?'has-alert':'')+'"><td><span class="patient-name" onclick="showCmDetail(\''+c.id+'\')">'+(al.length>0?'<span class="alert-dot"></span>':'')+esc(c.patientName)+'</span></td><td style="font-size:11px">'+fmtDate(c.doi)+'</td><td><span class="type-badge">'+esc(c.caseType)+'</span></td><td style="font-size:11px">'+esc(c.location||'—')+'</td><td style="font-size:11px">'+esc(c.assigned)+'</td><td><span class="status-badge '+(c.status==='Active'?'status-active':'status-settled')+'">'+esc(c.status)+'</span></td><td><span class="days-count '+dc+'">'+days+'</span></td><td style="font-size:11px">'+fmtDate(c.apptDate)+'</td><td>'+(al.length>0?'<span style="color:var(--red);font-weight:700;font-size:11px">'+al.length+'</span>':'—')+'</td></tr>';
   });
   h+='</tbody></table></div></div>';
   el.innerHTML=h;
+  if(cmCaseSearchVal){var inp=document.getElementById('cmCaseSearch');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}}
 }
 
 function renderCmAlertsPage(el) {
@@ -3145,7 +3298,7 @@ let editingCaseId=null;
 
 function cmAutoAssign(){document.getElementById('cAssigned').value=getNextCM()}
 
-function openNewCaseModal(){editingCaseId=null;document.getElementById('caseModalTitle').textContent='New Case';document.getElementById('btnDeleteCase').style.display='none';['cLastName','cFirstName','cDOB','cPhone','cEmail','cDOI','cAttorney','cLawFirm','cLawContact','cRefSource','cApptDate','cRecordsSent','cMissingInfo','cFollowUp','cNotes'].forEach(id=>document.getElementById(id).value='');document.getElementById('cCaseType').value='WC';document.getElementById('cLocation').value='';document.getElementById('cLanguage').value='English';document.getElementById('cAssigned').value=getNextCM();document.getElementById('cStatus').value='Active';document.querySelectorAll('.caseAlertCb').forEach(cb=>{cb.checked=false});populateLawFirmDropdown();populateRefSourceDropdown();document.getElementById('caseModal').classList.add('show')}
+function openNewCaseModal(){try{editingCaseId=null;document.getElementById('caseModalTitle').textContent='New Case';document.getElementById('btnDeleteCase').style.display='none';['cLastName','cFirstName','cDOB','cPhone','cEmail','cDOI','cAttorney','cLawFirm','cLawContact','cRefSource','cApptDate','cRecordsSent','cMissingInfo','cFollowUp','cNotes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});document.getElementById('cCaseType').value='WC';document.getElementById('cLocation').value='';document.getElementById('cLanguage').value='English';document.getElementById('cAssigned').value=getNextCM();document.getElementById('cStatus').value='Active';document.querySelectorAll('.caseAlertCb').forEach(function(cb){cb.checked=false});try{populateLawFirmDropdown();populateRefSourceDropdown();}catch(e){}document.getElementById('caseModal').classList.add('show')}catch(e){console.error('Error opening case modal:',e);alert('Error opening form. Please try again.')}}
 
 function openEditCaseModal(id){const c=cases.find(x=>x.id===id);if(!c)return;editingCaseId=id;document.getElementById('caseModalTitle').textContent='Edit Case';document.getElementById('btnDeleteCase').style.display='block';var nameParts=(c.patientName||'').split(',');document.getElementById('cLastName').value=(nameParts[0]||'').trim();document.getElementById('cFirstName').value=(nameParts[1]||'').trim();document.getElementById('cDOB').value=c.dob||'';document.getElementById('cPhone').value=c.phone||'';document.getElementById('cEmail').value=c.email||'';document.getElementById('cDOI').value=c.doi||'';document.getElementById('cCaseType').value=c.caseType||'WC';document.getElementById('cLocation').value=c.location||'';document.getElementById('cLanguage').value=c.language||'English';document.getElementById('cAttorney').value=c.attorney||'';document.getElementById('cLawFirm').value=c.lawFirm||'';document.getElementById('cLawContact').value=c.lawContact||'';document.getElementById('cRefSource').value=c.referralSource||'';document.getElementById('cAssigned').value=c.assigned||'Sean';document.getElementById('cApptDate').value=c.apptDate||'';document.getElementById('cRecordsSent').value=c.recordsSent||'';document.getElementById('cMissingInfo').value=c.missingInfo||'';document.getElementById('cFollowUp').value=c.followUpDate||'';document.getElementById('cNotes').value=c.notes||'';document.getElementById('cStatus').value=c.status||'Active';var alerts=(c.missingInfo||'').split(' | ').filter(Boolean);document.querySelectorAll('.caseAlertCb').forEach(cb=>{cb.checked=alerts.includes(cb.value)});populateLawFirmDropdown();populateRefSourceDropdown();document.getElementById('caseModal').classList.add('show')}
 
@@ -4435,7 +4588,7 @@ document.addEventListener('click', function(e) {
 });
 
 // Modal close on overlay
-['referralModal','resolveModal','apptConfirmModal','updateLogModal','marketingModal','caseModal','callLogModal','ticketModal','recordsBillingModal','missingInfoModal','introEmailModal','cmAlertModal','mktActivityModal','mktContactModal','pinModal','changePwModal','addAlertModal'].forEach(id=>{
+['referralModal','resolveModal','apptConfirmModal','updateLogModal','marketingModal','caseModal','callLogModal','ticketModal','recordsBillingModal','missingInfoModal','introEmailModal','cmAlertModal','mktActivityModal','mktContactModal','pinModal','changePwModal','addAlertModal','adjusterResolveModal','pipResolveModal'].forEach(id=>{
   document.getElementById(id).addEventListener('click',function(e){if(e.target===this){this.classList.remove('show');if(id==='pinModal'&&currentUser==='Manager'&&!managerUnlocked)logout();}});
 });
 </script>
