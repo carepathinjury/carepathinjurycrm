@@ -2795,17 +2795,31 @@ function submitPipResolve(){
 // ── FAX LOG ──
 var faxLog=[];
 function saveFaxLog(){storeSet('cp11_faxlog',JSON.stringify(faxLog))}
+var faxSearchVal='';
+var faxSort='newest';
 function renderCmFaxLog(el){
+  var searchEl=document.getElementById('faxSearch');
+  if(searchEl)faxSearchVal=searchEl.value;
   var h='<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">Fax Log</div><div style="margin-left:auto"><button class="btn-primary" onclick="openFaxLogModal()" style="font-size:11px;padding:7px 14px">+ Log Fax</button></div></div>';
   h+='<div class="page-subtitle">'+faxLog.length+' faxes logged.</div>';
-  h+='<div class="table-card"><div class="table-header"><h3>Fax History</h3></div><div class="table-scroll"><table class="tbl" style="min-width:800px"><thead><tr><th>Date</th><th>Sent By</th><th>Recipient</th><th>Recipient Type</th><th>Content Type</th><th>Order/Invoice #</th><th>Notes</th></tr></thead><tbody>';
-  var sorted=faxLog.slice().sort(function(a,b){return(b.date||'').localeCompare(a.date||'')});
-  if(sorted.length===0)h+='<tr><td colspan="7" style="text-align:center;color:var(--gray-400);padding:24px">No faxes logged yet.</td></tr>';
-  sorted.forEach(function(f){
+  h+='<div class="table-card"><div class="table-header"><h3>Fax History</h3><div class="table-controls"><select class="search-input" style="width:auto" onchange="faxSort=this.value;renderCmFaxLog(document.getElementById(\'sec-cm-faxlog\'))"><option value="newest"'+(faxSort==='newest'?' selected':'')+'>Newest First</option><option value="oldest"'+(faxSort==='oldest'?' selected':'')+'>Oldest First</option><option value="recipient"'+(faxSort==='recipient'?' selected':'')+'>By Recipient</option><option value="type"'+(faxSort==='type'?' selected':'')+'>By Recipient Type</option><option value="content"'+(faxSort==='content'?' selected':'')+'>By Content Type</option><option value="sender"'+(faxSort==='sender'?' selected':'')+'>By Sent By</option></select><input class="search-input" id="faxSearch" value="'+esc(faxSearchVal)+'" placeholder="Search..." oninput="renderCmFaxLog(document.getElementById(\'sec-cm-faxlog\'))"></div></div>';
+  h+='<div class="table-scroll"><table class="tbl" style="min-width:800px"><thead><tr><th>Date</th><th>Sent By</th><th>Recipient</th><th>Recipient Type</th><th>Content Type</th><th>Order/Invoice #</th><th>Notes</th></tr></thead><tbody>';
+  var search=faxSearchVal.toLowerCase();
+  var list=faxLog.slice();
+  if(search)list=list.filter(function(f){return(f.recipient||'').toLowerCase().includes(search)||(f.sentBy||'').toLowerCase().includes(search)||(f.recipientType||'').toLowerCase().includes(search)||(f.contentType||'').toLowerCase().includes(search)||(f.orderNum||'').toLowerCase().includes(search)||(f.notes||'').toLowerCase().includes(search)});
+  if(faxSort==='newest')list.sort(function(a,b){return(b.date||'').localeCompare(a.date||'')});
+  else if(faxSort==='oldest')list.sort(function(a,b){return(a.date||'').localeCompare(b.date||'')});
+  else if(faxSort==='recipient')list.sort(function(a,b){return(a.recipient||'').localeCompare(b.recipient||'')});
+  else if(faxSort==='type')list.sort(function(a,b){return(a.recipientType||'').localeCompare(b.recipientType||'')});
+  else if(faxSort==='content')list.sort(function(a,b){return(a.contentType||'').localeCompare(b.contentType||'')});
+  else if(faxSort==='sender')list.sort(function(a,b){return(a.sentBy||'').localeCompare(b.sentBy||'')});
+  if(list.length===0)h+='<tr><td colspan="7" style="text-align:center;color:var(--gray-400);padding:24px">No faxes found.</td></tr>';
+  list.forEach(function(f){
     h+='<tr><td style="font-size:11px">'+fmtDate(f.date)+'</td><td style="font-size:11px;font-weight:600">'+esc(f.sentBy||'—')+'</td><td style="font-size:11px">'+esc(f.recipient||'—')+'</td><td style="font-size:11px">'+esc(f.recipientType||'—')+'</td><td style="font-size:11px">'+esc(f.contentType||'—')+'</td><td style="font-size:11px">'+esc(f.orderNum||'—')+'</td><td style="font-size:10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(f.notes||'—')+'</td></tr>';
   });
   h+='</tbody></table></div></div>';
   el.innerHTML=h;
+  if(faxSearchVal){var inp=document.getElementById('faxSearch');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}}
 }
 function openFaxLogModal(){
   var html='<div class="modal-overlay show" id="faxLogModal" style="z-index:300">';
