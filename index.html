@@ -925,7 +925,7 @@ function savePsrMet(){storeSet(K.psrMet,JSON.stringify(psrMetrics))}
 function genId(){return Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,6)}
 function today(){return new Date().toISOString().split('T')[0]}
 function fmtDate(d){if(!d)return'—';const p=d.split('-');return p[1]+'/'+p[2]+'/'+p[0]}
-function daysBtw(a,b){const d1=new Date(a),d2=new Date(b);d1.setHours(0,0,0,0);d2.setHours(0,0,0,0);return Math.round((d2-d1)/864e5)}
+function daysBtw(a,b){if(!a||!b)return 0;const d1=new Date(a),d2=new Date(b);if(isNaN(d1.getTime())||isNaN(d2.getTime()))return 0;d1.setHours(0,0,0,0);d2.setHours(0,0,0,0);return Math.round((d2-d1)/864e5)}
 function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function getNextStaff(){const s=CRM_STAFF[robinIdx%CRM_STAFF.length];robinIdx++;saveRobin();return s}
 
@@ -1240,6 +1240,8 @@ function loginAs(name, role) {
   else if (role === 'case_mgr') switchModule('cm');
   else if (role === 'psr') switchModule('psr');
   else switchModule('crm');
+  // Delayed badge refresh to ensure DOM is ready
+  setTimeout(function(){updateAllBadges();},500);
 }
 
 function loginAsManager(name) {
@@ -1496,16 +1498,17 @@ function updateAllBadges() {
   const ca = crmAlerts(), cma = cmAlerts();
   const openTk = tickets.filter(t=>t.status!=='Resolved').length;
   const total = ca.length + cma.length + openTk;
-  console.log('Badge update — CRM alerts:',ca.length,'CM alerts:',cma.length,'Tickets:',openTk,'Total:',total);
-  document.getElementById('topAlertCount').textContent = total;
-  document.getElementById('topAlertCount').style.display = total > 0 ? 'flex' : 'none';
-  document.getElementById('crmAlertBadge').textContent = ca.length;
-  document.getElementById('crmAlertBadge').style.display = ca.length > 0 ? 'inline' : 'none';
-  document.getElementById('cmAlertBadge').textContent = cma.length;
-  document.getElementById('cmAlertBadge').style.display = cma.length > 0 ? 'inline' : 'none';
-  CRM_STAFF.forEach(s => { const b=document.getElementById('crmBadge-'+s); if(b){const n=ca.filter(a=>a.assignedTo===s).length; b.textContent=n; b.style.display=n>0?'inline':'none';} });
-  CM_STAFF.forEach(s => { const b=document.getElementById('cmBadge-'+s); if(b){const n=cma.filter(a=>a.assigned===s).length; b.textContent=n; b.style.display=n>0?'inline':'none';} });
-  const tkBadge=document.getElementById('psrTicketBadge');if(tkBadge){tkBadge.textContent=openTk;tkBadge.style.display=openTk>0?'inline':'none';}
+  console.log('Badge update — CRM:',ca.length,'CM:',cma.length,'Tk:',openTk);
+  if(ca.length>0)console.log('CRM alert sample — assignedTo:',ca[0].assignedTo,'type:',ca[0].type);
+  var topEl=document.getElementById('topAlertCount');
+  if(topEl){topEl.textContent=total;topEl.style.display=total>0?'flex':'none';}
+  var crmBadge=document.getElementById('crmAlertBadge');
+  if(crmBadge){crmBadge.textContent=ca.length;crmBadge.style.display=ca.length>0?'inline':'none';}
+  var cmBadge=document.getElementById('cmAlertBadge');
+  if(cmBadge){cmBadge.textContent=cma.length;cmBadge.style.display=cma.length>0?'inline':'none';}
+  CRM_STAFF.forEach(function(s){var b=document.getElementById('crmBadge-'+s);if(b){var n=ca.filter(function(a){return a.assignedTo===s}).length;b.textContent=n;b.style.display=n>0?'inline':'none';}});
+  CM_STAFF.forEach(function(s){var b=document.getElementById('cmBadge-'+s);if(b){var n=cma.filter(function(a){return a.assigned===s}).length;b.textContent=n;b.style.display=n>0?'inline':'none';}});
+  var tkBadge=document.getElementById('psrTicketBadge');if(tkBadge){tkBadge.textContent=openTk;tkBadge.style.display=openTk>0?'inline':'none';}
   } catch(e){console.error('Badge update error:',e);}
 }
 
@@ -4183,6 +4186,8 @@ function seed(){
 // Load from Supabase first, then seed and initialize
 _loadFromSupabase().then(function(){
   seed();
+  // Start periodic badge refresh
+  setInterval(function(){if(currentUser)try{updateAllBadges()}catch(e){}},30000);
 }).catch(function(e){ console.warn('Init error:', e); seed(); });
 
 // ── Event delegation for patient name clicks (robust fallback) ──
