@@ -2670,18 +2670,20 @@ function renderCmStaff(el,staff){
   const staffCases=cases.filter(c=>c.assigned===staff);
   const active=staffCases.filter(c=>c.status==='Active');
   const settled=staffCases.filter(c=>c.status==='Settled/Complete');
+  const missingClaim=staffCases.filter(function(c){return c.status==='Active'&&c.missingInfo&&c.missingInfo.indexOf('Missing Claim Info')!==-1&&(!c.followUpDate||daysBtw(c.followUpDate,today())>=0)});
   const alerts=cmAlerts().filter(a=>a.assigned===staff);
   const tab = cmStaffTab[staff] || 'all';
 
   let h='<div class="page-title">'+esc(staff)+'\'s Caseload</div><div class="page-subtitle">Cases and alerts assigned to '+esc(staff)+'.</div>';
-  h+='<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('Active Cases',active.length,'teal')+stat('Alerts',alerts.length,'red')+stat('Settled',settled.length,'')+stat('Total',staffCases.length,'gold')+'</div>';
+  h+='<div class="stats-row" style="grid-template-columns:repeat(5,1fr)">'+stat('Active Cases',active.length,'teal')+stat('Alerts',alerts.length,'red')+stat('Missing Claim',missingClaim.length,'gold')+stat('Settled',settled.length,'')+stat('Total',staffCases.length,'')+'</div>';
 
   // Tab bar
   h += '<div style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap">' +
-    '<button class="filter-btn '+(tab==='all'?'active':'')+'" onclick="setCmStaffTab(\''+staff+'\',\'all\')">All</button>' +
+    '<button class="filter-btn '+(tab==='all'?'active':'')+'" onclick="setCmStaffTab(\''+staff+'\',\'all\')">All ('+staffCases.length+')</button>' +
     '<button class="filter-btn '+(tab==='alerts'?'active':'')+'" onclick="setCmStaffTab(\''+staff+'\',\'alerts\')" style="position:relative">Alerts'+(alerts.length>0?' <span style="background:var(--red-light);color:white;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:3px">'+alerts.length+'</span>':'')+'</button>' +
-    '<button class="filter-btn '+(tab==='active'?'active':'')+'" onclick="setCmStaffTab(\''+staff+'\',\'active\')">Active Cases</button>' +
-    '<button class="filter-btn '+(tab==='settled'?'active':'')+'" onclick="setCmStaffTab(\''+staff+'\',\'settled\')">Settled / Complete</button>' +
+    '<button class="filter-btn '+(tab==='missing_claim'?'active':'')+'" onclick="setCmStaffTab(\''+staff+'\',\'missing_claim\')" style="position:relative">Missing Claim Info'+(missingClaim.length>0?' <span style="background:var(--gold);color:white;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:3px">'+missingClaim.length+'</span>':'')+'</button>' +
+    '<button class="filter-btn '+(tab==='active'?'active':'')+'" onclick="setCmStaffTab(\''+staff+'\',\'active\')">Active ('+active.length+')</button>' +
+    '<button class="filter-btn '+(tab==='settled'?'active':'')+'" onclick="setCmStaffTab(\''+staff+'\',\'settled\')">Settled ('+settled.length+')</button>' +
   '</div>';
 
   // Alerts tab
@@ -2689,6 +2691,30 @@ function renderCmStaff(el,staff){
     if (alerts.length > 0) alerts.forEach((a,i) => { h += renderCmAlertCard(a,i); });
     else h += '<div style="background:white;border-radius:var(--radius);padding:24px;text-align:center;color:var(--gray-400);box-shadow:var(--shadow-sm)">No active alerts for '+esc(staff)+'.</div>';
     el.innerHTML = h; return;
+  }
+
+  // Missing Claim Info tab
+  if (tab === 'missing_claim') {
+    h+='<div class="table-card" style="border-left:4px solid var(--gold)"><div class="table-header"><h3>Missing Claim Info — Unresolved ('+missingClaim.length+')</h3></div>';
+    if(missingClaim.length>0){
+      h+='<div class="table-scroll"><table class="tbl" style="min-width:700px"><thead><tr><th>Patient</th><th>Type</th><th>Location</th><th>Missing Info</th><th>Last Follow-up</th><th>Days Since</th><th>Action</th></tr></thead><tbody>';
+      missingClaim.forEach(function(c){
+        var daysSince=c.followUpDate?daysBtw(c.followUpDate,today()):daysBtw(c.createdDate,today());
+        var urgency=daysSince>=10?'danger':daysSince>=5?'warn':'';
+        h+='<tr><td><span class="patient-name" onclick="showCmDetail(\''+c.id+'\')">'+esc(c.patientName)+'</span></td>';
+        h+='<td><span class="type-badge">'+esc(c.caseType)+'</span></td>';
+        h+='<td style="font-size:11px">'+esc(c.location||'—')+'</td>';
+        h+='<td style="font-size:11px;color:var(--red);font-weight:600">'+esc(c.missingInfo)+'</td>';
+        h+='<td style="font-size:11px">'+fmtDate(c.followUpDate)+'</td>';
+        h+='<td><span class="days-count '+urgency+'">'+daysSince+'</span></td>';
+        h+='<td><button class="btn-resolve" style="font-size:10px;padding:4px 10px" onclick="showCmDetail(\''+c.id+'\')">View Case</button></td></tr>';
+      });
+      h+='</tbody></table></div>';
+    } else {
+      h+='<div style="padding:24px;text-align:center;color:var(--gray-400)">No unresolved missing claim info cases. Great work!</div>';
+    }
+    h+='</div>';
+    el.innerHTML=h;return;
   }
 
   // Show alerts above table on "all" tab
