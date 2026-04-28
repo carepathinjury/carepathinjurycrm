@@ -2415,11 +2415,54 @@ function saveReferral() {
     // Auto-create case if scheduled
     if(data.apptDate) createCaseFromRef(nr);
   }
-  saveRefs();closeRefModal();renderActiveModule();
+  saveRefs();
+  // Sync to linked case if editing
+  if(editingRefId) syncRefToCase(editingRefId);
+  closeRefModal();renderActiveModule();
   if(crmCurrentPage==='crm-detail'&&editingRefId)showCrmDetail(editingRefId);
 }
 
 function deleteReferral(){if(!editingRefId||!confirm('Delete?'))return;refs=refs.filter(r=>r.id!==editingRefId);saveRefs();closeRefModal();crmNav('crm-referrals');}
+
+// ── Sync shared fields between referral and case ──
+function syncRefToCase(refId){
+  var r=refs.find(function(x){return x.id===refId});
+  if(!r)return;
+  var c=cases.find(function(x){return x.sourceRefId===refId});
+  if(!c)return;
+  c.patientName=r.patientName;
+  c.dob=r.dob;
+  c.phone=r.phone;
+  c.email=r.email;
+  c.doi=r.doi;
+  c.caseType=r.caseType;
+  c.location=r.location;
+  c.language=r.language;
+  c.attorney=r.attorney;
+  c.lawFirm=r.lawFirm;
+  c.lawContact=r.lawContact;
+  c.referralSource=r.referralSource;
+  saveCases();
+}
+function syncCaseToRef(caseId){
+  var c=cases.find(function(x){return x.id===caseId});
+  if(!c||!c.sourceRefId)return;
+  var r=refs.find(function(x){return x.id===c.sourceRefId});
+  if(!r)return;
+  r.patientName=c.patientName;
+  r.dob=c.dob;
+  r.phone=c.phone||r.phone;
+  r.email=c.email||r.email;
+  r.doi=c.doi;
+  r.caseType=c.caseType;
+  r.location=c.location;
+  r.language=c.language||r.language;
+  r.attorney=c.attorney||r.attorney;
+  r.lawFirm=c.lawFirm||r.lawFirm;
+  r.lawContact=c.lawContact||r.lawContact;
+  r.referralSource=c.referralSource||r.referralSource;
+  saveRefs();
+}
 
 // ── Auto-create case from referral ──
 function createCaseFromRef(r) {
@@ -2429,14 +2472,23 @@ function createCaseFromRef(r) {
     id: genId(),
     sourceRefId: r.id,
     patientName: r.patientName,
+    dob: r.dob,
+    phone: r.phone,
+    email: r.email,
     doi: r.doi,
     caseType: r.caseType,
     location: r.location,
+    language: r.language,
+    attorney: r.attorney,
+    lawFirm: r.lawFirm,
+    lawContact: r.lawContact,
+    referralSource: r.referralSource,
     assigned: assigned,
     apptDate: r.apptDate,
     recordsSent: '',
     missingInfo: alertInfo,
     followUpDate: '',
+    notes: '',
     status: 'Active',
     createdDate: today(),
     settledDate: '',
@@ -3121,7 +3173,10 @@ function saveCase(){
   const data={patientName:name,dob:document.getElementById('cDOB').value,phone:document.getElementById('cPhone').value.trim(),email:document.getElementById('cEmail').value.trim(),doi:document.getElementById('cDOI').value,caseType:document.getElementById('cCaseType').value,location:document.getElementById('cLocation').value,language:document.getElementById('cLanguage').value,attorney:document.getElementById('cAttorney').value.trim(),lawFirm:document.getElementById('cLawFirm').value.trim(),lawContact:document.getElementById('cLawContact').value.trim(),referralSource:document.getElementById('cRefSource').value.trim(),assigned:document.getElementById('cAssigned').value,apptDate:document.getElementById('cApptDate').value,recordsSent:document.getElementById('cRecordsSent').value,missingInfo:missingInfo,followUpDate:document.getElementById('cFollowUp').value,notes:document.getElementById('cNotes').value.trim(),status:document.getElementById('cStatus').value};
   if(editingCaseId){const idx=cases.findIndex(c=>c.id===editingCaseId);if(idx!==-1){const prev=cases[idx];if(data.status==='Settled/Complete'&&prev.status==='Active'&&!prev.settledDate)data.settledDate=today();else data.settledDate=prev.settledDate||'';if(data.status==='Active')data.settledDate='';cases[idx]={...prev,...data};}}
   else{cases.push({id:genId(),...data,createdDate:today(),settledDate:data.status==='Settled/Complete'?today():'',dismissedAlerts:[],manualAlerts:[]});}
-  saveCases();closeCaseModal();renderActiveModule();if(cmCurrentPage==='cm-detail'&&editingCaseId)showCmDetail(editingCaseId);
+  saveCases();
+  // Sync to linked referral
+  if(editingCaseId) syncCaseToRef(editingCaseId);
+  closeCaseModal();renderActiveModule();if(cmCurrentPage==='cm-detail'&&editingCaseId)showCmDetail(editingCaseId);
 }
 
 function deleteCase(){if(!editingCaseId||!confirm('Delete case?'))return;cases=cases.filter(c=>c.id!==editingCaseId);saveCases();closeCaseModal();cmNav('cm-cases');}
