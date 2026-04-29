@@ -918,13 +918,15 @@ var _supabaseReady = false;
 function storeGet(k){ return _cache[k] || null; }
 function storeSet(k,v){
   _cache[k] = v;
-  // Fire-and-forget write to Supabase
   if(_supabaseReady){
     var parsed; try { parsed = JSON.parse(v); } catch(e){ parsed = v; }
-    fetch(SUPABASE_URL+'/rest/v1/app_data?key=eq.'+encodeURIComponent(k), {
-      method:'PATCH', headers: _sbHeaders,
-      body: JSON.stringify({ value: parsed, updated_at: new Date().toISOString() })
-    }).catch(function(e){ console.warn('Supabase write error:', e); });
+    var upsertHeaders = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer '+SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' };
+    fetch(SUPABASE_URL+'/rest/v1/app_data', {
+      method:'POST', headers: upsertHeaders,
+      body: JSON.stringify({ key: k, value: parsed, updated_at: new Date().toISOString() })
+    }).then(function(resp){
+      if(!resp.ok) resp.text().then(function(t){console.warn('Supabase upsert failed for',k,':',resp.status,t)});
+    }).catch(function(e){ console.warn('Supabase write error for',k,':',e); });
   }
 }
 
@@ -2390,7 +2392,7 @@ function saveReferral() {
 
   // Required fields
   if (!document.getElementById('fCaseType').value) {alert('Case Type is required.');return;}
-  if (!document.getElementById('fDOI').value) {alert('Date of Injury is required.');return;}
+  if (!document.getElementById('fDOI').value && document.getElementById('fCaseType').value!=='PHI') {alert('Date of Injury is required.');return;}
   if (!document.getElementById('fLocation').value) {alert('Clinic Location is required.');return;}
   if (!document.getElementById('fRefSource').value.trim()) {alert('Referral Source is required.');return;}
   if (!document.getElementById('fRegDate').value) {alert('Referred / Registered Date is required.');return;}
@@ -3413,7 +3415,7 @@ function saveCase(){
   firstName=firstName.split(/\s+/).map(capWord).join(' ');
   var name=lastName+', '+firstName;
   if(!document.getElementById('cCaseType').value){alert('Case Type is required.');return;}
-  if(!document.getElementById('cDOI').value){alert('Date of Injury is required.');return;}
+  if(!document.getElementById('cDOI').value && document.getElementById('cCaseType').value!=='PHI'){alert('Date of Injury is required.');return;}
   if(!document.getElementById('cLocation').value){alert('Clinic Location is required.');return;}
   // Build missing info from checkboxes + notes
   var checkedAlerts=[];document.querySelectorAll('.caseAlertCb').forEach(function(cb){if(cb.checked)checkedAlerts.push(cb.value)});
