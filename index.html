@@ -925,9 +925,26 @@ function storeSet(k,v){
       method:'POST', headers: upsertHeaders,
       body: JSON.stringify({ key: k, value: parsed, updated_at: new Date().toISOString() })
     }).then(function(resp){
-      if(!resp.ok) resp.text().then(function(t){console.warn('Supabase upsert failed for',k,':',resp.status,t)});
-    }).catch(function(e){ console.warn('Supabase write error for',k,':',e); });
+      if(!resp.ok){
+        // Fallback to PATCH if upsert fails
+        return fetch(SUPABASE_URL+'/rest/v1/app_data?key=eq.'+encodeURIComponent(k), {
+          method:'PATCH', headers: _sbHeaders,
+          body: JSON.stringify({ value: parsed, updated_at: new Date().toISOString() })
+        }).then(function(r2){
+          if(!r2.ok) console.error('Save FAILED for',k,'—',r2.status);
+        });
+      }
+    }).catch(function(e){ console.error('Supabase write error for',k,':',e); showSaveError(); });
   }
+}
+
+function showSaveError(){
+  if(document.getElementById('saveErrorToast'))return;
+  var d=document.createElement('div');d.id='saveErrorToast';
+  d.style.cssText='position:fixed;bottom:20px;right:20px;background:#c0392b;color:white;padding:12px 20px;border-radius:8px;font-family:DM Sans;font-size:12px;font-weight:600;z-index:999;box-shadow:0 4px 12px rgba(0,0,0,0.3)';
+  d.textContent='⚠️ Save failed — check your internet connection and try again';
+  document.body.appendChild(d);
+  setTimeout(function(){d.remove()},5000);
 }
 
 // Load all data from Supabase on startup
@@ -947,6 +964,10 @@ async function _loadFromSupabase(){
   }
   _supabaseReady = true;
   // Initialize app variables from cache
+  _hydrateFromCache();
+}
+
+function _hydrateFromCache(){
   refs = JSON.parse(storeGet(K.refs)||'[]');
   mktList = JSON.parse(storeGet(K.mkt)||'[]');
   cases = JSON.parse(storeGet(K.cases)||'[]');
@@ -961,6 +982,38 @@ async function _loadFromSupabase(){
   customLawFirms = JSON.parse(storeGet('cp11_customLawFirms')||'[]');
   customRefSources = JSON.parse(storeGet('cp11_customRefSources')||'[]');
   faxLog = JSON.parse(storeGet('cp11_faxlog')||'[]');
+}
+
+// Poll Supabase for fresh data every 15 seconds so all users see updates
+var _lastPollHash = '';
+async function _pollSupabase(){
+  if(!_supabaseReady||!currentUser)return;
+  try{
+    var resp = await fetch(SUPABASE_URL+'/rest/v1/app_data?select=key,value', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer '+SUPABASE_KEY }
+    });
+    if(!resp.ok)return;
+    var rows = await resp.json();
+    // Build a hash to detect changes
+    var newHash='';
+    rows.forEach(function(r){
+      var val=(typeof r.value === 'string') ? r.value : JSON.stringify(r.value);
+      newHash+=r.key+':'+val.length+';';
+    });
+    if(newHash===_lastPollHash)return; // No changes
+    _lastPollHash=newHash;
+    // Update cache
+    rows.forEach(function(r){
+      _cache[r.key] = (typeof r.value === 'string') ? r.value : JSON.stringify(r.value);
+    });
+    // Re-hydrate variables
+    _hydrateFromCache();
+    // Re-render current view
+    try{renderActiveModule();}catch(e){}
+    console.log('🔄 Data refreshed from Supabase');
+  }catch(e){}
+}
+setInterval(_pollSupabase, 15000);
   // Refresh whatever view is currently active
   if(typeof setupUIForRole === 'function') try { setupUIForRole(); } catch(e){}
 }
