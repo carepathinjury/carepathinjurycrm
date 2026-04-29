@@ -946,10 +946,11 @@ function _fromDb(row, fieldMap){
 // ─── Generic DB operations ─────────────────────────────────────────
 async function _dbFetchAll(table){
   try{
-    var resp=await fetch(SUPABASE_URL+'/rest/v1/'+table+'?select=*&order=id',{headers:_sbRead});
-    if(!resp.ok){console.error('Fetch failed:',table,resp.status);return null;}
+    var orderCol=(table==='system_config'||table==='daily_metrics')?'':'&order=id';
+    var resp=await fetch(SUPABASE_URL+'/rest/v1/'+table+'?select=*'+orderCol,{headers:_sbRead});
+    if(!resp.ok){console.error('Fetch failed:',table,resp.status);return [];}
     return await resp.json();
-  }catch(e){console.error('Fetch error:',table,e);return null;}
+  }catch(e){console.error('Fetch error:',table,e);return [];}
 }
 
 function _dbUpsert(table, row){
