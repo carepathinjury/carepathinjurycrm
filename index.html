@@ -1773,7 +1773,8 @@ function renderCrmDashboard(el) {
 
   // Recent table
   h += '<div class="table-card"><div class="table-header"><h3>Recent Referrals</h3></div><div class="table-scroll"><table class="tbl" style="min-width:800px"><thead><tr><th>Patient</th><th>Type</th><th>Location</th><th>Source</th><th>Status</th><th>Days</th><th>Appt</th></tr></thead><tbody>';
-  refs.slice().sort((a,b)=>(b.createdDate||'').localeCompare(a.createdDate||'')).slice(0,8).forEach(r => { h += crmRefRow(r); });
+  var dashAlertRefIds={};alerts.forEach(function(a){dashAlertRefIds[a.id]=true});
+  refs.slice().sort((a,b)=>(b.createdDate||'').localeCompare(a.createdDate||'')).slice(0,8).forEach(r => { h += crmRefRow(r, dashAlertRefIds); });
   h += '</tbody></table></div></div>';
   el.innerHTML = h;
 }
@@ -1782,11 +1783,11 @@ function stat(label, value, cls) {
   return '<div class="stat-card"><div class="stat-label">'+label+'</div><div class="stat-value '+(cls||'')+'">'+value+'</div></div>';
 }
 
-function crmRefRow(r) {
+function crmRefRow(r, alertRefIds) {
   const days = r.createdDate ? daysBtw(r.createdDate, today()) : 0;
   const dc = days>7&&!r.apptDate?'danger':days>3&&!r.apptDate?'warn':'';
-  const ha = crmAlerts().some(a => a.id === r.id);
-  const sc = r.status==='Completed'?'status-settled':r.apptDate?'status-active':'status-pending';
+  const ha = alertRefIds ? (alertRefIds[r.id]||false) : false;
+  const sc = r.status==='Completed'||r.status==='Patient Lost'?'status-settled':r.apptDate?'status-active':'status-pending';
   let apptCol = fmtDate(r.apptDate);
   if(r.apptOutcome==='completed') apptCol+=' <span style="color:var(--teal);font-size:9px">✓</span>';
   else if(r.apptOutcome==='no_show') apptCol+=' <span style="color:var(--red);font-size:9px">NS</span>';
@@ -1856,18 +1857,20 @@ function renderCrmReferrals(el) {
   h += '<div class="table-scroll"><table class="tbl" style="min-width:1000px"><thead><tr><th>Patient</th><th>Type</th><th>DOI</th><th>Location</th><th>Attorney/Firm</th><th>Source</th><th>Status</th><th>Days</th><th>Appt</th><th>Outcome</th></tr></thead><tbody>';
   const search = crmRefSearchVal.toLowerCase();
   let list = refs.slice();
-  if(search) list = list.filter(r => (r.patientName||'').toLowerCase().includes(search)||(r.location||'').toLowerCase().includes(search)||(r.referralSource||'').toLowerCase().includes(search)||(r.lawFirm||'').toLowerCase().includes(search));
-  if(crmRefSort==='newest') list.sort((a,b)=>(b.enteredAt||b.createdDate||'').localeCompare(a.enteredAt||a.createdDate||''));
-  else if(crmRefSort==='oldest') list.sort((a,b)=>(a.enteredAt||a.createdDate||'').localeCompare(b.enteredAt||b.createdDate||''));
-  else if(crmRefSort==='name') list.sort((a,b)=>(a.patientName||'').localeCompare(b.patientName||''));
-  else if(crmRefSort==='status') list.sort((a,b)=>(a.status||'').localeCompare(b.status||''));
-  else if(crmRefSort==='location') list.sort((a,b)=>(a.location||'').localeCompare(b.location||''));
-  else if(crmRefSort==='firm') list.sort((a,b)=>(a.lawFirm||'').localeCompare(b.lawFirm||''));
-  list.forEach(r => {
-    const days=r.createdDate?daysBtw(r.createdDate,today()):0;
-    const dc=days>7&&!r.apptDate?'danger':days>3&&!r.apptDate?'warn':'';
-    const ha=crmAlerts().some(a=>a.id===r.id);
-    const sc=r.status==='Completed'?'status-settled':r.apptDate?'status-active':'status-pending';
+  if(search) list = list.filter(function(r){return (r.patientName||'').toLowerCase().includes(search)||(r.location||'').toLowerCase().includes(search)||(r.referralSource||'').toLowerCase().includes(search)||(r.lawFirm||'').toLowerCase().includes(search)});
+  if(crmRefSort==='newest') list.sort(function(a,b){return(b.enteredAt||b.createdDate||'').localeCompare(a.enteredAt||a.createdDate||'')});
+  else if(crmRefSort==='oldest') list.sort(function(a,b){return(a.enteredAt||a.createdDate||'').localeCompare(b.enteredAt||b.createdDate||'')});
+  else if(crmRefSort==='name') list.sort(function(a,b){return(a.patientName||'').localeCompare(b.patientName||'')});
+  else if(crmRefSort==='status') list.sort(function(a,b){return(a.status||'').localeCompare(b.status||'')});
+  else if(crmRefSort==='location') list.sort(function(a,b){return(a.location||'').localeCompare(b.location||'')});
+  else if(crmRefSort==='firm') list.sort(function(a,b){return(a.lawFirm||'').localeCompare(b.lawFirm||'')});
+  // Pre-compute alert IDs once instead of per-row
+  var alertRefIds={};try{crmAlerts().forEach(function(a){alertRefIds[a.id]=true})}catch(e){}
+  list.forEach(function(r){
+    var days=r.createdDate?daysBtw(r.createdDate,today()):0;
+    var dc=days>7&&!r.apptDate?'danger':days>3&&!r.apptDate?'warn':'';
+    var ha=alertRefIds[r.id]||false;
+    var sc=r.status==='Completed'||r.status==='Patient Lost'?'status-settled':r.apptDate?'status-active':'status-pending';
     const ol={'completed':'<span style="color:var(--teal)">✓ Attended</span>','no_show':'<span style="color:var(--red)">No Show</span>','cancelled':'<span style="color:var(--red)">Cancelled</span>'};
     let oc=ol[r.apptOutcome]||(r.apptDate&&daysBtw(r.apptDate,today())>=1?'<span style="color:var(--gold)">Pending</span>':'—');
     // Make outcome clickable if there's an appointment
@@ -1975,13 +1978,14 @@ function renderCrmStaff(el, staff) {
 
   h += '<div class="table-card"><div class="table-header"><h3>'+tableTitle+'</h3><div class="table-controls"><input class="search-input" placeholder="Search..." oninput="crmStaffSearch(this,\''+staff+'\')"></div></div>';
   h += '<div class="table-scroll"><table class="tbl" style="min-width:750px"><thead><tr><th>Patient</th><th>Type</th><th>Location</th><th>Source</th><th>Status</th><th>Days</th><th>Appt</th><th>Outcome</th></tr></thead><tbody id="crmStaffTbody-'+staff+'">';
-  displayRefs.sort((a,b)=>(b.createdDate||'').localeCompare(a.createdDate||'')).forEach(r => {
-    const days=r.createdDate?daysBtw(r.createdDate,today()):0;
-    const dc=days>7&&!r.apptDate?'danger':days>3&&!r.apptDate?'warn':'';
-    const ha=crmAlerts().some(a=>a.id===r.id);
-    const sc=r.status==='Completed'?'status-settled':r.status==='Active Treatment'?'status-active':r.apptDate?'status-active':'status-pending';
-    const ol={'completed':'<span style="color:var(--teal)">✓</span>','no_show':'<span style="color:var(--red)">NS</span>','cancelled':'<span style="color:var(--red)">Can</span>'};
-    const oc=ol[r.apptOutcome]||(r.apptDate&&daysBtw(r.apptDate,today())>=1?'<span style="color:var(--gold)">Pend</span>':'—');
+  var staffAlertRefIds={};allAlerts.forEach(function(a){staffAlertRefIds[a.id]=true});
+  displayRefs.sort(function(a,b){return(b.createdDate||'').localeCompare(a.createdDate||'')}).forEach(function(r){
+    var days=r.createdDate?daysBtw(r.createdDate,today()):0;
+    var dc=days>7&&!r.apptDate?'danger':days>3&&!r.apptDate?'warn':'';
+    var ha=staffAlertRefIds[r.id]||false;
+    var sc=r.status==='Completed'||r.status==='Patient Lost'?'status-settled':r.status==='Active Treatment'?'status-active':r.apptDate?'status-active':'status-pending';
+    var ol={'completed':'<span style="color:var(--teal)">✓</span>','no_show':'<span style="color:var(--red)">NS</span>','cancelled':'<span style="color:var(--red)">Can</span>'};
+    var oc=ol[r.apptOutcome]||(r.apptDate&&daysBtw(r.apptDate,today())>=1?'<span style="color:var(--gold)">Pend</span>':'—');
     h+='<tr class="'+(ha?'has-alert':'')+'"><td><span class="patient-name" onclick="showCrmDetail(\''+r.id+'\')">'+(ha?'<span class="alert-dot"></span>':'')+esc(r.patientName)+'</span></td><td><span class="type-badge">'+esc(r.caseType)+'</span></td><td style="font-size:11px">'+esc(r.location||'—')+'</td><td style="font-size:11px">'+esc(r.referralSource||'—')+'</td><td><span class="status-badge '+sc+'">'+esc(r.status)+'</span></td><td><span class="days-count '+dc+'">'+days+'</span></td><td style="font-size:11px">'+fmtDate(r.apptDate)+'</td><td style="font-size:10px">'+oc+'</td></tr>';
   });
   if(displayRefs.length===0) h+='<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--gray-400)">No referrals in this category.</td></tr>';
@@ -2727,9 +2731,10 @@ function renderCmDashboard(el) {
   });
   h+='</tbody></table></div></div>';
   h+='<div class="table-card"><div class="table-header"><h3>Recent Cases</h3></div><div class="table-scroll"><table class="tbl" style="min-width:700px"><thead><tr><th>Patient</th><th>Type</th><th>Location</th><th>Assigned</th><th>Status</th><th>Days</th><th>Appt</th></tr></thead><tbody>';
+  var dashAlertIds={};try{alerts.forEach(function(a){dashAlertIds[a.caseId]=true})}catch(e){}
   cases.slice().sort((a,b)=>(b.createdDate||'').localeCompare(a.createdDate||'')).slice(0,10).forEach(c=>{
     const days=c.createdDate?daysBtw(c.createdDate,c.settledDate||today()):0;const dc=days>90?'danger':days>45?'warn':'';
-    var al=false;try{al=cmAlerts().filter(a=>a.caseId===c.id).length>0}catch(e){}
+    var al=dashAlertIds[c.id]||false;
     var stClass=c.status==='Active'?'status-active':c.status==='In Litigation'?'status-pending':'status-settled';
     h+='<tr class="'+(al?'has-alert':'')+'"><td><span class="patient-name" onclick="showCmDetail(\''+c.id+'\')">'+(al?'<span class="alert-dot"></span>':'')+esc(c.patientName)+'</span></td><td><span class="type-badge">'+esc(c.caseType)+'</span></td><td style="font-size:11px">'+esc(c.location||'—')+'</td><td style="font-size:11px">'+esc(c.assigned)+'</td><td><span class="status-badge '+stClass+'">'+esc(c.status)+'</span></td><td><span class="days-count '+dc+'">'+days+'</span></td><td style="font-size:11px">'+fmtDate(c.apptDate)+'</td></tr>';
   });
@@ -3042,10 +3047,13 @@ function renderCmCases(el) {
   else if(cmCaseSort==='assigned')list.sort(function(a,b){return(a.assigned||'').localeCompare(b.assigned||'')});
   else if(cmCaseSort==='status')list.sort(function(a,b){var ord={'Active':0,'Settled/Complete':1};return(ord[a.status]||0)-(ord[b.status]||0)});
   else if(cmCaseSort==='location')list.sort(function(a,b){return(a.location||'').localeCompare(b.location||'')});
+  // Pre-compute alert counts per case
+  var caseAlertCounts={};try{cmAlerts().forEach(function(a){caseAlertCounts[a.caseId]=(caseAlertCounts[a.caseId]||0)+1})}catch(e){}
   list.forEach(function(c){
     const days=c.createdDate?daysBtw(c.createdDate,c.settledDate||today()):0;const dc=days>90?'danger':days>45?'warn':'';
-    var al=[];try{al=cmAlerts().filter(function(a){return a.caseId===c.id})}catch(e){}
-    h+='<tr class="'+(al.length>0?'has-alert':'')+'"><td><span class="patient-name" onclick="showCmDetail(\''+c.id+'\')">'+(al.length>0?'<span class="alert-dot"></span>':'')+esc(c.patientName)+'</span></td><td style="font-size:11px">'+fmtDate(c.doi)+'</td><td><span class="type-badge">'+esc(c.caseType)+'</span></td><td style="font-size:11px">'+esc(c.location||'—')+'</td><td style="font-size:11px">'+esc(c.assigned)+'</td><td><span class="status-badge '+(c.status==='Active'?'status-active':'status-settled')+'">'+esc(c.status)+'</span></td><td><span class="days-count '+dc+'">'+days+'</span></td><td style="font-size:11px">'+fmtDate(c.apptDate)+'</td><td>'+(al.length>0?'<span style="color:var(--red);font-weight:700;font-size:11px">'+al.length+'</span>':'—')+'</td></tr>';
+    var alCount=caseAlertCounts[c.id]||0;
+    var stClass=c.status==='Active'?'status-active':c.status==='In Litigation'?'status-pending':'status-settled';
+    h+='<tr class="'+(alCount>0?'has-alert':'')+'"><td><span class="patient-name" onclick="showCmDetail(\''+c.id+'\')">'+(alCount>0?'<span class="alert-dot"></span>':'')+esc(c.patientName)+'</span></td><td style="font-size:11px">'+fmtDate(c.doi)+'</td><td><span class="type-badge">'+esc(c.caseType)+'</span></td><td style="font-size:11px">'+esc(c.location||'—')+'</td><td style="font-size:11px">'+esc(c.assigned)+'</td><td><span class="status-badge '+stClass+'">'+esc(c.status)+'</span></td><td><span class="days-count '+dc+'">'+days+'</span></td><td style="font-size:11px">'+fmtDate(c.apptDate)+'</td><td>'+(alCount>0?'<span style="color:var(--red);font-weight:700;font-size:11px">'+alCount+'</span>':'—')+'</td></tr>';
   });
   h+='</tbody></table></div></div>';
   el.innerHTML=h;
@@ -3133,10 +3141,12 @@ function renderCmStaff(el,staff){
   h+='<div class="table-card"><div class="table-header"><h3>'+tableTitle+'</h3><div class="table-controls"><input class="search-input" placeholder="Search..." oninput="cmStaffSearch(this,\''+staff+'\')"></div></div>';
   h+='<div class="table-scroll"><table class="tbl" style="min-width:650px"><thead><tr><th>Patient</th><th>Type</th><th>Location</th><th>Status</th><th>Days Active</th><th>Next Appt</th><th>Alerts</th></tr></thead><tbody id="cmStaffTbody-'+staff+'">';
 
-  displayCases.sort((a,b)=>{if(a.status==='Active'&&b.status!=='Active')return -1;if(a.status!=='Active'&&b.status==='Active')return 1;return(b.createdDate||'').localeCompare(a.createdDate||'')}).forEach(c=>{
-    const ca=cmAlerts().filter(a=>a.caseId===c.id);
-    const days=c.createdDate?daysBtw(c.createdDate,c.settledDate||today()):0;const dc=days>90?'danger':days>45?'warn':'';
-    h+='<tr class="'+(ca.length>0?'has-alert':'')+'"><td><span class="patient-name" onclick="showCmDetail(\''+c.id+'\')">'+(ca.length>0?'<span class="alert-dot"></span>':'')+esc(c.patientName)+'</span></td><td><span class="type-badge">'+esc(c.caseType)+'</span></td><td style="font-size:11px">'+esc(c.location||'—')+'</td><td><span class="status-badge '+(c.status==='Active'?'status-active':'status-settled')+'">'+esc(c.status)+'</span></td><td><span class="days-count '+dc+'">'+days+'</span> days</td><td style="font-size:11px">'+fmtDate(c.apptDate)+'</td><td>'+(ca.length>0?'<span style="color:var(--red);font-weight:700;font-size:11px">'+ca.length+'</span>':'<span style="color:var(--gray-400)">—</span>')+'</td></tr>';
+  var staffAlertCounts={};try{alerts.forEach(function(a){staffAlertCounts[a.caseId]=(staffAlertCounts[a.caseId]||0)+1})}catch(e){}
+  displayCases.sort(function(a,b){if(a.status==='Active'&&b.status!=='Active')return -1;if(a.status!=='Active'&&b.status==='Active')return 1;return(b.createdDate||'').localeCompare(a.createdDate||'')}).forEach(function(c){
+    var ca=staffAlertCounts[c.id]||0;
+    var days=c.createdDate?daysBtw(c.createdDate,c.settledDate||today()):0;var dc=days>90?'danger':days>45?'warn':'';
+    var stClass=c.status==='Active'?'status-active':c.status==='In Litigation'?'status-pending':'status-settled';
+    h+='<tr class="'+(ca>0?'has-alert':'')+'"><td><span class="patient-name" onclick="showCmDetail(\''+c.id+'\')">'+(ca>0?'<span class="alert-dot"></span>':'')+esc(c.patientName)+'</span></td><td><span class="type-badge">'+esc(c.caseType)+'</span></td><td style="font-size:11px">'+esc(c.location||'—')+'</td><td><span class="status-badge '+stClass+'">'+esc(c.status)+'</span></td><td><span class="days-count '+dc+'">'+days+'</span> days</td><td style="font-size:11px">'+fmtDate(c.apptDate)+'</td><td>'+(ca>0?'<span style="color:var(--red);font-weight:700;font-size:11px">'+ca+'</span>':'<span style="color:var(--gray-400)">—</span>')+'</td></tr>';
   });
   if(displayCases.length===0) h+='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--gray-400)">No cases in this category.</td></tr>';
   h+='</tbody></table></div></div>';
