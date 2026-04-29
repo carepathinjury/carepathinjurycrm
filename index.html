@@ -1008,6 +1008,11 @@ async function _loadFromSupabase(){
       });
       if(r[9]){crmMetrics={};cmMetrics={};psrMetrics={};r[9].forEach(function(m){var k=m.staff+'_'+m.date;var d={staff:m.staff,date:m.date,phoneCalls:m.phone_calls||0,emailsSent:m.emails_sent||0,faxesSent:m.faxes_sent||0};if(m.module==='crm')crmMetrics[k]=d;else if(m.module==='cm')cmMetrics[k]=d;else if(m.module==='psr')psrMetrics[k]=d;});}
       console.log('✅ Loaded refs:'+refs.length+' cases:'+cases.length+' contacts:'+contacts.length);
+      // DEBUG: log what each fetch returned
+      console.log('DEBUG r[0] referrals raw count:', r[0]?r[0].length:'null');
+      console.log('DEBUG r[1] cases raw count:', r[1]?r[1].length:'null');
+      console.log('DEBUG r[2] contacts raw count:', r[2]?r[2].length:'null');
+      if(r[0]&&r[0].length>0)console.log('DEBUG first ref raw:',JSON.stringify(r[0][0]).substring(0,200));
     } else {
       // Fallback to old app_data
       _useNewTables=false;
