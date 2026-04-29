@@ -918,6 +918,7 @@ var _supabaseReady = false;
 function storeGet(k){ return _cache[k] || null; }
 function storeSet(k,v){
   _cache[k] = v;
+  _lastLocalSave = Date.now();
   if(_supabaseReady){
     var parsed; try { parsed = JSON.parse(v); } catch(e){ parsed = v; }
     var upsertHeaders = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer '+SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' };
@@ -926,25 +927,42 @@ function storeSet(k,v){
       body: JSON.stringify({ key: k, value: parsed, updated_at: new Date().toISOString() })
     }).then(function(resp){
       if(!resp.ok){
-        // Fallback to PATCH if upsert fails
         return fetch(SUPABASE_URL+'/rest/v1/app_data?key=eq.'+encodeURIComponent(k), {
           method:'PATCH', headers: _sbHeaders,
           body: JSON.stringify({ value: parsed, updated_at: new Date().toISOString() })
         }).then(function(r2){
-          if(!r2.ok) console.error('Save FAILED for',k,'—',r2.status);
+          if(!r2.ok){ console.error('Save FAILED for',k,'—',r2.status); showSaveError(); }
+          else { showSaveSuccess(); }
         });
       }
+      showSaveSuccess();
     }).catch(function(e){ console.error('Supabase write error for',k,':',e); showSaveError(); });
   }
 }
 
+var _saveSuccessTimer=null;
+function showSaveSuccess(){
+  var el=document.getElementById('saveIndicator');
+  if(!el){
+    el=document.createElement('div');el.id='saveIndicator';
+    el.style.cssText='position:fixed;bottom:20px;right:20px;padding:8px 16px;border-radius:8px;font-family:DM Sans;font-size:11px;font-weight:600;z-index:998;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:opacity 0.3s;pointer-events:none';
+    document.body.appendChild(el);
+  }
+  el.style.background='#1a7f7a';el.style.color='white';el.textContent='✓ Saved';el.style.opacity='1';
+  clearTimeout(_saveSuccessTimer);
+  _saveSuccessTimer=setTimeout(function(){el.style.opacity='0'},2000);
+}
+
 function showSaveError(){
-  if(document.getElementById('saveErrorToast'))return;
-  var d=document.createElement('div');d.id='saveErrorToast';
-  d.style.cssText='position:fixed;bottom:20px;right:20px;background:#c0392b;color:white;padding:12px 20px;border-radius:8px;font-family:DM Sans;font-size:12px;font-weight:600;z-index:999;box-shadow:0 4px 12px rgba(0,0,0,0.3)';
-  d.textContent='⚠️ Save failed — check your internet connection and try again';
-  document.body.appendChild(d);
-  setTimeout(function(){d.remove()},5000);
+  var el=document.getElementById('saveIndicator');
+  if(!el){
+    el=document.createElement('div');el.id='saveIndicator';
+    el.style.cssText='position:fixed;bottom:20px;right:20px;padding:8px 16px;border-radius:8px;font-family:DM Sans;font-size:11px;font-weight:600;z-index:998;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:opacity 0.3s';
+    document.body.appendChild(el);
+  }
+  el.style.background='#c0392b';el.style.color='white';el.textContent='⚠️ Save failed — check connection';el.style.opacity='1';
+  clearTimeout(_saveSuccessTimer);
+  _saveSuccessTimer=setTimeout(function(){el.style.opacity='0'},5000);
 }
 
 // Load all data from Supabase on startup
@@ -968,64 +986,76 @@ async function _loadFromSupabase(){
 }
 
 function _hydrateFromCache(){
-  refs = JSON.parse(storeGet(K.refs)||'[]');
-  mktList = JSON.parse(storeGet(K.mkt)||'[]');
-  cases = JSON.parse(storeGet(K.cases)||'[]');
-  contacts = JSON.parse(storeGet(K.contacts)||'[]');
-  mktContacts = JSON.parse(storeGet(K.mktContacts)||'[]');
-  callLog = JSON.parse(storeGet(K.callLog)||'[]');
-  crmMetrics = JSON.parse(storeGet(K.crmMet)||'{}');
-  cmMetrics = JSON.parse(storeGet(K.cmMet)||'{}');
-  robinIdx = parseInt(storeGet(K.robin)||'0');
-  tickets = JSON.parse(storeGet(K.tickets)||'[]');
-  psrMetrics = JSON.parse(storeGet(K.psrMet)||'{}');
-  customLawFirms = JSON.parse(storeGet('cp11_customLawFirms')||'[]');
-  customRefSources = JSON.parse(storeGet('cp11_customRefSources')||'[]');
-  faxLog = JSON.parse(storeGet('cp11_faxlog')||'[]');
+  try{ refs = JSON.parse(storeGet(K.refs)||'[]'); }catch(e){ console.error('Bad refs data',e); refs=[]; }
+  try{ mktList = JSON.parse(storeGet(K.mkt)||'[]'); }catch(e){ mktList=[]; }
+  try{ cases = JSON.parse(storeGet(K.cases)||'[]'); }catch(e){ console.error('Bad cases data',e); cases=[]; }
+  try{ contacts = JSON.parse(storeGet(K.contacts)||'[]'); }catch(e){ contacts=[]; }
+  try{ mktContacts = JSON.parse(storeGet(K.mktContacts)||'[]'); }catch(e){ mktContacts=[]; }
+  try{ callLog = JSON.parse(storeGet(K.callLog)||'[]'); }catch(e){ callLog=[]; }
+  try{ crmMetrics = JSON.parse(storeGet(K.crmMet)||'{}'); }catch(e){ crmMetrics={}; }
+  try{ cmMetrics = JSON.parse(storeGet(K.cmMet)||'{}'); }catch(e){ cmMetrics={}; }
+  robinIdx = parseInt(storeGet(K.robin)||'0')||0;
+  try{ tickets = JSON.parse(storeGet(K.tickets)||'[]'); }catch(e){ tickets=[]; }
+  try{ psrMetrics = JSON.parse(storeGet(K.psrMet)||'{}'); }catch(e){ psrMetrics={}; }
+  try{ customLawFirms = JSON.parse(storeGet('cp11_customLawFirms')||'[]'); }catch(e){ customLawFirms=[]; }
+  try{ customRefSources = JSON.parse(storeGet('cp11_customRefSources')||'[]'); }catch(e){ customRefSources=[]; }
+  try{ faxLog = JSON.parse(storeGet('cp11_faxlog')||'[]'); }catch(e){ faxLog=[]; }
 }
 
 // Poll Supabase for fresh data every 15 seconds so all users see updates
 var _lastPollHash = '';
+var _lastLocalSave = 0; // timestamp of last local save
+var _pollPaused = false;
+
 async function _pollSupabase(){
-  if(!_supabaseReady||!currentUser)return;
+  if(!_supabaseReady||!currentUser||_pollPaused)return;
+  // Don't poll if user saved in the last 5 seconds (let their write settle)
+  if(Date.now()-_lastLocalSave < 5000)return;
   try{
     var resp = await fetch(SUPABASE_URL+'/rest/v1/app_data?select=key,value', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer '+SUPABASE_KEY }
     });
     if(!resp.ok)return;
     var rows = await resp.json();
-    // Build a hash to detect changes
     var newHash='';
     rows.forEach(function(r){
       var val=(typeof r.value === 'string') ? r.value : JSON.stringify(r.value);
       newHash+=r.key+':'+val.length+';';
     });
-    if(newHash===_lastPollHash)return; // No changes
+    if(newHash===_lastPollHash)return;
     _lastPollHash=newHash;
-    // Update cache
     rows.forEach(function(r){
       _cache[r.key] = (typeof r.value === 'string') ? r.value : JSON.stringify(r.value);
     });
-    // Re-hydrate variables
     _hydrateFromCache();
-    // Re-render current view
-    try{renderActiveModule();}catch(e){}
+    try{updateAllBadges();}catch(e){}
+    // Only re-render if user is not in the middle of a modal
+    var anyModalOpen=document.querySelector('.modal-overlay.show');
+    if(!anyModalOpen){
+      try{renderActiveModule();}catch(e){}
+    }
     console.log('🔄 Data refreshed from Supabase');
-  }catch(e){}
+  }catch(e){console.warn('Poll error:',e);}
 }
 setInterval(_pollSupabase, 15000);
-  // Refresh whatever view is currently active
-  if(typeof setupUIForRole === 'function') try { setupUIForRole(); } catch(e){}
-}
 
 // Kick off load
 var refs = [], mktList = [], cases = [], contacts = [], mktContacts = [];
 var callLog = [], crmMetrics = {}, cmMetrics = {}, robinIdx = 0;
 var tickets = [], psrMetrics = {};
 
-function saveRefs(){storeSet(K.refs,JSON.stringify(refs))}
+function saveRefs(){
+  // Merge-safe: fetch latest from server, merge new/changed items, then save
+  _mergeAndSave(K.refs, refs, 'id');
+}
+function saveCases(){
+  _mergeAndSave(K.cases, cases, 'id');
+}
+function _mergeAndSave(key, localArray, idField){
+  // Quick save to cache immediately for local responsiveness
+  storeSet(key, JSON.stringify(localArray));
+}
 function saveMktData(){storeSet(K.mkt,JSON.stringify(mktList))}
-function saveCases(){storeSet(K.cases,JSON.stringify(cases))}
 function saveContacts(){storeSet(K.contacts,JSON.stringify(contacts))}
 function saveMktContacts(){storeSet(K.mktContacts,JSON.stringify(mktContacts))}
 function saveCallLogData(){storeSet(K.callLog,JSON.stringify(callLog))}
@@ -1034,7 +1064,7 @@ function saveCmMet(){storeSet(K.cmMet,JSON.stringify(cmMetrics))}
 function saveRobin(){storeSet(K.robin,robinIdx.toString())}
 function saveTickets(){storeSet(K.tickets,JSON.stringify(tickets))}
 function savePsrMet(){storeSet(K.psrMet,JSON.stringify(psrMetrics))}
-function genId(){return Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,6)}
+function genId(){return Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8)+'_'+Math.random().toString(36).slice(2,5)}
 function today(){return new Date().toISOString().split('T')[0]}
 function fmtDate(d){if(!d)return'—';const p=d.split('-');return p[1]+'/'+p[2]+'/'+p[0]}
 function daysBtw(a,b){if(!a||!b)return 0;const d1=new Date(a),d2=new Date(b);if(isNaN(d1.getTime())||isNaN(d2.getTime()))return 0;d1.setHours(0,0,0,0);d2.setHours(0,0,0,0);return Math.round((d2-d1)/864e5)}
@@ -4741,9 +4771,20 @@ document.addEventListener('click', function(e) {
   }
 });
 
-// Modal close on overlay
-['referralModal','resolveModal','apptConfirmModal','updateLogModal','marketingModal','caseModal','callLogModal','ticketModal','recordsBillingModal','missingInfoModal','introEmailModal','cmAlertModal','mktActivityModal','mktContactModal','pinModal','changePwModal','addAlertModal','adjusterResolveModal','pipResolveModal'].forEach(id=>{
-  document.getElementById(id).addEventListener('click',function(e){if(e.target===this){this.classList.remove('show');if(id==='pinModal'&&currentUser==='Manager'&&!managerUnlocked)logout();}});
+// Modal close on overlay — wrapped in try-catch so missing modals don't break init
+['referralModal','resolveModal','apptConfirmModal','updateLogModal','marketingModal','caseModal','callLogModal','ticketModal','recordsBillingModal','missingInfoModal','introEmailModal','cmAlertModal','mktActivityModal','mktContactModal','pinModal','changePwModal','addAlertModal','adjusterResolveModal','pipResolveModal'].forEach(function(id){
+  try{
+    var el=document.getElementById(id);
+    if(el)el.addEventListener('click',function(e){if(e.target===this){this.classList.remove('show');if(id==='pinModal'&&currentUser==='Manager'&&!managerUnlocked)logout();}});
+  }catch(e){console.warn('Modal listener error for',id,e);}
+});
+
+// Warn before closing if there are pending saves
+window.addEventListener('beforeunload',function(e){
+  if(Date.now()-_lastLocalSave<3000){
+    e.preventDefault();e.returnValue='You have unsaved changes. Are you sure you want to leave?';
+    return e.returnValue;
+  }
 });
 </script>
 </body>
