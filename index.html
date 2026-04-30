@@ -957,38 +957,38 @@ function _dbUpsert(table, row){
   _lastLocalSave=Date.now();
   var id=row.id||row.key;
   var idCol=(table==='system_config')?'key':'id';
-  // Strategy: PATCH first (update), then INSERT if row doesn't exist
-  fetch(SUPABASE_URL+'/rest/v1/'+table+'?'+idCol+'=eq.'+encodeURIComponent(id), {
+  
+  // Remove id from update body (can't update primary key)
+  var updateBody={};
+  for(var k in row){ if(k!==idCol) updateBody[k]=row[k]; }
+  
+  // Simple PATCH to update the row
+  var url=SUPABASE_URL+'/rest/v1/'+table+'?'+idCol+'=eq.'+encodeURIComponent(id);
+  fetch(url, {
     method:'PATCH',
-    headers:Object.assign({},_sbH,{'Prefer':'return=headers-only'}),
-    body:JSON.stringify(row)
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify(updateBody)
   }).then(function(resp){
-    if(!resp.ok){
-      // PATCH failed — try INSERT
-      return fetch(SUPABASE_URL+'/rest/v1/'+table, {
-        method:'POST',
-        headers:Object.assign({},_sbH,{'Prefer':'return=minimal'}),
-        body:JSON.stringify(row)
-      }).then(function(r2){
-        if(!r2.ok) r2.text().then(function(t){console.error('❌ INSERT FAILED:',table,'id:',id,r2.status,t);showSaveError();});
-        else showSaveSuccess();
+    if(resp.ok || resp.status===204){
+      showSaveSuccess();
+    } else {
+      // PATCH failed — row might not exist yet, try INSERT
+      resp.text().then(function(errText){
+        console.warn('PATCH returned',resp.status,'for',table,id,'- trying INSERT. Error:',errText);
+        fetch(SUPABASE_URL+'/rest/v1/'+table, {
+          method:'POST',
+          headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+          body:JSON.stringify(row)
+        }).then(function(r2){
+          if(r2.ok||r2.status===201){showSaveSuccess();}
+          else{r2.text().then(function(t){console.error('INSERT ALSO FAILED:',table,id,r2.status,t);showSaveError();});}
+        }).catch(function(e){console.error('INSERT ERROR:',table,id,e);showSaveError();});
       });
     }
-    // Check if PATCH actually updated a row
-    var contentRange=resp.headers.get('content-range');
-    if(contentRange && contentRange.indexOf('0/')!==-1){
-      // No rows matched — insert instead
-      return fetch(SUPABASE_URL+'/rest/v1/'+table, {
-        method:'POST',
-        headers:Object.assign({},_sbH,{'Prefer':'return=minimal'}),
-        body:JSON.stringify(row)
-      }).then(function(r2){
-        if(!r2.ok) r2.text().then(function(t){console.error('❌ INSERT FAILED:',table,'id:',id,r2.status,t);showSaveError();});
-        else showSaveSuccess();
-      });
-    }
-    showSaveSuccess();
-  }).catch(function(e){console.error('❌ SAVE ERROR:',table,e);showSaveError();});
+  }).catch(function(e){
+    console.error('PATCH ERROR:',table,id,e);
+    showSaveError();
+  });
 }
 
 function _dbDelete(table, id){
