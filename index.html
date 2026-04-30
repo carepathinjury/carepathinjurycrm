@@ -1037,7 +1037,7 @@ async function _loadFromSupabase(){
 }
 
 // ─── Save functions ────────────────────────────────────────────────
-function saveRefs(){if(_useNewTables){refs.forEach(function(r){_dbUpsert('referrals',_toDb(r,_refMap))})}else{_legacySave('cp11_refs',refs)}}
+function saveRefs(){if(_useNewTables){/* Only use for bulk operations - prefer saveSingleRef */refs.forEach(function(r){_dbUpsert('referrals',_toDb(r,_refMap))})}else{_legacySave('cp11_refs',refs)}}
 function saveSingleRef(r){if(_useNewTables){_dbUpsert('referrals',_toDb(r,_refMap))}else{_legacySave('cp11_refs',refs)}}
 function saveCases(){if(_useNewTables){cases.forEach(function(c){_dbUpsert('cases',_toDb(c,_caseMap))})}else{_legacySave('cp11_cases',cases)}}
 function saveSingleCase(c){if(_useNewTables){_dbUpsert('cases',_toDb(c,_caseMap))}else{_legacySave('cp11_cases',cases)}}
@@ -1083,10 +1083,8 @@ async function _pollSupabase(){
           var idx=t.arr.findIndex(function(x){return x.id===obj.id});
           if(idx===-1){t.arr.push(obj);changed=true;}
           else{
-            // Update existing record if server version is newer
-            var localUpdated=t.arr[idx].updatedAt||t.arr[idx].enteredAt||'';
-            var serverUpdated=dbRow.updated_at||'';
-            if(serverUpdated>localUpdated){t.arr[idx]=obj;changed=true;}
+            // Always update with server version — server is authoritative
+            t.arr[idx]=obj;changed=true;
           }
         });
       }
@@ -1611,7 +1609,7 @@ function crmAlerts() {
     if (!r.apptDate && r.createdDate) {
       const ck = r.lastContactDate || r.createdDate;
       if (daysBtw(ck, now) >= 2) {
-        if (!r.alertAssignedTo) { r.alertAssignedTo = getNextStaff(); needsSave = true; }
+        if (!r.alertAssignedTo) { r.alertAssignedTo = getNextStaff(); r._justAssigned=true; needsSave = true; }
         alerts.push({ id:r.id, type:'scheduling', patientName:r.patientName, assignedTo:r.alertAssignedTo, daysSinceReg:daysBtw(r.createdDate,now), daysSinceContact:daysBtw(ck,now), location:r.location, caseType:r.caseType, phone:r.phone, email:r.email, referralSource:r.referralSource });
       }
     }
@@ -1633,11 +1631,11 @@ function crmAlerts() {
         if (r.apptOutcome === 'no_show' || r.apptOutcome === 'cancelled') {
           const ck2 = r.lastApptFollowUp || r.apptDate;
           if (daysBtw(ck2, now) >= 2) {
-            if (!r.apptConfirmAssignedTo) { r.apptConfirmAssignedTo = getNextStaff(); needsSave = true; }
+            if (!r.apptConfirmAssignedTo) { r.apptConfirmAssignedTo = getNextStaff(); r._justAssigned=true; needsSave = true; }
             alerts.push({ id:r.id, type:'reschedule', patientName:r.patientName, assignedTo:r.apptConfirmAssignedTo, apptDate:r.apptDate, daysPastAppt:past, daysSinceFollowUp:daysBtw(ck2,now), previousOutcome:r.apptOutcome, location:r.location, caseType:r.caseType, phone:r.phone, email:r.email });
           }
         } else if (!r.apptOutcome) {
-          if (!r.apptConfirmAssignedTo) { r.apptConfirmAssignedTo = getNextStaff(); needsSave = true; }
+          if (!r.apptConfirmAssignedTo) { r.apptConfirmAssignedTo = getNextStaff(); r._justAssigned=true; needsSave = true; }
           alerts.push({ id:r.id, type:'appt_confirm', patientName:r.patientName, assignedTo:r.apptConfirmAssignedTo, apptDate:r.apptDate, daysPastAppt:past, location:r.location, caseType:r.caseType, phone:r.phone, email:r.email });
         }
       }
@@ -1661,7 +1659,9 @@ function crmAlerts() {
     });
     } catch(e){console.error('CRM alert error for',r.patientName,e);}
   });
-  if(needsSave) saveRefs();
+  if(needsSave && _useNewTables) {
+    refs.filter(function(r){return r._justAssigned}).forEach(function(r){saveSingleRef(r);delete r._justAssigned;});
+  } else if(needsSave) { _legacySave('cp11_refs',refs); }
   return alerts;
 }
 
@@ -2530,8 +2530,8 @@ function saveReferral() {
   if (!editingRefId) {
     const dupes = checkDuplicatePatient(name, dob);
     if (dupes.length > 0) {
-      const dupeList = dupes.slice(0,3).map(d=>'"'+d.patientName+'" (DOB: '+fmtDate(d.dob)+', Status: '+d.status+', Registered: '+fmtDate(d.createdDate)+')').join('\n');
-      if (!confirm('⚠️ Possible duplicate'+(dupes.length>1?'s':'')+' detected!\n\n'+dupeList+'\n\nDo you still want to create a new referral?')) return;
+      const dupeList = dupes.slice(0,3).map(d=>'"'+d.patientName+'" (DOB: '+fmtDate(d.dob)+', DOI: '+fmtDate(d.doi)+', Case: '+(d.caseType||'—')+', Status: '+d.status+', Registered: '+fmtDate(d.createdDate)+')').join('\n');
+      if (!confirm('⚠️ Possible duplicate'+(dupes.length>1?'s':'')+' detected!\n\n'+dupeList+'\n\nIf this is a new case/injury for the same patient, click OK to proceed.\nClick Cancel to go back.')) return;
     }
   }
 
@@ -2577,11 +2577,11 @@ function saveReferral() {
       if(!linkedCase.followUpDate) linkedCase.followUpDate=''; // ensure immediate alert fires
       // Clear dismissed so the new alert shows
       linkedCase.dismissedAlerts=(linkedCase.dismissedAlerts||[]).filter(d=>d!=='missing-info');
-      saveCases();
+      saveSingleCase(linkedCase);
     } else if(linkedCase && !alertType && linkedCase.missingInfo) {
       // Alert was cleared on the referral — clear it on the case too
       linkedCase.missingInfo='';
-      saveCases();
+      saveSingleCase(linkedCase);
     }
   } else {
     const nr={id:genId(),...data,createdDate:document.getElementById('fRegDate').value||today(),enteredAt:new Date().toISOString(),registeredBy:currentUser,updateLog:[],alertAssignedTo:getNextStaff(),lastContactDate:null,dateScheduledOn:null,daysToSchedule:null,apptOutcome:null,apptConfirmAssignedTo:null,lastApptFollowUp:null};
@@ -2590,14 +2590,14 @@ function saveReferral() {
     // Auto-create case if scheduled
     if(data.apptDate) createCaseFromRef(nr);
   }
-  saveRefs();
+  saveSingleRef(editingRefId?refs.find(function(x){return x.id===editingRefId}):refs[refs.length-1]);
   // Sync to linked case if editing
   if(editingRefId) syncRefToCase(editingRefId);
   closeRefModal();renderActiveModule();
   if(crmCurrentPage==='crm-detail'&&editingRefId)showCrmDetail(editingRefId);
 }
 
-function deleteReferral(){if(!editingRefId||!confirm('Delete?'))return;refs=refs.filter(r=>r.id!==editingRefId);saveRefs();closeRefModal();crmNav('crm-referrals');}
+function deleteReferral(){if(!editingRefId||!confirm('Delete?'))return;var delId=editingRefId;refs=refs.filter(r=>r.id!==delId);if(_useNewTables)_dbDelete('referrals',delId);else _legacySave('cp11_refs',refs);closeRefModal();crmNav('crm-referrals');}
 
 // ── Sync shared fields between referral and case ──
 function syncRefToCase(refId){
@@ -2617,7 +2617,7 @@ function syncRefToCase(refId){
   c.lawFirm=r.lawFirm;
   c.lawContact=r.lawContact;
   c.referralSource=r.referralSource;
-  saveCases();
+  saveSingleCase(c);
 }
 function syncCaseToRef(caseId){
   var c=cases.find(function(x){return x.id===caseId});
@@ -2636,7 +2636,7 @@ function syncCaseToRef(caseId){
   r.lawFirm=c.lawFirm||r.lawFirm;
   r.lawContact=c.lawContact||r.lawContact;
   r.referralSource=c.referralSource||r.referralSource;
-  saveRefs();
+  saveSingleRef(r);
 }
 
 // ── Auto-create case from referral ──
@@ -2671,7 +2671,7 @@ function createCaseFromRef(r) {
     dismissedAlerts: [],
     manualAlerts: []
   });
-  saveCases();
+  saveSingleCase(cases[cases.length-1]);
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -2702,7 +2702,7 @@ function submitResolve(){
     r.lastContactDate=document.getElementById('resolveContactDate').value||today();r.alertAssignedTo=null;
     if(notes){if(!r.updateLog)r.updateLog=[];r.updateLog.push({date:today(),method:'Phone Call',summary:'Unable to schedule. '+notes})}
   }
-  saveRefs();closeResolveModal();renderActiveModule();
+  saveSingleRef(r);closeResolveModal();renderActiveModule();
 }
 
 function openApptConfirmModal(id){apptConfirmRefId=id;const r=refs.find(x=>x.id===id);if(!r)return;document.getElementById('apptConfirmPatient').textContent=r.patientName;document.getElementById('apptConfirmDate').textContent='Appt: '+fmtDate(r.apptDate);const sel=document.getElementById('apptOutcome');sel.value=(r.apptOutcome==='no_show'||r.apptOutcome==='cancelled')?'rescheduled':'completed';document.getElementById('apptNewDate').value='';document.getElementById('apptContactDate').value=today();document.getElementById('apptConfirmNotes').value='';toggleApptFields();document.getElementById('apptConfirmModal').classList.add('show')}
@@ -2716,15 +2716,15 @@ function submitApptConfirm(){
   if(!r.updateLog)r.updateLog=[];
   if(outcome==='completed'){r.apptOutcome='completed';r.apptConfirmAssignedTo=null;r.status='Active Treatment';r.updateLog.push({date:today(),method:'System',summary:'Appt '+fmtDate(r.apptDate)+' COMPLETED.'+(notes?' '+notes:'')})}
   else if(outcome==='rescheduled'){const nd=document.getElementById('apptNewDate').value;if(!nd){alert('Enter new date.');return;}r.updateLog.push({date:today(),method:'System',summary:'Rescheduled to '+fmtDate(nd)+'.'+(notes?' '+notes:'')});r.apptDate=nd;r.apptOutcome=null;r.apptConfirmAssignedTo=null;r.lastApptFollowUp=null;if(r.status==='Pending Scheduling')r.status='Scheduled';
-    const lc=cases.find(c=>c.sourceRefId===r.id);if(lc){lc.apptDate=nd;saveCases();}
+    const lc=cases.find(c=>c.sourceRefId===r.id);if(lc){lc.apptDate=nd;saveSingleCase(lc);}
   }
   else{const cd=document.getElementById('apptContactDate').value||today();const lbl=outcome==='no_show'?'NO SHOW':'CANCELLED';r.apptOutcome=outcome;r.apptOutcomeReason=reason;r.lastApptFollowUp=cd;r.apptConfirmAssignedTo=null;r.updateLog.push({date:today(),method:'System',summary:lbl+' on '+fmtDate(r.apptDate)+(reason?' — Reason: '+reason:'')+'. Contacted '+fmtDate(cd)+'.'+(notes?' '+notes:'')})}
-  saveRefs();closeApptConfirmModal();renderActiveModule();if(crmCurrentPage==='crm-detail')showCrmDetail(apptConfirmRefId||r.id);
+  saveSingleRef(r);closeApptConfirmModal();renderActiveModule();if(crmCurrentPage==='crm-detail')showCrmDetail(apptConfirmRefId||r.id);
 }
 
 function openUpdateLogModal(id){updateLogRefId=id;document.getElementById('ulDate').value=today();document.getElementById('ulMethod').value='Email';document.getElementById('ulSummary').value='';document.getElementById('updateLogModal').classList.add('show')}
 function closeUpdateLogModal(){document.getElementById('updateLogModal').classList.remove('show')}
-function saveUpdateLog(){const r=refs.find(x=>x.id===updateLogRefId);if(!r)return;const s=document.getElementById('ulSummary').value.trim();if(!s){alert('Enter summary.');return;}if(!r.updateLog)r.updateLog=[];r.updateLog.push({date:document.getElementById('ulDate').value,method:document.getElementById('ulMethod').value,summary:s});saveRefs();closeUpdateLogModal();showCrmDetail(updateLogRefId)}
+function saveUpdateLog(){const r=refs.find(x=>x.id===updateLogRefId);if(!r)return;const s=document.getElementById('ulSummary').value.trim();if(!s){alert('Enter summary.');return;}if(!r.updateLog)r.updateLog=[];r.updateLog.push({date:document.getElementById('ulDate').value,method:document.getElementById('ulMethod').value,summary:s});saveSingleRef(r);closeUpdateLogModal();showCrmDetail(updateLogRefId)}
 
 // ══════════════════════════════════════════════════════════════════════
 // CASE MANAGEMENT MODULE
@@ -2819,7 +2819,7 @@ function submitIntroEmail(){
   if(!dateStr){alert('Please enter the date the email was sent.');return;}
   const c=cases.find(x=>x.id===introEmailCaseId);if(!c)return;
   c.introEmailSentDate=dateStr;
-  saveCases();closeIntroEmailModal();renderActiveModule();
+  saveSingleCase(c);closeIntroEmailModal();renderActiveModule();
   if(cmCurrentPage==='cm-detail')showCmDetail(introEmailCaseId);
 }
 
@@ -2854,7 +2854,7 @@ function submitMissingInfo(){
     c.missingInfoResolvedDate=dateStr;
     c.inLitigation=false;
     const linkedRef=refs.find(r=>r.id===c.sourceRefId);
-    if(linkedRef){linkedRef.alertType='';saveRefs();}
+    if(linkedRef){linkedRef.alertType='';saveSingleRef(linkedRef);}
   } else if(outcome==='litigation'){
     c.followUpDate=dateStr;
     c.inLitigation=true;
@@ -2865,7 +2865,7 @@ function submitMissingInfo(){
     c.dismissedAlerts=(c.dismissedAlerts||[]).filter(d=>d!=='missing-info');
   }
 
-  saveCases();closeMissingInfoModal();renderActiveModule();
+  saveSingleCase(c);closeMissingInfoModal();renderActiveModule();
   if(cmCurrentPage==='cm-detail')showCmDetail(missingInfoCaseId);
 }
 
@@ -2892,7 +2892,7 @@ function submitRecordsBilling(){
   // Dismiss the records-billing alert
   if(!c.dismissedAlerts)c.dismissedAlerts=[];
   if(!c.dismissedAlerts.includes('records-billing'))c.dismissedAlerts.push('records-billing');
-  saveCases();closeRecordsBillingModal();renderActiveModule();
+  saveSingleCase(c);closeRecordsBillingModal();renderActiveModule();
   if(cmCurrentPage==='cm-detail')showCmDetail(rbCaseId);
 }
 
@@ -2917,7 +2917,7 @@ function submitAdjusterResolve(){
   } else {
     c.adjusterLastFollowUp=dateStr;c.adjusterResolved=false;
   }
-  saveCases();document.getElementById('adjusterResolveModal').classList.remove('show');renderActiveModule();
+  saveSingleCase(c);document.getElementById('adjusterResolveModal').classList.remove('show');renderActiveModule();
   if(cmCurrentPage==='cm-detail')showCmDetail(adjCaseId);
 }
 
@@ -2942,7 +2942,7 @@ function submitPipResolve(){
   } else {
     c.pipLastFollowUp=dateStr;c.pipResolved=false;
   }
-  saveCases();document.getElementById('pipResolveModal').classList.remove('show');renderActiveModule();
+  saveSingleCase(c);document.getElementById('pipResolveModal').classList.remove('show');renderActiveModule();
   if(cmCurrentPage==='cm-detail')showCmDetail(pipCaseId);
 }
 
@@ -2985,7 +2985,7 @@ function submitCaseStatus(caseId){
   // Log the status change
   if(!c.statusHistory)c.statusHistory=[];
   c.statusHistory.push({from:oldStatus,to:newStatus,date:dateStr,notes:notes,changedBy:currentUser});
-  saveCases();
+  saveSingleCase(c);
   document.getElementById('caseStatusModal').remove();
   renderActiveModule();
   showCmDetail(caseId);
@@ -2995,7 +2995,7 @@ function markSettlementEmailSent(caseId){
   if(confirm('Confirm that the settlement update email has been sent?')){
     c.settlementEmailSent=true;
     c.settlementEmailDate=today();
-    saveCases();renderActiveModule();showCmDetail(caseId);
+    saveSingleCase(c);renderActiveModule();showCmDetail(caseId);
   }
 }
 
@@ -3065,12 +3065,12 @@ function dismissCmAlert(caseId,type){const c=cases.find(x=>x.id===caseId);if(!c)
   if(type.startsWith('manual-')){const mid=type.replace('manual-','');const ma=(c.manualAlerts||[]).find(m=>m.id===mid);if(ma){ma.completed=true;ma.completedDate=today();}}
   else{if(!c.dismissedAlerts)c.dismissedAlerts=[];if(!c.dismissedAlerts.includes(type))c.dismissedAlerts.push(type);}
   if(!c.alertDismissLog)c.alertDismissLog=[];c.alertDismissLog.push({type:type,date:today()});
-  saveCases();renderActiveModule();if(cmCurrentPage==='cm-detail')showCmDetail(caseId);}
+  saveSingleCase(c);renderActiveModule();if(cmCurrentPage==='cm-detail')showCmDetail(caseId);}
 
 function restoreCmAlert(caseId,type){const c=cases.find(x=>x.id===caseId);if(!c)return;
   if(type.startsWith('manual-')){const mid=type.replace('manual-','');const ma=(c.manualAlerts||[]).find(m=>m.id===mid);if(ma)ma.completed=false;}
   else{if(c.dismissedAlerts)c.dismissedAlerts=c.dismissedAlerts.filter(t=>t!==type);}
-  saveCases();renderActiveModule();if(cmCurrentPage==='cm-detail')showCmDetail(caseId);}
+  saveSingleCase(c);renderActiveModule();if(cmCurrentPage==='cm-detail')showCmDetail(caseId);}
 
 var cmCaseSort='newest';
 var cmCaseSearchVal='';
@@ -3519,14 +3519,14 @@ function saveCmManualAlert(){
   if(!c.manualAlerts)c.manualAlerts=[];
   if(cmAlertEditId){const ma=c.manualAlerts.find(m=>m.id===cmAlertEditId);if(ma){ma.title=title;ma.note=note;ma.reminderDate=dateStr;}}
   else{c.manualAlerts.push({id:genId(),title,note,reminderDate:dateStr,createdDate:today(),completed:false});}
-  saveCases();closeCmAlertModal();renderActiveModule();showCmDetail(cmAlertCaseId);
+  saveSingleCase(c);closeCmAlertModal();renderActiveModule();showCmDetail(cmAlertCaseId);
 }
 
 function deleteCmManualAlert(){
   if(!cmAlertCaseId||!cmAlertEditId)return;
   const c=cases.find(x=>x.id===cmAlertCaseId);if(!c)return;
   c.manualAlerts=(c.manualAlerts||[]).filter(m=>m.id!==cmAlertEditId);
-  saveCases();closeCmAlertModal();renderActiveModule();showCmDetail(cmAlertCaseId);
+  saveSingleCase(c);closeCmAlertModal();renderActiveModule();showCmDetail(cmAlertCaseId);
 }
 
 // Case CRUD
@@ -3562,13 +3562,13 @@ function saveCase(){
   const data={patientName:name,dob:document.getElementById('cDOB').value,phone:document.getElementById('cPhone').value.trim(),email:document.getElementById('cEmail').value.trim(),doi:document.getElementById('cDOI').value,caseType:document.getElementById('cCaseType').value,location:document.getElementById('cLocation').value,language:document.getElementById('cLanguage').value,attorney:document.getElementById('cAttorney').value.trim(),lawFirm:document.getElementById('cLawFirm').value.trim(),lawContact:document.getElementById('cLawContact').value.trim(),referralSource:document.getElementById('cRefSource').value.trim(),assigned:document.getElementById('cAssigned').value,apptDate:document.getElementById('cApptDate').value,recordsSent:document.getElementById('cRecordsSent').value,missingInfo:missingInfo,followUpDate:document.getElementById('cFollowUp').value,notes:document.getElementById('cNotes').value.trim(),status:document.getElementById('cStatus').value};
   if(editingCaseId){const idx=cases.findIndex(c=>c.id===editingCaseId);if(idx!==-1){const prev=cases[idx];var updatedOpenDate=document.getElementById('cDateOpened').value||prev.createdDate;if((data.status==='Settled/Closed'||data.status==='Dropped')&&prev.status==='Active'&&!prev.settledDate)data.settledDate=today();else data.settledDate=prev.settledDate||'';if(data.status==='Active')data.settledDate='';cases[idx]={...prev,...data,createdDate:updatedOpenDate};}}
   else{cases.push({id:genId(),...data,createdDate:document.getElementById('cDateOpened').value||today(),settledDate:data.status==='Settled/Complete'?today():'',dismissedAlerts:[],manualAlerts:[]});}
-  saveCases();
+  saveSingleCase(editingCaseId?cases.find(function(x){return x.id===editingCaseId}):cases[cases.length-1]);
   // Sync to linked referral
   if(editingCaseId) syncCaseToRef(editingCaseId);
   closeCaseModal();renderActiveModule();if(cmCurrentPage==='cm-detail'&&editingCaseId)showCmDetail(editingCaseId);
 }
 
-function deleteCase(){if(!editingCaseId||!confirm('Delete case?'))return;cases=cases.filter(c=>c.id!==editingCaseId);saveCases();closeCaseModal();cmNav('cm-cases');}
+function deleteCase(){if(!editingCaseId||!confirm('Delete case?'))return;var delId=editingCaseId;cases=cases.filter(c=>c.id!==delId);if(_useNewTables)_dbDelete("cases",delId);else _legacySave("cp11_cases",cases);closeCaseModal();cmNav('cm-cases');}
 
 // ══════════════════════════════════════════════════════════════════════
 // MARKETING MODULE
@@ -3975,13 +3975,13 @@ function saveCustomAlert(){
   if(!r)return;
   if(!r.customAlerts)r.customAlerts=[];
   r.customAlerts.push({id:genId(),title:title,reminderDate:date,assignedTo:assignTo,note:notes,createdBy:currentUser,createdDate:today(),completed:false});
-  saveRefs();
+  saveSingleRef(r);
   // Also add to linked case if exists
   var linked=cases.find(function(c){return c.sourceRefId===addAlertRefId});
   if(linked){
     if(!linked.manualAlerts)linked.manualAlerts=[];
     linked.manualAlerts.push({id:genId(),title:title+' (from CRM)',note:notes,reminderDate:date,createdDate:today(),completed:false});
-    saveCases();
+    saveSingleCase(linked);
   }
   document.getElementById('addAlertModal').classList.remove('show');
   showCrmDetail(addAlertRefId);
@@ -3991,7 +3991,7 @@ function completeCustomAlert(refId,alertId){
   if(!r||!r.customAlerts)return;
   var a=r.customAlerts.find(function(x){return x.id===alertId});
   if(a){a.completed=true;a.completedDate=today();a.completedBy=currentUser;}
-  saveRefs();
+  saveSingleRef(r);
   showCrmDetail(refId);
 }
 
@@ -4103,7 +4103,7 @@ function saveCallLog(){
     if(c){
       if(!c.manualAlerts)c.manualAlerts=[];
       c.manualAlerts.push({id:genId(),title:'Call Follow-Up: '+(flagNote||notes||'See call log'),note:'Flagged from call on '+fmtDate(entry.date)+' by '+currentUser+'. Party: '+entry.party+'. Outcome: '+entry.outcome,reminderDate:today(),createdDate:today(),completed:false});
-      saveCases();
+      saveSingleCase(c);
     }
   }
 
@@ -4600,7 +4600,7 @@ function psrQuickAddReferral(){
   const phone=prompt('Phone number (optional):')||'';
   const loc=prompt('Location (optional):')||'';
   const r={id:genId(),patientName:name.trim(),phone:phone.trim(),location:loc.trim(),caseType:'PI',status:'Pending Scheduling',createdDate:today(),registeredBy:currentUser,dob:'',email:'',doi:'',attorney:'',lawFirm:'',lawContact:'',referralSource:'',apptDate:'',apptOutcome:'',language:'English',notes:'Quick-added by PSR: '+currentUser,alertType:'',updateLog:[]};
-  refs.push(r);saveRefs();renderActiveModule();
+  refs.push(r);saveSingleRef(r);renderActiveModule();
   alert('Patient "'+name.trim()+'" added. Scheduling team will be alerted.');
 }
 
