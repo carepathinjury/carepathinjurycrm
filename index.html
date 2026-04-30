@@ -955,13 +955,39 @@ async function _dbFetchAll(table){
 
 function _dbUpsert(table, row){
   _lastLocalSave=Date.now();
-  fetch(SUPABASE_URL+'/rest/v1/'+table, {
-    method:'POST',
-    headers:Object.assign({},_sbH,{'Prefer':'resolution=merge-duplicates,return=minimal'}),
+  var id=row.id||row.key;
+  var idCol=(table==='system_config')?'key':'id';
+  // Strategy: PATCH first (update), then INSERT if row doesn't exist
+  fetch(SUPABASE_URL+'/rest/v1/'+table+'?'+idCol+'=eq.'+encodeURIComponent(id), {
+    method:'PATCH',
+    headers:Object.assign({},_sbH,{'Prefer':'return=headers-only'}),
     body:JSON.stringify(row)
   }).then(function(resp){
-    if(!resp.ok) resp.text().then(function(t){console.error('❌ SAVE FAILED:',table,'id:',row.id,'status:',resp.status,'error:',t);showSaveError();});
-    else { showSaveSuccess(); console.log('✓ Saved to',table,'id:',row.id); }
+    if(!resp.ok){
+      // PATCH failed — try INSERT
+      return fetch(SUPABASE_URL+'/rest/v1/'+table, {
+        method:'POST',
+        headers:Object.assign({},_sbH,{'Prefer':'return=minimal'}),
+        body:JSON.stringify(row)
+      }).then(function(r2){
+        if(!r2.ok) r2.text().then(function(t){console.error('❌ INSERT FAILED:',table,'id:',id,r2.status,t);showSaveError();});
+        else showSaveSuccess();
+      });
+    }
+    // Check if PATCH actually updated a row
+    var contentRange=resp.headers.get('content-range');
+    if(contentRange && contentRange.indexOf('0/')!==-1){
+      // No rows matched — insert instead
+      return fetch(SUPABASE_URL+'/rest/v1/'+table, {
+        method:'POST',
+        headers:Object.assign({},_sbH,{'Prefer':'return=minimal'}),
+        body:JSON.stringify(row)
+      }).then(function(r2){
+        if(!r2.ok) r2.text().then(function(t){console.error('❌ INSERT FAILED:',table,'id:',id,r2.status,t);showSaveError();});
+        else showSaveSuccess();
+      });
+    }
+    showSaveSuccess();
   }).catch(function(e){console.error('❌ SAVE ERROR:',table,e);showSaveError();});
 }
 
@@ -1038,7 +1064,11 @@ async function _loadFromSupabase(){
 
 // ─── Save functions ────────────────────────────────────────────────
 function saveRefs(){if(_useNewTables){/* Only use for bulk operations - prefer saveSingleRef */refs.forEach(function(r){_dbUpsert('referrals',_toDb(r,_refMap))})}else{_legacySave('cp11_refs',refs)}}
-function saveSingleRef(r){if(_useNewTables){_dbUpsert('referrals',_toDb(r,_refMap))}else{_legacySave('cp11_refs',refs)}}
+function saveSingleRef(r){
+  if(!r)return;
+  if(_useNewTables){_dbUpsert('referrals',_toDb(r,_refMap))}
+  else{_legacySave('cp11_refs',refs)}
+}
 function saveCases(){if(_useNewTables){cases.forEach(function(c){_dbUpsert('cases',_toDb(c,_caseMap))})}else{_legacySave('cp11_cases',cases)}}
 function saveSingleCase(c){if(_useNewTables){_dbUpsert('cases',_toDb(c,_caseMap))}else{_legacySave('cp11_cases',cases)}}
 function saveMktData(){if(_useNewTables){mktList.forEach(function(m){_dbUpsert('marketing_initiatives',{id:m.id,name:m.name,contact:m.contact,type:m.type,stage:m.stage,date_initiated:m.dateInitiated||null,next_follow_up:m.nextFollowUp||null,volume:m.volume,effort:m.effort,notes:m.notes,created_date:m.createdDate||null,target_locations:m.targetLocations||[],activity_log:m.activityLog||[],updated_at:new Date().toISOString()})})}else{_legacySave('cp11_mkt',mktList)}}
