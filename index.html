@@ -922,12 +922,37 @@ var _caseMap = {id:'id',sourceRefId:'source_ref_id',patientName:'patient_name',d
 
 var _dateFields = ['dob','doi','appt_date','created_date','lost_date','settled_date','records_sent','follow_up_date','date_scheduled_on','last_contact_date','last_appt_follow_up','email_last_follow_up','status_change_date','intro_email_sent_date','settlement_email_date','adjuster_resolved_date','adjuster_last_follow_up','pip_resolved_date','pip_last_follow_up'];
 
+var _boolFields=['email_resolved','settlement_email_sent','in_litigation','adjuster_resolved','pip_resolved','pip_exhausted'];
+var _intFields=['days_to_schedule'];
+var _jsonFields=['records_needed','custom_alerts','update_log','dismissed_alerts','manual_alerts','status_history','target_locations','activity_log'];
+
 function _toDb(obj, fieldMap){
   var row={};
   for(var js in fieldMap){
     if(obj.hasOwnProperty(js)){
       var val=obj[js]; var dbKey=fieldMap[js];
-      if(_dateFields.indexOf(dbKey)!==-1 && (val===''||val===undefined)) val=null;
+      // Handle dates — empty string becomes null
+      if(_dateFields.indexOf(dbKey)!==-1){
+        if(val===''||val===undefined||val===null) val=null;
+      }
+      // Handle booleans — convert strings/empty to proper boolean
+      else if(_boolFields.indexOf(dbKey)!==-1){
+        if(val===''||val===undefined||val===null||val===0||val==='false'||val===false) val=false;
+        else val=true;
+      }
+      // Handle integers
+      else if(_intFields.indexOf(dbKey)!==-1){
+        if(val===''||val===undefined||val===null) val=null;
+        else val=parseInt(val)||0;
+      }
+      // Handle JSONB arrays — ensure they're proper arrays
+      else if(_jsonFields.indexOf(dbKey)!==-1){
+        if(!val||val==='') val=[];
+        if(typeof val==='string') try{val=JSON.parse(val)}catch(e){val=[];}
+      }
+      // Handle null/undefined for text fields
+      else if(val===undefined) val=null;
+      
       row[dbKey]=val;
     }
   }
@@ -938,7 +963,17 @@ function _fromDb(row, fieldMap){
   var obj={};
   for(var js in fieldMap){
     var dbKey=fieldMap[js];
-    if(row.hasOwnProperty(dbKey)){ var val=row[dbKey]; if(val===null)val=''; obj[js]=val; }
+    if(row.hasOwnProperty(dbKey)){
+      var val=row[dbKey];
+      if(val===null){
+        // Return appropriate default based on type
+        if(_boolFields.indexOf(dbKey)!==-1) val=false;
+        else if(_jsonFields.indexOf(dbKey)!==-1) val=[];
+        else if(_intFields.indexOf(dbKey)!==-1) val=null;
+        else val='';
+      }
+      obj[js]=val;
+    }
   }
   return obj;
 }
