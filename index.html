@@ -960,9 +960,9 @@ function _dbUpsert(table, row){
     headers:Object.assign({},_sbH,{'Prefer':'resolution=merge-duplicates,return=minimal'}),
     body:JSON.stringify(row)
   }).then(function(resp){
-    if(!resp.ok) resp.text().then(function(t){console.error('Upsert failed:',table,resp.status,t);showSaveError();});
-    else showSaveSuccess();
-  }).catch(function(e){console.error('Upsert error:',table,e);showSaveError();});
+    if(!resp.ok) resp.text().then(function(t){console.error('❌ SAVE FAILED:',table,'id:',row.id,'status:',resp.status,'error:',t);showSaveError();});
+    else { showSaveSuccess(); console.log('✓ Saved to',table,'id:',row.id); }
+  }).catch(function(e){console.error('❌ SAVE ERROR:',table,e);showSaveError();});
 }
 
 function _dbDelete(table, id){
