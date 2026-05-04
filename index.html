@@ -1038,7 +1038,7 @@ async function _loadFromSupabase(){
       var r=await Promise.all([_dbFetchAll('referrals'),_dbFetchAll('cases'),_dbFetchAll('contacts'),_dbFetchAll('call_log'),_dbFetchAll('tickets'),_dbFetchAll('fax_log'),_dbFetchAll('marketing_initiatives'),_dbFetchAll('marketing_contacts'),_dbFetchAll('system_config'),_dbFetchAll('daily_metrics')]);
       if(r[0])refs=r[0].map(function(x){return _fromDb(x,_refMap)});
       if(r[1])cases=r[1].map(function(x){return _fromDb(x,_caseMap)});
-      if(r[2])contacts=r[2].map(function(x){return{id:x.id,name:x.name,type:x.type,phone:x.phone,fax:x.fax,email:x.email,address:x.address,notes:x.notes,createdDate:x.created_date||''}});
+      if(r[2])contacts=r[2].map(function(x){return{id:x.id,name:x.name||x.company||'',type:x.type,phone:x.phone,fax:x.fax,email:x.email,address:x.address,notes:x.notes,createdDate:x.created_date||''}});
       if(r[3])callLog=r[3].map(function(x){return{id:x.id,refId:x.ref_id,caseId:x.case_id,patientId:x.patient_id,date:x.date||'',direction:x.direction,party:x.party,phone:x.phone,outcome:x.outcome,duration:x.duration,notes:x.notes,flag:x.flag,flagNote:x.flag_note,loggedBy:x.logged_by}});
       if(r[4])tickets=r[4].map(function(x){return{id:x.id,subject:x.subject,priority:x.priority,assignedTo:x.assigned_to,category:x.category,department:x.department,status:x.status,refId:x.ref_id,caseId:x.case_id,notes:x.notes,createdBy:x.created_by,createdDate:x.created_date||''}});
       if(r[5])faxLog=r[5].map(function(x){return{id:x.id,date:x.date||'',sentBy:x.sent_by,recipient:x.recipient,recipientType:x.recipient_type,contentType:x.content_type,orderNum:x.order_num,notes:x.notes}});
@@ -1080,16 +1080,17 @@ async function _loadFromSupabase(){
 }
 
 // ─── Save functions ────────────────────────────────────────────────
-function saveRefs(){if(_useNewTables){/* Only use for bulk operations - prefer saveSingleRef */refs.forEach(function(r){_dbUpsert('referrals',_toDb(r,_refMap))})}else{_legacySave('cp11_refs',refs)}}
+function saveRefs(){if(_useNewTables){refs.forEach(function(r){_markModified(r.id);_dbUpsert('referrals',_toDb(r,_refMap))})}else{_legacySave('cp11_refs',refs)}}
 function saveSingleRef(r){
   if(!r)return;
+  _markModified(r.id);
   if(_useNewTables){_dbUpsert('referrals',_toDb(r,_refMap))}
   else{_legacySave('cp11_refs',refs)}
 }
-function saveCases(){if(_useNewTables){cases.forEach(function(c){_dbUpsert('cases',_toDb(c,_caseMap))})}else{_legacySave('cp11_cases',cases)}}
-function saveSingleCase(c){if(_useNewTables){_dbUpsert('cases',_toDb(c,_caseMap))}else{_legacySave('cp11_cases',cases)}}
+function saveCases(){if(_useNewTables){cases.forEach(function(c){_markModified(c.id);_dbUpsert('cases',_toDb(c,_caseMap))})}else{_legacySave('cp11_cases',cases)}}
+function saveSingleCase(c){if(!c)return;_markModified(c.id);if(_useNewTables){_dbUpsert('cases',_toDb(c,_caseMap))}else{_legacySave('cp11_cases',cases)}}
 function saveMktData(){if(_useNewTables){mktList.forEach(function(m){_dbUpsert('marketing_initiatives',{id:m.id,name:m.name,contact:m.contact,type:m.type,stage:m.stage,date_initiated:m.dateInitiated||null,next_follow_up:m.nextFollowUp||null,volume:m.volume,effort:m.effort,notes:m.notes,created_date:m.createdDate||null,target_locations:m.targetLocations||[],activity_log:m.activityLog||[],updated_at:new Date().toISOString()})})}else{_legacySave('cp11_mkt',mktList)}}
-function saveContacts(){if(_useNewTables){contacts.forEach(function(c){_dbUpsert('contacts',{id:c.id,name:c.name,type:c.type,phone:c.phone,fax:c.fax,email:c.email,address:c.address,notes:c.notes,created_date:c.createdDate||null,updated_at:new Date().toISOString()})})}else{_legacySave('cp11_contacts',contacts)}}
+function saveContacts(){if(_useNewTables){contacts.forEach(function(c){_dbUpsert('contacts',{id:c.id,name:c.name,company:c.name,type:c.type,phone:c.phone,fax:c.fax,email:c.email,address:c.address,notes:c.notes,created_date:c.createdDate||null,updated_at:new Date().toISOString()})})}else{_legacySave('cp11_contacts',contacts)}}
 function saveMktContacts(){if(_useNewTables){mktContacts.forEach(function(c){_dbUpsert('marketing_contacts',{id:c.id,name:c.name,title:c.title,org:c.org,type:c.type,phone:c.phone,email:c.email,address:c.address,notes:c.notes,initiative_id:c.initiativeId,created_date:c.createdDate||null,updated_at:new Date().toISOString()})})}else{_legacySave('cp11_mktcontacts',mktContacts)}}
 function saveCallLogData(){if(_useNewTables){callLog.forEach(function(c){_dbUpsert('call_log',{id:c.id,ref_id:c.refId,case_id:c.caseId,patient_id:c.patientId,date:c.date||null,direction:c.direction,party:c.party,phone:c.phone,outcome:c.outcome,duration:c.duration,notes:c.notes,flag:c.flag,flag_note:c.flagNote,logged_by:c.loggedBy})})}else{_legacySave('cp11_calllog',callLog)}}
 function saveTickets(){if(_useNewTables){tickets.forEach(function(t){_dbUpsert('tickets',{id:t.id,subject:t.subject,priority:t.priority,assigned_to:t.assignedTo,category:t.category,department:t.department,status:t.status,ref_id:t.refId,case_id:t.caseId,notes:t.notes,created_by:t.createdBy,created_date:t.createdDate||null,updated_at:new Date().toISOString()})})}else{_legacySave('cp11_tickets',tickets)}}
@@ -1111,13 +1112,26 @@ function _legacySave(k,v){
 
 // ─── Polling — only for new tables ─────────────────────────────────
 var _pollTs={};
+var _locallyModified={}; // Track IDs modified in this session: {id: timestamp}
+
+function _markModified(id){
+  _locallyModified[id]=Date.now();
+}
+
+// Clean up old entries after 30 seconds (save should be done by then)
+setInterval(function(){
+  var now=Date.now();
+  for(var id in _locallyModified){
+    if(now-_locallyModified[id]>30000) delete _locallyModified[id];
+  }
+},15000);
+
 async function _pollSupabase(){
   if(!_supabaseReady||!currentUser||!_useNewTables)return;
   if(Date.now()-_lastLocalSave<5000)return;
   try{
     var changed=false;
-    // Only poll refs and cases — they change most
-    var tables=[{name:'referrals',arr:refs,map:_refMap},{name:'cases',arr:cases,map:_caseMap}];
+    var tables=[{name:'referrals',local:refs,map:_refMap},{name:'cases',local:cases,map:_caseMap}];
     for(var i=0;i<tables.length;i++){
       var t=tables[i];
       var since=_pollTs[t.name]||new Date(Date.now()-60000).toISOString();
@@ -1127,11 +1141,15 @@ async function _pollSupabase(){
       if(rows.length>0){
         rows.forEach(function(dbRow){
           var obj=_fromDb(dbRow,t.map);
-          var idx=t.arr.findIndex(function(x){return x.id===obj.id});
-          if(idx===-1){t.arr.push(obj);changed=true;}
-          else{
-            // Always update with server version — server is authoritative
-            t.arr[idx]=obj;changed=true;
+          // Skip records that were modified locally in the last 30 seconds
+          if(_locallyModified[obj.id]) return;
+          var idx=t.local.findIndex(function(x){return x.id===obj.id});
+          if(idx===-1){
+            t.local.push(obj);
+            changed=true;
+          } else {
+            t.local[idx]=obj;
+            changed=true;
           }
         });
       }
