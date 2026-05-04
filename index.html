@@ -1664,44 +1664,50 @@ function renderActiveModule() {
 // ══════════════════════════════════════════════════════════════════════
 // CRM ALERT SYSTEM
 // ══════════════════════════════════════════════════════════════════════
+var _cachedCrmAlerts=null;
+var _cachedCrmAlertsTime=0;
 function crmAlerts() {
+  // Return cached result if computed within last 2 seconds
+  if(_cachedCrmAlerts && Date.now()-_cachedCrmAlertsTime<2000) return _cachedCrmAlerts;
+  
   const now = today(), alerts = [];
-  var needsSave = false;
   refs.forEach(r => {
     try {
     if (r.status === 'Completed' || r.status === 'Patient Lost') return;
+    // Auto-assign if not assigned (but don't save during computation)
+    if (!r.alertAssignedTo) {
+      r.alertAssignedTo = getNextStaff();
+      _markModified(r.id);
+      saveSingleRef(r);
+    }
     // Scheduling alert
     if (!r.apptDate && r.createdDate) {
       const ck = r.lastContactDate || r.createdDate;
       if (daysBtw(ck, now) >= 2) {
-        if (!r.alertAssignedTo) { r.alertAssignedTo = getNextStaff(); r._justAssigned=true; needsSave = true; }
         alerts.push({ id:r.id, type:'scheduling', patientName:r.patientName, assignedTo:r.alertAssignedTo, daysSinceReg:daysBtw(r.createdDate,now), daysSinceContact:daysBtw(ck,now), location:r.location, caseType:r.caseType, phone:r.phone, email:r.email, referralSource:r.referralSource });
       }
     }
     // Appt confirmation
     if (r.apptDate && r.apptOutcome !== 'completed' && r.status !== 'Completed') {
       const past = daysBtw(r.apptDate, now);
-      // Paperwork alert — 1 day before appointment
       if (past >= -1 && past <= 0 && r.paperworkCompleted !== 'yes') {
-        alerts.push({ id:r.id, type:'paperwork', patientName:r.patientName, assignedTo:r.alertAssignedTo||r.apptConfirmAssignedTo, apptDate:r.apptDate, location:r.location, caseType:r.caseType, phone:r.phone, email:r.email });
+        alerts.push({ id:r.id, type:'paperwork', patientName:r.patientName, assignedTo:r.alertAssignedTo, apptDate:r.apptDate, location:r.location, caseType:r.caseType, phone:r.phone, email:r.email });
       }
-      // Records needed alert — 3 days before appointment
       if (past >= -3 && past <= 0 && r.recordsNeeded && r.recordsNeeded.length > 0) {
         var pendingRecs = r.recordsNeeded.filter(function(rc){return rc.status!=='received';});
         if (pendingRecs.length > 0) {
-          alerts.push({ id:r.id, type:'records_needed', patientName:r.patientName, assignedTo:r.alertAssignedTo||r.apptConfirmAssignedTo, apptDate:r.apptDate, location:r.location, caseType:r.caseType, phone:r.phone, email:r.email, pendingRecords:pendingRecs });
+          alerts.push({ id:r.id, type:'records_needed', patientName:r.patientName, assignedTo:r.alertAssignedTo, apptDate:r.apptDate, location:r.location, caseType:r.caseType, phone:r.phone, email:r.email, pendingRecords:pendingRecs });
         }
       }
       if (past >= 1) {
         if (r.apptOutcome === 'no_show' || r.apptOutcome === 'cancelled') {
           const ck2 = r.lastApptFollowUp || r.apptDate;
           if (daysBtw(ck2, now) >= 2) {
-            if (!r.apptConfirmAssignedTo) { r.apptConfirmAssignedTo = getNextStaff(); r._justAssigned=true; needsSave = true; }
-            alerts.push({ id:r.id, type:'reschedule', patientName:r.patientName, assignedTo:r.apptConfirmAssignedTo, apptDate:r.apptDate, daysPastAppt:past, daysSinceFollowUp:daysBtw(ck2,now), previousOutcome:r.apptOutcome, location:r.location, caseType:r.caseType, phone:r.phone, email:r.email });
+            alerts.push({ id:r.id, type:'reschedule', patientName:r.patientName, assignedTo:r.alertAssignedTo, apptDate:r.apptDate, daysPastAppt:past, daysSinceFollowUp:daysBtw(ck2,now), previousOutcome:r.apptOutcome, location:r.location, caseType:r.caseType, phone:r.phone, email:r.email });
           }
         } else if (!r.apptOutcome) {
-          if (!r.apptConfirmAssignedTo) { r.apptConfirmAssignedTo = getNextStaff(); r._justAssigned=true; needsSave = true; }
-          alerts.push({ id:r.id, type:'appt_confirm', patientName:r.patientName, assignedTo:r.apptConfirmAssignedTo, apptDate:r.apptDate, daysPastAppt:past, location:r.location, caseType:r.caseType, phone:r.phone, email:r.email });
+          if (!r.apptConfirmAssignedTo) { r.apptConfirmAssignedTo = r.alertAssignedTo || getNextStaff(); _markModified(r.id); saveSingleRef(r); }
+          alerts.push({ id:r.id, type:'appt_confirm', patientName:r.patientName, assignedTo:r.apptConfirmAssignedTo||r.alertAssignedTo, apptDate:r.apptDate, daysPastAppt:past, location:r.location, caseType:r.caseType, phone:r.phone, email:r.email });
         }
       }
     }
@@ -1724,16 +1730,18 @@ function crmAlerts() {
     });
     } catch(e){console.error('CRM alert error for',r.patientName,e);}
   });
-  if(needsSave && _useNewTables) {
-    refs.filter(function(r){return r._justAssigned}).forEach(function(r){saveSingleRef(r);delete r._justAssigned;});
-  } else if(needsSave) { _legacySave('cp11_refs',refs); }
+  _cachedCrmAlerts=alerts;
+  _cachedCrmAlertsTime=Date.now();
   return alerts;
 }
 
 // ══════════════════════════════════════════════════════════════════════
 // CASE MANAGEMENT ALERT SYSTEM
 // ══════════════════════════════════════════════════════════════════════
+var _cachedCmAlerts=null;
+var _cachedCmAlertsTime=0;
 function cmAlerts() {
+  if(_cachedCmAlerts && Date.now()-_cachedCmAlertsTime<2000) return _cachedCmAlerts;
   const now = today(), alerts = [];
   cases.forEach(c => {
     try {
@@ -1804,6 +1812,8 @@ function cmAlerts() {
     });
     } catch(e){console.error('CM alert error for',c.patientName,e);}
   });
+  _cachedCmAlerts=alerts;
+  _cachedCmAlertsTime=Date.now();
   return alerts;
 }
 
