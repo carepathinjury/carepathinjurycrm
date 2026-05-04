@@ -988,31 +988,36 @@ async function _dbFetchAll(table){
   }catch(e){console.error('Fetch error:',table,e);return [];}
 }
 
-function _dbUpsert(table, row){
+function _dbInsert(table, row){
+  _lastLocalSave=Date.now();
+  fetch(SUPABASE_URL+'/rest/v1/'+table, {
+    method:'POST',
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify(row)
+  }).then(function(resp){
+    if(resp.ok||resp.status===201||resp.status===204) showSaveSuccess();
+    else showSaveError();
+  }).catch(function(e){showSaveError()});
+}
+
+function _dbUpdate(table, row){
   _lastLocalSave=Date.now();
   var id=row.id||row.key;
   var idCol=(table==='system_config')?'key':'id';
   var body={};
   for(var k in row){if(k!==idCol)body[k]=row[k];}
-  
   fetch(SUPABASE_URL+'/rest/v1/'+table+'?'+idCol+'=eq.'+encodeURIComponent(id), {
     method:'PATCH',
     headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
     body:JSON.stringify(body)
   }).then(function(resp){
     if(resp.ok||resp.status===204) showSaveSuccess();
-    else resp.text().then(function(t){
-      // PATCH failed - row might not exist, try INSERT
-      fetch(SUPABASE_URL+'/rest/v1/'+table,{
-        method:'POST',
-        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
-        body:JSON.stringify(row)
-      }).then(function(r2){
-        if(r2.ok||r2.status===201||r2.status===204) showSaveSuccess();
-        else r2.text().then(function(t2){showSaveError()});
-      });
-    });
+    else showSaveError();
   }).catch(function(e){showSaveError()});
+}
+
+function _dbUpsert(table, row){
+  _dbUpdate(table, row);
 }
 
 function _dbDelete(table, id){
@@ -1088,14 +1093,16 @@ async function _loadFromSupabase(){
 
 // ─── Save functions ────────────────────────────────────────────────
 function saveRefs(){if(_useNewTables){refs.forEach(function(r){_markModified(r.id);_dbUpsert('referrals',_toDb(r,_refMap))})}else{_legacySave('cp11_refs',refs)}}
-function saveSingleRef(r){
+function saveSingleRef(r, isNew){
   if(!r)return;
   _markModified(r.id);
-  if(_useNewTables){_dbUpsert('referrals',_toDb(r,_refMap))}
-  else{_legacySave('cp11_refs',refs)}
+  if(_useNewTables){
+    if(isNew) _dbInsert('referrals',_toDb(r,_refMap));
+    else _dbUpdate('referrals',_toDb(r,_refMap));
+  } else{_legacySave('cp11_refs',refs)}
 }
 function saveCases(){if(_useNewTables){cases.forEach(function(c){_markModified(c.id);_dbUpsert('cases',_toDb(c,_caseMap))})}else{_legacySave('cp11_cases',cases)}}
-function saveSingleCase(c){if(!c)return;_markModified(c.id);if(_useNewTables){_dbUpsert('cases',_toDb(c,_caseMap))}else{_legacySave('cp11_cases',cases)}}
+function saveSingleCase(c, isNew){if(!c)return;_markModified(c.id);if(_useNewTables){if(isNew)_dbInsert('cases',_toDb(c,_caseMap));else _dbUpdate('cases',_toDb(c,_caseMap));}else{_legacySave('cp11_cases',cases)}}
 function saveMktData(){if(_useNewTables){mktList.forEach(function(m){_dbUpsert('marketing_initiatives',{id:m.id,name:m.name,contact:m.contact,type:m.type,stage:m.stage,date_initiated:m.dateInitiated||null,next_follow_up:m.nextFollowUp||null,volume:m.volume,effort:m.effort,notes:m.notes,created_date:m.createdDate||null,target_locations:m.targetLocations||[],activity_log:m.activityLog||[],updated_at:new Date().toISOString()})})}else{_legacySave('cp11_mkt',mktList)}}
 function saveContacts(){if(_useNewTables){contacts.forEach(function(c){_dbUpsert('contacts',{id:c.id,name:c.name,company:c.name,type:c.type,phone:c.phone,fax:c.fax,email:c.email,address:c.address,notes:c.notes,created_date:c.createdDate||null,updated_at:new Date().toISOString()})})}else{_legacySave('cp11_contacts',contacts)}}
 function saveMktContacts(){if(_useNewTables){mktContacts.forEach(function(c){_dbUpsert('marketing_contacts',{id:c.id,name:c.name,title:c.title,org:c.org,type:c.type,phone:c.phone,email:c.email,address:c.address,notes:c.notes,initiative_id:c.initiativeId,created_date:c.createdDate||null,updated_at:new Date().toISOString()})})}else{_legacySave('cp11_mktcontacts',mktContacts)}}
@@ -2665,7 +2672,8 @@ function saveReferral() {
     // Auto-create case if scheduled
     if(data.apptDate) createCaseFromRef(nr);
   }
-  saveSingleRef(editingRefId?refs.find(function(x){return x.id===editingRefId}):refs[refs.length-1]);
+  var isNewRef = !editingRefId;
+  saveSingleRef(editingRefId?refs.find(function(x){return x.id===editingRefId}):refs[refs.length-1], isNewRef);
   // Sync to linked case if editing
   if(editingRefId) syncRefToCase(editingRefId);
   closeRefModal();renderActiveModule();
@@ -2746,7 +2754,7 @@ function createCaseFromRef(r) {
     dismissedAlerts: [],
     manualAlerts: []
   });
-  saveSingleCase(cases[cases.length-1]);
+  saveSingleCase(cases[cases.length-1], true);
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -3637,7 +3645,8 @@ function saveCase(){
   const data={patientName:name,dob:document.getElementById('cDOB').value,phone:document.getElementById('cPhone').value.trim(),email:document.getElementById('cEmail').value.trim(),doi:document.getElementById('cDOI').value,caseType:document.getElementById('cCaseType').value,location:document.getElementById('cLocation').value,language:document.getElementById('cLanguage').value,attorney:document.getElementById('cAttorney').value.trim(),lawFirm:document.getElementById('cLawFirm').value.trim(),lawContact:document.getElementById('cLawContact').value.trim(),referralSource:document.getElementById('cRefSource').value.trim(),assigned:document.getElementById('cAssigned').value,apptDate:document.getElementById('cApptDate').value,recordsSent:document.getElementById('cRecordsSent').value,missingInfo:missingInfo,followUpDate:document.getElementById('cFollowUp').value,notes:document.getElementById('cNotes').value.trim(),status:document.getElementById('cStatus').value};
   if(editingCaseId){const idx=cases.findIndex(c=>c.id===editingCaseId);if(idx!==-1){const prev=cases[idx];var updatedOpenDate=document.getElementById('cDateOpened').value||prev.createdDate;if((data.status==='Settled/Closed'||data.status==='Dropped')&&prev.status==='Active'&&!prev.settledDate)data.settledDate=today();else data.settledDate=prev.settledDate||'';if(data.status==='Active')data.settledDate='';cases[idx]={...prev,...data,createdDate:updatedOpenDate};}}
   else{cases.push({id:genId(),...data,createdDate:document.getElementById('cDateOpened').value||today(),settledDate:data.status==='Settled/Complete'?today():'',dismissedAlerts:[],manualAlerts:[]});}
-  saveSingleCase(editingCaseId?cases.find(function(x){return x.id===editingCaseId}):cases[cases.length-1]);
+  var isNewCase=!editingCaseId;
+  saveSingleCase(editingCaseId?cases.find(function(x){return x.id===editingCaseId}):cases[cases.length-1], isNewCase);
   // Sync to linked referral
   if(editingCaseId) syncCaseToRef(editingCaseId);
   closeCaseModal();renderActiveModule();if(cmCurrentPage==='cm-detail'&&editingCaseId)showCmDetail(editingCaseId);
@@ -4675,7 +4684,7 @@ function psrQuickAddReferral(){
   const phone=prompt('Phone number (optional):')||'';
   const loc=prompt('Location (optional):')||'';
   const r={id:genId(),patientName:name.trim(),phone:phone.trim(),location:loc.trim(),caseType:'PI',status:'Pending Scheduling',createdDate:today(),registeredBy:currentUser,dob:'',email:'',doi:'',attorney:'',lawFirm:'',lawContact:'',referralSource:'',apptDate:'',apptOutcome:'',language:'English',notes:'Quick-added by PSR: '+currentUser,alertType:'',updateLog:[]};
-  refs.push(r);saveSingleRef(r);renderActiveModule();
+  refs.push(r);saveSingleRef(r,true);renderActiveModule();
   alert('Patient "'+name.trim()+'" added. Scheduling team will be alerted.');
 }
 
