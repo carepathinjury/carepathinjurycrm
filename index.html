@@ -1106,12 +1106,54 @@ function saveSingleCase(c, isNew){if(!c)return;_markModified(c.id);if(_useNewTab
 function saveMktData(){if(_useNewTables){mktList.forEach(function(m){_dbUpsert('marketing_initiatives',{id:m.id,name:m.name,contact:m.contact,type:m.type,stage:m.stage,date_initiated:m.dateInitiated||null,next_follow_up:m.nextFollowUp||null,volume:m.volume,effort:m.effort,notes:m.notes,created_date:m.createdDate||null,target_locations:m.targetLocations||[],activity_log:m.activityLog||[],updated_at:new Date().toISOString()})})}else{_legacySave('cp11_mkt',mktList)}}
 function saveContacts(){if(_useNewTables){contacts.forEach(function(c){_dbUpsert('contacts',{id:c.id,name:c.name,company:c.name,type:c.type,phone:c.phone,fax:c.fax,email:c.email,address:c.address,notes:c.notes,created_date:c.createdDate||null,updated_at:new Date().toISOString()})})}else{_legacySave('cp11_contacts',contacts)}}
 function saveMktContacts(){if(_useNewTables){mktContacts.forEach(function(c){_dbUpsert('marketing_contacts',{id:c.id,name:c.name,title:c.title,org:c.org,type:c.type,phone:c.phone,email:c.email,address:c.address,notes:c.notes,initiative_id:c.initiativeId,created_date:c.createdDate||null,updated_at:new Date().toISOString()})})}else{_legacySave('cp11_mktcontacts',mktContacts)}}
-function saveCallLogData(){if(_useNewTables){callLog.forEach(function(c){_dbUpsert('call_log',{id:c.id,ref_id:c.refId,case_id:c.caseId,patient_id:c.patientId,date:c.date||null,direction:c.direction,party:c.party,phone:c.phone,outcome:c.outcome,duration:c.duration,notes:c.notes,flag:c.flag,flag_note:c.flagNote,logged_by:c.loggedBy})})}else{_legacySave('cp11_calllog',callLog)}}
-function saveTickets(){if(_useNewTables){tickets.forEach(function(t){_dbUpsert('tickets',{id:t.id,subject:t.subject,priority:t.priority,assigned_to:t.assignedTo,category:t.category,department:t.department,status:t.status,ref_id:t.refId,case_id:t.caseId,notes:t.notes,created_by:t.createdBy,created_date:t.createdDate||null,updated_at:new Date().toISOString()})})}else{_legacySave('cp11_tickets',tickets)}}
-function saveFaxLog(){if(_useNewTables){faxLog.forEach(function(f){_dbUpsert('fax_log',{id:f.id,date:f.date||null,sent_by:f.sentBy,recipient:f.recipient,recipient_type:f.recipientType,content_type:f.contentType,order_num:f.orderNum,notes:f.notes})})}else{_legacySave('cp11_faxlog',faxLog)}}
-function saveCrmMet(){if(_useNewTables){for(var k in crmMetrics){var m=crmMetrics[k];if(m.staff&&m.date)_dbUpsert('daily_metrics',{staff:m.staff,date:m.date,module:'crm',phone_calls:m.phoneCalls||0,emails_sent:m.emailsSent||0,faxes_sent:0,updated_at:new Date().toISOString()})}}else{_legacySave('cp11_crmmet',crmMetrics)}}
-function saveCmMet(){if(_useNewTables){for(var k in cmMetrics){var m=cmMetrics[k];if(m.staff&&m.date)_dbUpsert('daily_metrics',{staff:m.staff,date:m.date,module:'cm',phone_calls:m.phoneCalls||0,emails_sent:m.emailsSent||0,faxes_sent:m.faxesSent||0,updated_at:new Date().toISOString()})}}else{_legacySave('cp11_cmmet',cmMetrics)}}
-function savePsrMet(){if(_useNewTables){for(var k in psrMetrics){var m=psrMetrics[k];if(m.staff&&m.date)_dbUpsert('daily_metrics',{staff:m.staff,date:m.date,module:'psr',phone_calls:m.phoneCalls||0,emails_sent:m.emailsSent||0,faxes_sent:0,updated_at:new Date().toISOString()})}}else{_legacySave('cp11_psrmet',psrMetrics)}}
+function saveCallLogData(){if(_useNewTables){callLog.forEach(function(c){_dbInsert('call_log',{id:c.id,ref_id:c.refId,case_id:c.caseId,patient_id:c.patientId,date:c.date||null,direction:c.direction,party:c.party,phone:c.phone,outcome:c.outcome,duration:c.duration,notes:c.notes,flag:c.flag,flag_note:c.flagNote,logged_by:c.loggedBy})})}else{_legacySave('cp11_calllog',callLog)}}
+function saveTickets(){if(_useNewTables){tickets.forEach(function(t){_dbInsert('tickets',{id:t.id,subject:t.subject,priority:t.priority,assigned_to:t.assignedTo,category:t.category,department:t.department,status:t.status,ref_id:t.refId,case_id:t.caseId,notes:t.notes,created_by:t.createdBy,created_date:t.createdDate||null,updated_at:new Date().toISOString()})})}else{_legacySave('cp11_tickets',tickets)}}
+function saveFaxLog(){if(_useNewTables){faxLog.forEach(function(f){_dbInsert('fax_log',{id:f.id,date:f.date||null,sent_by:f.sentBy,recipient:f.recipient,recipient_type:f.recipientType,content_type:f.contentType,order_num:f.orderNum,notes:f.notes})})}else{_legacySave('cp11_faxlog',faxLog)}}
+function saveCrmMet(){if(_useNewTables){for(var k in crmMetrics){var m=crmMetrics[k];if(m.staff&&m.date)_dbMetricSave(m.staff,m.date,'crm',m.phoneCalls||0,m.emailsSent||0,0)}}else{_legacySave('cp11_crmmet',crmMetrics)}}
+function saveCmMet(){if(_useNewTables){for(var k in cmMetrics){var m=cmMetrics[k];if(m.staff&&m.date)_dbMetricSave(m.staff,m.date,'cm',m.phoneCalls||0,m.emailsSent||0,m.faxesSent||0)}}else{_legacySave('cp11_cmmet',cmMetrics)}}
+function savePsrMet(){if(_useNewTables){for(var k in psrMetrics){var m=psrMetrics[k];if(m.staff&&m.date)_dbMetricSave(m.staff,m.date,'psr',m.phoneCalls||0,m.emailsSent||0,0)}}else{_legacySave('cp11_psrmet',psrMetrics)}}
+
+function _dbMetricSave(staff,date,module,calls,emails,faxes){
+  _lastLocalSave=Date.now();
+  var row={staff:staff,date:date,module:module,phone_calls:calls,emails_sent:emails,faxes_sent:faxes,updated_at:new Date().toISOString()};
+  // Try PATCH first (update existing metric for this staff/date/module)
+  fetch(SUPABASE_URL+'/rest/v1/daily_metrics?staff=eq.'+encodeURIComponent(staff)+'&date=eq.'+encodeURIComponent(date)+'&module=eq.'+encodeURIComponent(module), {
+    method:'PATCH',
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify(row)
+  }).then(function(resp){
+    if(resp.ok||resp.status===204){
+      // Check if row existed — if not, INSERT
+      fetch(SUPABASE_URL+'/rest/v1/daily_metrics?staff=eq.'+encodeURIComponent(staff)+'&date=eq.'+encodeURIComponent(date)+'&module=eq.'+encodeURIComponent(module)+'&select=id',{
+        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+      }).then(function(r){return r.json()}).then(function(rows){
+        if(rows.length===0){
+          row.id=genId();
+          _dbInsert('daily_metrics',row);
+        } else {
+          showSaveSuccess();
+        }
+      });
+    } else {
+      showSaveError();
+    }
+  }).catch(function(e){showSaveError()});
+}
+
+function saveSingleCallLog(entry){
+  if(_useNewTables){_dbInsert('call_log',{id:entry.id,ref_id:entry.refId,case_id:entry.caseId,patient_id:entry.patientId,date:entry.date||null,direction:entry.direction,party:entry.party,phone:entry.phone,outcome:entry.outcome,duration:entry.duration,notes:entry.notes,flag:entry.flag,flag_note:entry.flagNote,logged_by:entry.loggedBy})}
+  else{_legacySave('cp11_calllog',callLog)}
+}
+function saveSingleTicket(t,isNew){
+  if(_useNewTables){
+    if(isNew)_dbInsert('tickets',{id:t.id,subject:t.subject,priority:t.priority,assigned_to:t.assignedTo,category:t.category,department:t.department,status:t.status,ref_id:t.refId,case_id:t.caseId,notes:t.notes,created_by:t.createdBy,created_date:t.createdDate||null,updated_at:new Date().toISOString()});
+    else _dbUpdate('tickets',{id:t.id,subject:t.subject,priority:t.priority,assigned_to:t.assignedTo,category:t.category,department:t.department,status:t.status,ref_id:t.refId,case_id:t.caseId,notes:t.notes,created_by:t.createdBy,created_date:t.createdDate||null,updated_at:new Date().toISOString()});
+  }else{_legacySave('cp11_tickets',tickets)}
+}
+function saveSingleFax(f){
+  if(_useNewTables){_dbInsert('fax_log',{id:f.id,date:f.date||null,sent_by:f.sentBy,recipient:f.recipient,recipient_type:f.recipientType,content_type:f.contentType,order_num:f.orderNum,notes:f.notes})}
+  else{_legacySave('cp11_faxlog',faxLog)}
+}
 function saveRobin(){if(_useNewTables){_dbUpsert('system_config',{key:'robin_idx',value:robinIdx,updated_at:new Date().toISOString()})}else{_legacySave('cp11_robin',robinIdx.toString())}}
 
 function _legacySave(k,v){
@@ -3129,7 +3171,7 @@ function openFaxLogModal(){
 function saveFaxEntry(){
   var recipient=document.getElementById('fxRecipient').value.trim();
   if(!recipient){alert('Please enter a recipient.');return;}
-  faxLog.push({
+  var newFax={
     id:genId(),
     date:document.getElementById('fxDate').value,
     sentBy:currentUser,
@@ -3138,8 +3180,9 @@ function saveFaxEntry(){
     contentType:document.getElementById('fxContentType').value,
     orderNum:document.getElementById('fxOrderNum').value.trim(),
     notes:document.getElementById('fxNotes').value.trim()
-  });
-  saveFaxLog();
+  };
+  faxLog.push(newFax);
+  saveSingleFax(newFax);
   document.getElementById('faxLogModal').remove();
   renderActiveModule();
 }
@@ -4180,7 +4223,7 @@ function saveCallLog(){
     const tk={id:genId(),subject:flagNote||notes||'Call escalation — see call log',priority:'Normal',assignedTo:PSR_STAFF.includes(currentUser)?currentUser:PSR_STAFF[0],category:'General Inquiry',status:'Open',refId:entry.refId,caseId:entry.caseId,createdBy:currentUser,createdDate:today(),resolvedDate:'',updates:[{date:today(),by:currentUser,note:'Created from call. Party: '+entry.party+'. Outcome: '+entry.outcome+(notes?'. Notes: '+notes:'')}]};
     if(tk.refId&&!tk.caseId){const cc=cases.find(x=>x.sourceRefId===tk.refId);if(cc)tk.caseId=cc.id;}
     if(tk.caseId&&!tk.refId){const cc=cases.find(x=>x.id===tk.caseId);if(cc&&cc.sourceRefId)tk.refId=cc.sourceRefId;}
-    tickets.push(tk);saveTickets();
+    tickets.push(tk);saveSingleTicket(tk,true);
     entry.ticketId=tk.id;
   } else if(flag&&entry.caseId){
     const c=cases.find(x=>x.id===entry.caseId);
@@ -4191,7 +4234,7 @@ function saveCallLog(){
     }
   }
 
-  saveCallLogData();closeCallLogModal();renderActiveModule();
+  saveSingleCallLog(entry);closeCallLogModal();renderActiveModule();
   // Re-render detail views if open
   if(activeModule==='crm'&&crmCurrentPage==='crm-detail'&&callLogRefId)showCrmDetail(callLogRefId);
   if(activeModule==='cm'&&cmCurrentPage==='cm-detail'&&callLogCaseId)showCmDetail(callLogCaseId);
@@ -4412,7 +4455,9 @@ function saveTicket(){
     if(t.caseId&&!t.refId){const c=cases.find(x=>x.id===t.caseId);if(c&&c.sourceRefId)t.refId=c.sourceRefId;}
     tickets.push(t);
   }
-  saveTickets();closeTicketModal();renderActiveModule();
+  var isNewTicket=!editingTicketId;
+  var savedTicket=editingTicketId?tickets.find(function(t){return t.id===editingTicketId}):tickets[tickets.length-1];
+  saveSingleTicket(savedTicket,isNewTicket);closeTicketModal();renderActiveModule();
   if(psrCurrentPage==='psr-ticket-detail'&&editingTicketId)showPsrTicketDetail(editingTicketId);
 }
 function deleteTicket(){if(!editingTicketId||!confirm('Delete this ticket?'))return;tickets=tickets.filter(t=>t.id!==editingTicketId);saveTickets();closeTicketModal();psrNav('psr-tickets');}
