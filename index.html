@@ -966,11 +966,15 @@ function _fromDb(row, fieldMap){
     if(row.hasOwnProperty(dbKey)){
       var val=row[dbKey];
       if(val===null){
-        // Return appropriate default based on type
         if(_boolFields.indexOf(dbKey)!==-1) val=false;
         else if(_jsonFields.indexOf(dbKey)!==-1) val=[];
         else if(_intFields.indexOf(dbKey)!==-1) val=null;
         else val='';
+      }
+      // Ensure JSONB fields are always arrays
+      if(_jsonFields.indexOf(dbKey)!==-1){
+        if(typeof val==='string'){try{val=JSON.parse(val)}catch(e){val=[];}}
+        if(!Array.isArray(val))val=[];
       }
       obj[js]=val;
     }
@@ -1123,13 +1127,20 @@ function _dbMetricSave(staff,date,module,calls,emails,faxes){
     body:JSON.stringify(row)
   }).then(function(resp){
     if(resp.ok||resp.status===204){
-      // Check if row existed — if not, INSERT
-      fetch(SUPABASE_URL+'/rest/v1/daily_metrics?staff=eq.'+encodeURIComponent(staff)+'&date=eq.'+encodeURIComponent(date)+'&module=eq.'+encodeURIComponent(module)+'&select=id',{
+      // Check if row existed
+      fetch(SUPABASE_URL+'/rest/v1/daily_metrics?staff=eq.'+encodeURIComponent(staff)+'&date=eq.'+encodeURIComponent(date)+'&module=eq.'+encodeURIComponent(module)+'&select=staff',{
         headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
       }).then(function(r){return r.json()}).then(function(rows){
         if(rows.length===0){
-          row.id=genId();
-          _dbInsert('daily_metrics',row);
+          // No id field — let the database generate it
+          fetch(SUPABASE_URL+'/rest/v1/daily_metrics',{
+            method:'POST',
+            headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
+            body:JSON.stringify(row)
+          }).then(function(r2){
+            if(r2.ok||r2.status===201) showSaveSuccess();
+            else showSaveError();
+          });
         } else {
           showSaveSuccess();
         }
@@ -1801,7 +1812,7 @@ function cmAlerts() {
       }
       return;
     }
-    const dismissed = c.dismissedAlerts || [];
+    const dismissed = Array.isArray(c.dismissedAlerts) ? c.dismissedAlerts : (typeof c.dismissedAlerts==='string' ? (function(){try{return JSON.parse(c.dismissedAlerts)}catch(e){return []}})() : []);
     const missingParts = (c.missingInfo||'').split(' | ').filter(Boolean);
 
     // NEW PATIENT INTRO EMAIL — fires immediately if not sent
