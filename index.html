@@ -4933,14 +4933,7 @@ function verifyPIN(){var pin='0824';if(document.getElementById('pinInput').value
 // SEED DATA
 // ══════════════════════════════════════════════════════════════════════
 function seed(){
-  // One-time redistribution of cases to even round-robin
-  if(cases.length>0 && !false){
-    var activeCases=cases.filter(function(c){return c.status==='Active'});
-    activeCases.forEach(function(c,i){c.assigned=CM_STAFF[i%CM_STAFF.length];});
-    saveCases();
-    // redistribution done
-    console.log('Cases redistributed evenly among CM staff');
-  }
+  // Redistribution already completed — do nothing
 }
 
 
