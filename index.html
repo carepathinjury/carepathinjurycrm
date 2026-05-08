@@ -1337,10 +1337,13 @@ function showEodReminderModal(){
 }
 
 function exportAllMetrics(){
-  // Referrals summary
+  var data=refs;
+  if(crmMgrDateFrom)data=data.filter(function(r){return(r.createdDate||'')>=crmMgrDateFrom});
+  if(crmMgrDateTo)data=data.filter(function(r){return(r.createdDate||'')<=crmMgrDateTo});
   var rHeaders=['Patient','DOB','Case Type','Location','Law Firm','Attorney','Source','Status','Registered','Appt Date','Outcome'];
-  var rRows=refs.map(function(r){return[r.patientName,r.dob,r.caseType,r.location,r.lawFirm,r.attorney,r.referralSource,r.status,r.createdDate,r.apptDate,r.apptOutcome||'']});
-  downloadCSV('carepath-referrals-'+today()+'.csv',rHeaders,rRows);
+  var rRows=data.map(function(r){return[r.patientName,r.dob,r.caseType,r.location,r.lawFirm,r.attorney,r.referralSource,r.status,r.createdDate,r.apptDate,r.apptOutcome||'']});
+  var label=crmMgrDateFrom||crmMgrDateTo?'-'+crmMgrDateFrom+'-to-'+crmMgrDateTo:'';
+  downloadCSV('carepath-referrals'+label+'-'+today()+'.csv',rHeaders,rRows);
 }
 function exportCases(){
   var h=['Patient','DOB','Case Type','Location','Assigned','Status','Appt','Missing Info','Created'];
@@ -1409,20 +1412,48 @@ function renderPieChart(data){
 // Download visual report as printable HTML
 function downloadVisualReport(){
   var w=window.open('','_blank');
-  var total=refs.length,pending=refs.filter(function(r){return!r.apptDate&&r.status!=='Completed'&&r.status!=='Patient Lost'}).length;
-  var lost=refs.filter(function(r){return r.status==='Patient Lost'}).length;
-  var scheduled=refs.filter(function(r){return r.apptDate}).length;
-  var completed=refs.filter(function(r){return r.apptOutcome==='completed'}).length;
+  var data=refs;
+  if(crmMgrDateFrom)data=data.filter(function(r){return(r.createdDate||'')>=crmMgrDateFrom});
+  if(crmMgrDateTo)data=data.filter(function(r){return(r.createdDate||'')<=crmMgrDateTo});
+  var dateLabel=crmMgrDateFrom||crmMgrDateTo?(crmMgrDateFrom||'Start')+' to '+(crmMgrDateTo||'Present'):'All Time';
+  var total=data.length,pending=data.filter(function(r){return!r.apptDate&&r.status!=='Completed'&&r.status!=='Patient Lost'}).length;
+  var lost=data.filter(function(r){return r.status==='Patient Lost'}).length;
+  var scheduled=data.filter(function(r){return r.apptDate}).length;
+  var completed=data.filter(function(r){return r.apptOutcome==='completed'}).length;
 
-  var caseTypes={};refs.forEach(function(r){var t=r.caseType||'Unknown';caseTypes[t]=(caseTypes[t]||0)+1;});
-  var locCounts={};refs.forEach(function(r){var l=r.location||'Unknown';locCounts[l]=(locCounts[l]||0)+1;});
-  var firmCounts={};refs.forEach(function(r){var f=r.lawFirm||'No Firm';firmCounts[f]=(firmCounts[f]||0)+1;});
-  var srcCounts={};refs.forEach(function(r){var s=r.referralSource||'Unknown';srcCounts[s]=(srcCounts[s]||0)+1;});
+  var caseTypes={};data.forEach(function(r){var t=r.caseType||'Unknown';caseTypes[t]=(caseTypes[t]||0)+1;});
+  var locCounts={};data.forEach(function(r){var l=r.location||'Unknown';locCounts[l]=(locCounts[l]||0)+1;});
+  var firmCounts={};data.forEach(function(r){var f=r.lawFirm||'No Firm';firmCounts[f]=(firmCounts[f]||0)+1;});
+  var srcCounts={};data.forEach(function(r){var s=r.referralSource||'Unknown';srcCounts[s]=(srcCounts[s]||0)+1;});
+  var statuses={};data.forEach(function(r){var s=r.status||'Unknown';statuses[s]=(statuses[s]||0)+1;});
 
-  var html='<!DOCTYPE html><html><head><title>CarePath Analytics Report — '+today()+'</title>';
-  html+='<style>body{font-family:Arial,sans-serif;max-width:900px;margin:0 auto;padding:20px;color:#1a2332}h1{color:#1a7f7a;border-bottom:3px solid #1a7f7a;padding-bottom:8px}h2{color:#1a2332;margin-top:28px;border-bottom:1px solid #ddd;padding-bottom:6px}.stat{display:inline-block;text-align:center;padding:14px 20px;margin:6px;background:#f8f9fa;border-radius:8px;min-width:120px}.stat-val{font-size:24px;font-weight:700;color:#1a7f7a}.stat-lbl{font-size:11px;color:#666;margin-top:2px}table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}th{background:#1a2332;color:white;padding:8px 10px;text-align:left}td{padding:6px 10px;border-bottom:1px solid #eee}.bar-wrap{background:#eee;height:18px;border-radius:4px;overflow:hidden}.bar{height:100%;border-radius:4px}@media print{body{padding:0}}</style></head><body>';
+  var colors=['#1a7f7a','#c8973a','#c0392b','#2c3e50','#3498db','#e67e22','#9b59b6','#27ae60','#e74c3c','#1abc9c'];
+
+  function svgDonut(dataObj,size){
+    var entries=Object.entries(dataObj).sort(function(a,b){return b[1]-a[1]});
+    var tot=entries.reduce(function(s,e){return s+e[1]},0);
+    if(tot===0)return '<p>No data</p>';
+    var cx=size/2,cy=size/2,r=size/2-20,circ=2*Math.PI*r;
+    var svg='<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'">';
+    var offset=0;
+    entries.forEach(function(e,i){
+      var pct=e[1]/tot;var dash=pct*circ;
+      svg+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+colors[i%colors.length]+'" stroke-width="30" stroke-dasharray="'+dash.toFixed(1)+' '+(circ-dash).toFixed(1)+'" stroke-dashoffset="-'+offset.toFixed(1)+'" transform="rotate(-90 '+cx+' '+cy+')"/>';
+      offset+=dash;
+    });
+    svg+='<text x="'+cx+'" y="'+cy+'" text-anchor="middle" dy="0.35em" style="font-size:20px;font-weight:700;fill:#1a2332">'+tot+'</text></svg>';
+    svg+='<div style="margin-top:8px">';
+    entries.forEach(function(e,i){
+      svg+='<span style="display:inline-block;margin:2px 8px 2px 0;font-size:11px"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:'+colors[i%colors.length]+';margin-right:4px"></span>'+e[0]+': '+e[1]+' ('+Math.round(e[1]/tot*100)+'%)</span>';
+    });
+    svg+='</div>';
+    return svg;
+  }
+
+  var html='<!DOCTYPE html><html><head><title>CarePath Analytics Report</title>';
+  html+='<style>body{font-family:Arial,sans-serif;max-width:900px;margin:0 auto;padding:20px;color:#1a2332}h1{color:#1a7f7a;border-bottom:3px solid #1a7f7a;padding-bottom:8px}h2{color:#1a2332;margin-top:28px;border-bottom:1px solid #ddd;padding-bottom:6px}.stat{display:inline-block;text-align:center;padding:14px 20px;margin:6px;background:#f8f9fa;border-radius:8px;min-width:120px}.stat-val{font-size:24px;font-weight:700;color:#1a7f7a}.stat-lbl{font-size:11px;color:#666;margin-top:2px}table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}th{background:#1a2332;color:white;padding:8px 10px;text-align:left}td{padding:6px 10px;border-bottom:1px solid #eee}.bar-wrap{background:#eee;height:18px;border-radius:4px;overflow:hidden}.bar{height:100%;border-radius:4px}.chart-row{display:flex;gap:40px;flex-wrap:wrap;margin:16px 0}@media print{body{padding:0}}</style></head><body>';
   html+='<h1>CarePath Injury Centers — Analytics Report</h1>';
-  html+='<p style="color:#666;font-size:12px">Generated: '+new Date().toLocaleString()+'</p>';
+  html+='<p style="color:#666;font-size:12px">Generated: '+new Date().toLocaleString()+' | Date Range: '+dateLabel+'</p>';
 
   html+='<div style="text-align:center;margin:16px 0">';
   html+='<div class="stat"><div class="stat-val">'+total+'</div><div class="stat-lbl">Total Referrals</div></div>';
@@ -1432,10 +1463,14 @@ function downloadVisualReport(){
   html+='<div class="stat"><div class="stat-val" style="color:#c0392b">'+lost+'</div><div class="stat-lbl">Lost</div></div>';
   html+='</div>';
 
-  // Case type breakdown
+  // Charts
+  html+='<div class="chart-row"><div><h2>Case Types</h2>'+svgDonut(caseTypes,180)+'</div>';
+  html+='<div><h2>Patient Status</h2>'+svgDonut(statuses,180)+'</div></div>';
+
+  // Case type table
   html+='<h2>Case Type Breakdown</h2><table><tr><th>Case Type</th><th>Count</th><th>%</th><th>Chart</th></tr>';
   Object.entries(caseTypes).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
-    var pct=Math.round(e[1]/total*100);
+    var pct=total>0?Math.round(e[1]/total*100):0;
     html+='<tr><td><strong>'+e[0]+'</strong></td><td>'+e[1]+'</td><td>'+pct+'%</td><td><div class="bar-wrap"><div class="bar" style="width:'+pct+'%;background:#1a7f7a"></div></div></td></tr>';
   });
   html+='</table>';
@@ -1443,7 +1478,7 @@ function downloadVisualReport(){
   // By location
   html+='<h2>Referrals by Location</h2><table><tr><th>Location</th><th>Count</th><th>%</th><th>Chart</th></tr>';
   Object.entries(locCounts).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
-    var pct=Math.round(e[1]/total*100);
+    var pct=total>0?Math.round(e[1]/total*100):0;
     html+='<tr><td><strong>'+e[0]+'</strong></td><td>'+e[1]+'</td><td>'+pct+'%</td><td><div class="bar-wrap"><div class="bar" style="width:'+pct+'%;background:#c8973a"></div></div></td></tr>';
   });
   html+='</table>';
@@ -1451,13 +1486,13 @@ function downloadVisualReport(){
   // By law firm
   html+='<h2>Patients by Law Firm</h2><table><tr><th>Law Firm</th><th>Patients</th><th>%</th></tr>';
   Object.entries(firmCounts).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
-    html+='<tr><td><strong>'+e[0]+'</strong></td><td>'+e[1]+'</td><td>'+Math.round(e[1]/total*100)+'%</td></tr>';
+    html+='<tr><td><strong>'+e[0]+'</strong></td><td>'+e[1]+'</td><td>'+(total>0?Math.round(e[1]/total*100):0)+'%</td></tr>';
   });
   html+='</table>';
 
   // Referral source conversion
   html+='<h2>Referral Source Conversion</h2><table><tr><th>Source</th><th>Total</th><th>Scheduled</th><th>Completed</th><th>Lost</th></tr>';
-  var srcConv={};refs.forEach(function(r){var s=r.referralSource||'Unknown';if(!srcConv[s])srcConv[s]={t:0,sc:0,co:0,lo:0};srcConv[s].t++;if(r.apptDate)srcConv[s].sc++;if(r.apptOutcome==='completed')srcConv[s].co++;if(r.status==='Patient Lost')srcConv[s].lo++;});
+  var srcConv={};data.forEach(function(r){var s=r.referralSource||'Unknown';if(!srcConv[s])srcConv[s]={t:0,sc:0,co:0,lo:0};srcConv[s].t++;if(r.apptDate)srcConv[s].sc++;if(r.apptOutcome==='completed')srcConv[s].co++;if(r.status==='Patient Lost')srcConv[s].lo++;});
   Object.entries(srcConv).sort(function(a,b){return b[1].t-a[1].t}).forEach(function(e){
     html+='<tr><td><strong>'+e[0]+'</strong></td><td>'+e[1].t+'</td><td>'+e[1].sc+'</td><td>'+e[1].co+'</td><td style="color:#c0392b">'+(e[1].lo||0)+'</td></tr>';
   });
@@ -1466,7 +1501,7 @@ function downloadVisualReport(){
   // Lost patients
   if(lost>0){
     html+='<h2>Patient Leakage</h2>';
-    var reasons={};refs.filter(function(r){return r.status==='Patient Lost'}).forEach(function(r){var rs=r.lostReason||'Unknown';reasons[rs]=(reasons[rs]||0)+1;});
+    var reasons={};data.filter(function(r){return r.status==='Patient Lost'}).forEach(function(r){var rs=r.lostReason||'Unknown';reasons[rs]=(reasons[rs]||0)+1;});
     html+='<table><tr><th>Reason</th><th>Count</th><th>%</th></tr>';
     Object.entries(reasons).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
       html+='<tr><td><strong>'+e[0]+'</strong></td><td>'+e[1]+'</td><td>'+Math.round(e[1]/lost*100)+'%</td></tr>';
