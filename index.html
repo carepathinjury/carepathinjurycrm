@@ -1337,11 +1337,23 @@ function showEodReminderModal(){
 }
 
 function exportAllMetrics(){
-  var data=refs;
-  if(crmMgrDateFrom)data=data.filter(function(r){return(r.createdDate||'')>=crmMgrDateFrom});
-  if(crmMgrDateTo)data=data.filter(function(r){return(r.createdDate||'')<=crmMgrDateTo});
-  var rHeaders=['Patient','DOB','Case Type','Location','Law Firm','Attorney','Source','Status','Registered','Appt Date','Outcome'];
-  var rRows=data.map(function(r){return[r.patientName,r.dob,r.caseType,r.location,r.lawFirm,r.attorney,r.referralSource,r.status,r.createdDate,r.apptDate,r.apptOutcome||'']});
+  var data=getFilteredRefs();
+  var scheduled=data.filter(function(r){return r.apptDate}).length;
+  var completed=data.filter(function(r){return r.apptOutcome==='completed'}).length;
+  var noShows=data.filter(function(r){return r.apptOutcome==='no_show'}).length;
+  var pendingOutcome=data.filter(function(r){return r.apptDate&&!r.apptOutcome}).length;
+  var lost=data.filter(function(r){return r.status==='Patient Lost'}).length;
+  var rHeaders=['Patient','DOB','Case Type','Location','Law Firm','Attorney','Source','Status','Registered','Appt Date','Outcome','Lost Reason'];
+  var rRows=data.map(function(r){return[r.patientName,r.dob,r.caseType,r.location,r.lawFirm,r.attorney,r.referralSource,r.status,r.createdDate,r.apptDate,r.apptOutcome||'',r.lostReason||'']});
+  // Add summary row
+  rRows.push([]);
+  rRows.push(['SUMMARY']);
+  rRows.push(['Total Referrals',data.length]);
+  rRows.push(['Scheduled',scheduled]);
+  rRows.push(['Appt Completed',completed,scheduled>0?Math.round(completed/scheduled*100)+'%':'']);
+  rRows.push(['No-Shows',noShows,scheduled>0?Math.round(noShows/scheduled*100)+'%':'']);
+  rRows.push(['Pending Outcome',pendingOutcome]);
+  rRows.push(['Patient Lost',lost]);
   var label=crmMgrDateFrom||crmMgrDateTo?'-'+crmMgrDateFrom+'-to-'+crmMgrDateTo:'';
   downloadCSV('carepath-referrals'+label+'-'+today()+'.csv',rHeaders,rRows);
 }
@@ -1412,9 +1424,7 @@ function renderPieChart(data){
 // Download visual report as printable HTML
 function downloadVisualReport(){
   var w=window.open('','_blank');
-  var data=refs;
-  if(crmMgrDateFrom)data=data.filter(function(r){return(r.createdDate||'')>=crmMgrDateFrom});
-  if(crmMgrDateTo)data=data.filter(function(r){return(r.createdDate||'')<=crmMgrDateTo});
+  var data=getFilteredRefs();
   var dateLabel=crmMgrDateFrom||crmMgrDateTo?(crmMgrDateFrom||'Start')+' to '+(crmMgrDateTo||'Present'):'All Time';
   var total=data.length,pending=data.filter(function(r){return!r.apptDate&&r.status!=='Completed'&&r.status!=='Patient Lost'}).length;
   var lost=data.filter(function(r){return r.status==='Patient Lost'}).length;
@@ -1461,6 +1471,18 @@ function downloadVisualReport(){
   html+='<div class="stat"><div class="stat-val">'+completed+'</div><div class="stat-lbl">Completed</div></div>';
   html+='<div class="stat"><div class="stat-val">'+pending+'</div><div class="stat-lbl">Pending</div></div>';
   html+='<div class="stat"><div class="stat-val" style="color:#c0392b">'+lost+'</div><div class="stat-lbl">Lost</div></div>';
+  html+='</div>';
+
+  // Appointment outcome stats
+  var apptScheduled=data.filter(function(r){return r.apptDate}).length;
+  var apptCompleted=data.filter(function(r){return r.apptOutcome==='completed'}).length;
+  var apptNoShow=data.filter(function(r){return r.apptOutcome==='no_show'}).length;
+  var apptPending=data.filter(function(r){return r.apptDate&&!r.apptOutcome}).length;
+  html+='<div style="text-align:center;margin:8px 0 16px">';
+  html+='<div class="stat"><div class="stat-val">'+apptScheduled+'</div><div class="stat-lbl">Scheduled</div></div>';
+  html+='<div class="stat"><div class="stat-val">'+apptCompleted+(apptScheduled>0?' ('+Math.round(apptCompleted/apptScheduled*100)+'%)':'')+'</div><div class="stat-lbl">Appt Completed</div></div>';
+  html+='<div class="stat"><div class="stat-val">'+apptPending+'</div><div class="stat-lbl">Pending Outcome</div></div>';
+  html+='<div class="stat"><div class="stat-val" style="color:#c0392b">'+apptNoShow+(apptScheduled>0?' ('+Math.round(apptNoShow/apptScheduled*100)+'%)':'')+'</div><div class="stat-lbl">No-Shows</div></div>';
   html+='</div>';
 
   // Charts
@@ -2350,6 +2372,21 @@ function renderCrmMgrMetrics(el){
 }
 
 let crmMgrDateFrom='', crmMgrDateTo='';
+function applyMgrDateFilter(){
+  crmMgrDateFrom=document.getElementById('crmMgrFrom').value||'';
+  crmMgrDateTo=document.getElementById('crmMgrTo').value||'';
+  renderCrmMgrDash(document.getElementById('sec-crm-mgr-dashboard'));
+}
+function clearMgrDateFilter(){
+  crmMgrDateFrom='';crmMgrDateTo='';
+  renderCrmMgrDash(document.getElementById('sec-crm-mgr-dashboard'));
+}
+function getFilteredRefs(){
+  var data=refs;
+  if(crmMgrDateFrom)data=data.filter(function(r){return(r.createdDate||'')>=crmMgrDateFrom});
+  if(crmMgrDateTo)data=data.filter(function(r){return(r.createdDate||'')<=crmMgrDateTo});
+  return data;
+}
 function renderCrmMgrDash(el) {
   if (!managerUnlocked) return;
   let filteredRefs=refs;
@@ -2365,8 +2402,8 @@ function renderCrmMgrDash(el) {
   h+='<div class="page-title">Manager Analytics</div><div class="page-subtitle">Referral process overview.</div>';
   h+='<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">'+downloadBtn('Export All Referrals','exportAllMetrics()')+downloadBtn('Export Cases','exportCases()')+downloadBtn('📊 Print Visual Report','downloadVisualReport()')+'</div>';
 
-  h+='<div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap"><span style="font-size:11px;font-weight:600;color:var(--navy)">Date Range:</span><input type="date" class="search-input" id="crmMgrFrom" value="'+crmMgrDateFrom+'" style="width:140px"><span style="font-size:11px;color:var(--gray-400)">to</span><input type="date" class="search-input" id="crmMgrTo" value="'+crmMgrDateTo+'" style="width:140px"><button class="btn-primary" onclick="crmMgrDateFrom=document.getElementById(\'crmMgrFrom\').value;crmMgrDateTo=document.getElementById(\'crmMgrTo\').value;renderCrmMgrDash(document.getElementById(\'sec-crm-mgr-dashboard\'))" style="font-size:11px;padding:7px 14px">Apply</button>';
-  if(crmMgrDateFrom||crmMgrDateTo)h+='<button class="btn-resolve" onclick="crmMgrDateFrom=\'\';crmMgrDateTo=\'\';renderCrmMgrDash(document.getElementById(\'sec-crm-mgr-dashboard\'))" style="font-size:10px">Clear</button>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap"><span style="font-size:11px;font-weight:600;color:var(--navy)">Date Range:</span><input type="date" class="search-input" id="crmMgrFrom" value="'+crmMgrDateFrom+'" style="width:140px"><span style="font-size:11px;color:var(--gray-400)">to</span><input type="date" class="search-input" id="crmMgrTo" value="'+crmMgrDateTo+'" style="width:140px"><button class="btn-primary" onclick="applyMgrDateFilter()" style="font-size:11px;padding:7px 14px">Apply</button>';
+  if(crmMgrDateFrom||crmMgrDateTo)h+='<button class="btn-resolve" onclick="clearMgrDateFilter()" style="font-size:10px">Clear</button>';
   h+='</div>';
   // Summary stats
   var ctSummary=Object.entries(caseTypes).map(function(e){return e[0]+': '+e[1]}).join(' · ');
