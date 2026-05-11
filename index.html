@@ -2352,8 +2352,6 @@ function renderCrmMgrMetrics(el){
 let crmMgrDateFrom='', crmMgrDateTo='';
 function renderCrmMgrDash(el) {
   if (!managerUnlocked) return;
-  const dfEl=document.getElementById('crmMgrFrom');const dtEl=document.getElementById('crmMgrTo');
-  if(dfEl)crmMgrDateFrom=dfEl.value;if(dtEl)crmMgrDateTo=dtEl.value;
   let filteredRefs=refs;
   if(crmMgrDateFrom)filteredRefs=filteredRefs.filter(r=>(r.createdDate||'')>=crmMgrDateFrom);
   if(crmMgrDateTo)filteredRefs=filteredRefs.filter(r=>(r.createdDate||'')<=crmMgrDateTo);
