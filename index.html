@@ -2367,7 +2367,7 @@ function renderCrmMgrDash(el) {
   h+='<div class="page-title">Manager Analytics</div><div class="page-subtitle">Referral process overview.</div>';
   h+='<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">'+downloadBtn('Export All Referrals','exportAllMetrics()')+downloadBtn('Export Cases','exportCases()')+downloadBtn('📊 Print Visual Report','downloadVisualReport()')+'</div>';
 
-  h+='<div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap"><span style="font-size:11px;font-weight:600;color:var(--navy)">Date Range:</span><input type="date" class="search-input" id="crmMgrFrom" value="'+crmMgrDateFrom+'" onchange="renderCrmMgrDash(document.getElementById(\'sec-crm-mgr-dashboard\'))" style="width:140px"><span style="font-size:11px;color:var(--gray-400)">to</span><input type="date" class="search-input" id="crmMgrTo" value="'+crmMgrDateTo+'" onchange="renderCrmMgrDash(document.getElementById(\'sec-crm-mgr-dashboard\'))" style="width:140px">';
+  h+='<div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap"><span style="font-size:11px;font-weight:600;color:var(--navy)">Date Range:</span><input type="date" class="search-input" id="crmMgrFrom" value="'+crmMgrDateFrom+'" style="width:140px"><span style="font-size:11px;color:var(--gray-400)">to</span><input type="date" class="search-input" id="crmMgrTo" value="'+crmMgrDateTo+'" style="width:140px"><button class="btn-primary" onclick="crmMgrDateFrom=document.getElementById(\'crmMgrFrom\').value;crmMgrDateTo=document.getElementById(\'crmMgrTo\').value;renderCrmMgrDash(document.getElementById(\'sec-crm-mgr-dashboard\'))" style="font-size:11px;padding:7px 14px">Apply</button>';
   if(crmMgrDateFrom||crmMgrDateTo)h+='<button class="btn-resolve" onclick="crmMgrDateFrom=\'\';crmMgrDateTo=\'\';renderCrmMgrDash(document.getElementById(\'sec-crm-mgr-dashboard\'))" style="font-size:10px">Clear</button>';
   h+='</div>';
   // Summary stats
@@ -2375,7 +2375,13 @@ function renderCrmMgrDash(el) {
   var leakageRate=total>0?Math.round(lostCount/total*100):0;
   var scheduledCount=filteredRefs.filter(function(r){return r.apptDate}).length;
   var completedCount=filteredRefs.filter(function(r){return r.apptOutcome==='completed'}).length;
+  var noShowCount=filteredRefs.filter(function(r){return r.apptOutcome==='no_show'}).length;
+  var pendingApptCount=filteredRefs.filter(function(r){return r.apptDate&&!r.apptOutcome}).length;
+  var completedPct=scheduledCount>0?Math.round(completedCount/scheduledCount*100):0;
+  var noShowPct=scheduledCount>0?Math.round(noShowCount/scheduledCount*100):0;
+  var pendingApptPct=scheduledCount>0?Math.round(pendingApptCount/scheduledCount*100):0;
   h += '<div class="stats-row" style="grid-template-columns:repeat(5,1fr)">'+stat('Total Referrals',total,'teal')+stat('Pending Scheduling',pending,'gold')+stat('Active Alerts',alerts,'red')+stat('Patients Lost',lostCount+(leakageRate>0?' ('+leakageRate+'%)':''),'red')+stat('Case Mix',ctSummary||'—','')+'</div>';
+  h += '<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('Scheduled',scheduledCount,'teal')+stat('Appt Completed',completedCount+' ('+completedPct+'%)','teal')+stat('Pending Outcome',pendingApptCount+' ('+pendingApptPct+'%)','gold')+stat('No-Shows',noShowCount+' ('+noShowPct+'%)','red')+'</div>';
 
   // Visual overview — case type donut + status breakdown
   h+='<div class="table-card"><div class="table-header"><h3>Visual Overview</h3></div><div style="padding:16px 18px;display:flex;gap:32px;flex-wrap:wrap">';
