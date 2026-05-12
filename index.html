@@ -2431,7 +2431,7 @@ function renderCrmMgrMetrics(el){
   h+='<div class="table-card" style="border-left:4px solid var(--teal)"><div class="table-header"><h3>📊 Scheduler Scorecards</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Scheduler</th><th>Assigned</th><th>Scheduled</th><th>Sched %</th><th>Completed</th><th>No-Shows</th><th>Lost</th><th>Avg Days to Sched</th><th>Alerts Open</th><th>Calls/Wk</th><th>Score</th><th>Rating</th></tr></thead><tbody>';
   var allCrmAlerts=crmAlerts();
   CRM_STAFF.forEach(function(s){
-    var sr=filteredRefs.filter(function(r){return r.alertAssignedTo===s||r.registeredBy===s});
+    var sr=refs.filter(function(r){return r.alertAssignedTo===s||r.registeredBy===s});
     var sTotal=sr.length;
     var sSched=sr.filter(function(r){return r.apptDate}).length;
     var sSchedPct=sTotal>0?Math.round(sSched/sTotal*100):0;
