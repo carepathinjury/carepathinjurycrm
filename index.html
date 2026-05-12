@@ -1080,7 +1080,7 @@ async function _loadFromSupabase(){
         else if(x.key==='custom_law_firms')try{customLawFirms=Array.isArray(x.value)?x.value:JSON.parse(x.value)}catch(e){customLawFirms=[];}
         else if(x.key==='custom_ref_sources')try{customRefSources=Array.isArray(x.value)?x.value:JSON.parse(x.value)}catch(e){customRefSources=[];}
       });
-      if(r[9]){crmMetrics={};cmMetrics={};psrMetrics={};r[9].forEach(function(m){var k=m.staff+'_'+m.date;var d={staff:m.staff,date:m.date,phoneCalls:m.phone_calls||0,emailsSent:m.emails_sent||0,faxesSent:m.faxes_sent||0};if(m.module==='crm')crmMetrics[k]=d;else if(m.module==='cm')cmMetrics[k]=d;else if(m.module==='psr')psrMetrics[k]=d;});}
+      if(r[9]){crmMetrics={};cmMetrics={};psrMetrics={};r[9].forEach(function(m){var k=m.staff+'_'+m.date;var d={staff:m.staff,date:m.date,phoneCalls:m.phone_calls||0,emailsSent:m.emails_sent||0,faxesSent:m.faxes_sent||0};if(m.module==='crm')crmMetrics[k]=d;else if(m.module==='cm')cmMetrics[k]=d;else if(m.module==='psr'){var psrD={staff:m.staff,date:m.date};if(m.data&&typeof m.data==='object'){for(var pk in m.data)psrD[pk]=m.data[pk];}psrMetrics[k]=psrD;}});}
       console.log('✅ Loaded refs:'+refs.length+' cases:'+cases.length+' contacts:'+contacts.length);
     } else {
       // Fallback to old app_data
@@ -1130,7 +1130,37 @@ function saveTickets(){if(_useNewTables){tickets.forEach(function(t){_dbInsert('
 function saveFaxLog(){if(_useNewTables){faxLog.forEach(function(f){_dbInsert('fax_log',{id:f.id,date:f.date||null,sent_by:f.sentBy,recipient:f.recipient,recipient_type:f.recipientType,content_type:f.contentType,order_num:f.orderNum,notes:f.notes})})}else{_legacySave('cp11_faxlog',faxLog)}}
 function saveCrmMet(){if(_useNewTables){for(var k in crmMetrics){var m=crmMetrics[k];if(m.staff&&m.date)_dbMetricSave(m.staff,m.date,'crm',m.phoneCalls||0,m.emailsSent||0,0)}}else{_legacySave('cp11_crmmet',crmMetrics)}}
 function saveCmMet(){if(_useNewTables){for(var k in cmMetrics){var m=cmMetrics[k];if(m.staff&&m.date)_dbMetricSave(m.staff,m.date,'cm',m.phoneCalls||0,m.emailsSent||0,m.faxesSent||0)}}else{_legacySave('cp11_cmmet',cmMetrics)}}
-function savePsrMet(){if(_useNewTables){for(var k in psrMetrics){var m=psrMetrics[k];if(m.staff&&m.date)_dbMetricSave(m.staff,m.date,'psr',m.phoneCalls||0,m.emailsSent||0,0)}}else{_legacySave('cp11_psrmet',psrMetrics)}}
+function savePsrMet(){if(_useNewTables){for(var k in psrMetrics){var m=psrMetrics[k];if(m.staff&&m.date){
+  var psrData={};PSR_MANUAL_FIELDS.forEach(function(f){psrData[f.key]=m[f.key]||0});
+  _dbMetricSavePsr(m.staff,m.date,psrData);
+}}}else{_legacySave('cp11_psrmet',psrMetrics)}}
+
+function _dbMetricSavePsr(staff,date,psrData){
+  _lastLocalSave=Date.now();
+  var row={staff:staff,date:date,module:'psr',data:psrData,phone_calls:0,emails_sent:0,faxes_sent:0,updated_at:new Date().toISOString()};
+  fetch(SUPABASE_URL+'/rest/v1/daily_metrics?staff=eq.'+encodeURIComponent(staff)+'&date=eq.'+encodeURIComponent(date)+'&module=eq.psr',{
+    method:'PATCH',
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify({data:psrData,updated_at:new Date().toISOString()})
+  }).then(function(resp){
+    if(resp.ok||resp.status===204){
+      fetch(SUPABASE_URL+'/rest/v1/daily_metrics?staff=eq.'+encodeURIComponent(staff)+'&date=eq.'+encodeURIComponent(date)+'&module=eq.psr&select=staff',{
+        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+      }).then(function(r){return r.json()}).then(function(rows){
+        if(rows.length===0){
+          fetch(SUPABASE_URL+'/rest/v1/daily_metrics',{
+            method:'POST',
+            headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
+            body:JSON.stringify(row)
+          }).then(function(r2){
+            if(r2.ok||r2.status===201) showSaveSuccess();
+            else showSaveError();
+          });
+        } else { showSaveSuccess(); }
+      });
+    } else { showSaveError(); }
+  }).catch(function(e){showSaveError()});
+}
 
 function _dbMetricSave(staff,date,module,calls,emails,faxes){
   _lastLocalSave=Date.now();
