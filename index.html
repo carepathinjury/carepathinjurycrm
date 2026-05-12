@@ -1388,9 +1388,36 @@ function exportAllMetrics(){
   downloadCSV('carepath-referrals'+label+'-'+today()+'.csv',rHeaders,rRows);
 }
 function exportCases(){
-  var h=['Patient','DOB','Case Type','Location','Assigned','Status','Appt','Missing Info','Created'];
-  var rows=cases.map(function(c){return[c.patientName,c.dob||'',c.caseType,c.location,c.assigned,c.status,c.apptDate,c.missingInfo||'',c.createdDate]});
-  downloadCSV('carepath-cases-'+today()+'.csv',h,rows);
+  var data=cases;
+  if(cmMgrDateFrom)data=data.filter(function(c){return(c.createdDate||'')>=cmMgrDateFrom});
+  if(cmMgrDateTo)data=data.filter(function(c){return(c.createdDate||'')<=cmMgrDateTo});
+  var h=['Patient','DOB','Case Type','Location','Assigned','Status','Days','Missing Info','Intro Email','Appt','Created','Settled'];
+  var rows=data.map(function(c){var days=c.createdDate?daysBtw(c.createdDate,c.settledDate||today()):0;return[c.patientName,c.dob||'',c.caseType,c.location,c.assigned,c.status,days,c.missingInfo||'',c.introEmailSentDate||'',c.apptDate||'',c.createdDate,c.settledDate||'']});
+  var label=cmMgrDateFrom||cmMgrDateTo?'-'+cmMgrDateFrom+'-to-'+cmMgrDateTo:'';
+  downloadCSV('carepath-cases'+label+'-'+today()+'.csv',h,rows);
+}
+
+function downloadCmVisualReport(){
+  var w=window.open('','_blank');
+  var data=cases;
+  if(cmMgrDateFrom)data=data.filter(function(c){return(c.createdDate||'')>=cmMgrDateFrom});
+  if(cmMgrDateTo)data=data.filter(function(c){return(c.createdDate||'')<=cmMgrDateTo});
+  var dateLabel=cmMgrDateFrom||cmMgrDateTo?(cmMgrDateFrom||'Start')+' to '+(cmMgrDateTo||'Present'):'All Time';
+  var active=data.filter(function(c){return c.status==='Active'}).length;
+  var inLit=data.filter(function(c){return c.status==='In Litigation'}).length;
+  var settled=data.filter(function(c){return c.status==='Settled/Closed'}).length;
+  var dropped=data.filter(function(c){return c.status==='Dropped'}).length;
+  var missingClaim=data.filter(function(c){return c.missingInfo&&c.missingInfo.indexOf('Missing Claim Info')!==-1}).length;
+  var html='<!DOCTYPE html><html><head><title>CarePath CM Report</title><style>body{font-family:Arial;max-width:900px;margin:0 auto;padding:20px;color:#1a2332}h1{color:#1a7f7a;border-bottom:3px solid #1a7f7a;padding-bottom:8px}h2{margin-top:24px;border-bottom:1px solid #ddd;padding-bottom:6px}.stat{display:inline-block;text-align:center;padding:14px 20px;margin:6px;background:#f8f9fa;border-radius:8px;min-width:100px}.stat-val{font-size:22px;font-weight:700;color:#1a7f7a}.stat-lbl{font-size:11px;color:#666}table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}th{background:#1a2332;color:white;padding:8px 10px;text-align:left}td{padding:6px 10px;border-bottom:1px solid #eee}</style></head><body>';
+  html+='<h1>CarePath — Case Management Report</h1><p style="color:#666;font-size:12px">Generated: '+new Date().toLocaleString()+' | '+dateLabel+'</p>';
+  html+='<div style="text-align:center;margin:16px 0"><div class="stat"><div class="stat-val">'+data.length+'</div><div class="stat-lbl">Total</div></div><div class="stat"><div class="stat-val">'+active+'</div><div class="stat-lbl">Active</div></div><div class="stat"><div class="stat-val">'+inLit+'</div><div class="stat-lbl">In Litigation</div></div><div class="stat"><div class="stat-val">'+settled+'</div><div class="stat-lbl">Settled</div></div><div class="stat"><div class="stat-val" style="color:#c0392b">'+dropped+'</div><div class="stat-lbl">Dropped</div></div><div class="stat"><div class="stat-val" style="color:#c8973a">'+missingClaim+'</div><div class="stat-lbl">Missing Claim</div></div></div>';
+  // Staff scorecards
+  html+='<h2>Case Manager Scorecards</h2><table><tr><th>Manager</th><th>Active</th><th>Settled</th><th>Dropped</th><th>Missing Info</th><th>Avg Days</th></tr>';
+  CM_STAFF.forEach(function(s){var sc=data.filter(function(c){return c.assigned===s});var sa=sc.filter(function(c){return c.status==='Active'}).length;var ss=sc.filter(function(c){return c.status==='Settled/Closed'}).length;var sd=sc.filter(function(c){return c.status==='Dropped'}).length;var smi=sc.filter(function(c){return c.missingInfo&&c.missingInfo.indexOf('Missing Claim Info')!==-1}).length;var sDays=0;var sS=sc.filter(function(c){return c.settledDate&&c.createdDate});if(sS.length>0){var td=0;sS.forEach(function(c){td+=daysBtw(c.createdDate,c.settledDate)});sDays=Math.round(td/sS.length);}
+    html+='<tr><td><strong>'+s+'</strong></td><td>'+sa+'</td><td>'+ss+'</td><td>'+sd+'</td><td>'+smi+'</td><td>'+sDays+'</td></tr>';});
+  html+='</table>';
+  html+='<hr style="margin-top:28px"><p style="font-size:10px;color:#999;text-align:center">CarePath Injury Centers — Confidential</p></body></html>';
+  w.document.write(html);w.document.close();w.print();
 }
 function exportMktData(){
   var h=['Initiative','Contact','Type','Stage','Volume','Effort','Date Initiated','Next Follow-up','Referrals Generated','ROI'];
@@ -2398,6 +2425,37 @@ function renderCrmMgrMetrics(el){
   CRM_STAFF.forEach(s=>h+='<th style="text-align:center">'+esc(s)+'</th>');h+='<th style="text-align:center">Total</th></tr></thead><tbody>';
   wk.forEach(d=>{const isT=d===today();let dt=0;h+='<tr style="'+(isT?'background:rgba(26,127,122,0.04)':'')+'"><td style="font-weight:600;font-size:11px;'+(isT?'color:var(--teal)':'')+'">'+dayName(d)+' '+fmtDate(d)+'</td>';CRM_STAFF.forEach(s=>{const auto=crmAutoMetrics(s,d);const man=getCrmMet(s,d);let t=0;Object.values(auto).forEach(v=>t+=v);CRM_MANUAL_FIELDS.forEach(f=>t+=(parseInt(man[f.key])||0));dt+=t;h+='<td style="text-align:center;font-size:11px;color:'+(t>0?STAFF_COLORS[s]:'var(--gray-400)')+'">'+t+'</td>'});h+='<td style="text-align:center;font-weight:700;font-size:11px">'+dt+'</td></tr>'});
   h+='</tbody></table></div></div>';
+
+  // ═══ SCHEDULER SCORECARDS ═══
+  h+='<div class="table-card" style="border-left:4px solid var(--teal)"><div class="table-header"><h3>📊 Scheduler Scorecards</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Scheduler</th><th>Assigned</th><th>Scheduled</th><th>Sched %</th><th>Completed</th><th>No-Shows</th><th>Lost</th><th>Avg Days to Sched</th><th>Alerts Open</th><th>Calls/Wk</th><th>Score</th><th>Rating</th></tr></thead><tbody>';
+  var allCrmAlerts=crmAlerts();
+  CRM_STAFF.forEach(function(s){
+    var sr=filteredRefs.filter(function(r){return r.alertAssignedTo===s||r.registeredBy===s});
+    var sTotal=sr.length;
+    var sSched=sr.filter(function(r){return r.apptDate}).length;
+    var sSchedPct=sTotal>0?Math.round(sSched/sTotal*100):0;
+    var sComp=sr.filter(function(r){return r.apptOutcome==='completed'}).length;
+    var sNoShow=sr.filter(function(r){return r.apptOutcome==='no_show'}).length;
+    var sLost=sr.filter(function(r){return r.status==='Patient Lost'}).length;
+    var sAlerts=allCrmAlerts.filter(function(a){return a.assignedTo===s}).length;
+    var schedWithDays=sr.filter(function(r){return r.daysToSchedule!=null&&r.daysToSchedule>=0});
+    var sAvgDays=schedWithDays.length>0?Math.round(schedWithDays.reduce(function(sum,r){return sum+r.daysToSchedule},0)/schedWithDays.length):0;
+    var sCalls=0;var met=getCrmMet(s,today());sCalls=parseInt(met.phoneCalls)||0;
+    var score=0;
+    score+=Math.min(30,sSchedPct>0?Math.round(sSchedPct*0.3):0);
+    score+=Math.max(0,25-sAlerts*2);
+    score+=Math.max(0,20-sAvgDays);
+    var compPct=sSched>0?Math.round(sComp/sSched*100):0;
+    score+=Math.round(compPct*0.15);
+    score+=Math.min(10,sCalls);
+    score=Math.min(100,Math.max(0,score));
+    var rating=score>=80?'⭐ Excellent':score>=60?'✅ Good':score>=40?'⚠️ Needs Improvement':'🔴 Action Required';
+    var rColor=score>=80?'var(--teal)':score>=60?'var(--navy)':score>=40?'var(--gold)':'var(--red)';
+    h+='<tr><td style="font-weight:700">'+esc(s)+'</td><td>'+sTotal+'</td><td>'+sSched+'</td><td>'+sSchedPct+'%</td><td>'+sComp+'</td><td>'+(sNoShow>0?'<span style="color:var(--red)">'+sNoShow+'</span>':'0')+'</td><td>'+(sLost>0?'<span style="color:var(--red)">'+sLost+'</span>':'0')+'</td><td>'+sAvgDays+'</td><td>'+(sAlerts>0?'<span style="color:var(--red);font-weight:700">'+sAlerts+'</span>':'0')+'</td><td>'+sCalls+'</td><td style="font-weight:700;color:'+rColor+'">'+score+'</td><td style="font-size:11px">'+rating+'</td></tr>';
+  });
+  h+='</tbody></table></div>';
+  h+='<div style="padding:10px 18px;font-size:10px;color:var(--gray-500);border-top:1px solid var(--gray-200)">Score: Scheduling rate (30) + Alert management (25) + Speed to schedule (20) + Completion rate (15) + Call activity (10)</div></div>';
+
   el.innerHTML=h;
 }
 
@@ -2519,6 +2577,32 @@ function renderCrmMgrDash(el) {
     h+='<tr><td style="font-weight:600">'+esc(s)+'</td><td>'+d.total+'</td><td>'+d.scheduled+'</td><td>'+schedPct+'%</td><td>'+d.completed+'</td><td>'+convPct+'%</td><td>'+d.active+'</td><td>'+(d.noShow>0?'<span style="color:var(--red)">'+d.noShow+'</span>':'0')+'</td><td>'+(d.lost>0?'<span style="color:var(--red)">'+d.lost+'</span>':'0')+'</td></tr>';
   });
   h += '</tbody></table></div></div>';
+
+  // ═══ SCHEDULER SCORECARDS ═══
+  h+='<div class="table-card" style="border-left:4px solid var(--teal)"><div class="table-header"><h3>📊 Scheduler Scorecards</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Scheduler</th><th>Registered</th><th>Scheduled</th><th>Sched %</th><th>Completed</th><th>No-Shows</th><th>Lost</th><th>Alerts Open</th><th>Avg Days to Sched</th><th>Score</th><th>Rating</th></tr></thead><tbody>';
+  CRM_STAFF.forEach(function(s){
+    var sr=filteredRefs.filter(function(r){return r.alertAssignedTo===s||r.registeredBy===s});
+    var sReg=sr.length;
+    var sSched=sr.filter(function(r){return r.apptDate}).length;
+    var sSchedPct=sReg>0?Math.round(sSched/sReg*100):0;
+    var sComp=sr.filter(function(r){return r.apptOutcome==='completed'}).length;
+    var sNS=sr.filter(function(r){return r.apptOutcome==='no_show'}).length;
+    var sLost=sr.filter(function(r){return r.status==='Patient Lost'}).length;
+    var sAlerts=crmAlerts().filter(function(a){return a.assignedTo===s}).length;
+    var sAvgDays=0;var sWithDays=sr.filter(function(r){return r.daysToSchedule!=null&&r.daysToSchedule>=0});
+    if(sWithDays.length>0){var td=0;sWithDays.forEach(function(r){td+=r.daysToSchedule||0});sAvgDays=Math.round(td/sWithDays.length);}
+    var score=0;
+    score+=Math.min(30,Math.round(sSchedPct*0.3)); // 30 pts for scheduling rate
+    score+=Math.max(0,25-sAlerts*3); // 25 pts minus 3 per open alert
+    score+=Math.max(0,25-sAvgDays*2); // 25 pts minus 2 per avg day to schedule
+    var lostPct=sReg>0?sLost/sReg:0;
+    score+=Math.round(Math.max(0,20-lostPct*100)); // 20 pts minus lost%
+    score=Math.min(100,Math.max(0,score));
+    var rating=score>=80?'⭐ Excellent':score>=60?'✅ Good':score>=40?'⚠️ Needs Improvement':'🔴 Action Required';
+    var rColor=score>=80?'var(--teal)':score>=60?'var(--navy)':score>=40?'var(--gold)':'var(--red)';
+    h+='<tr><td style="font-weight:700">'+esc(s)+'</td><td>'+sReg+'</td><td>'+sSched+'</td><td>'+sSchedPct+'%</td><td>'+sComp+'</td><td>'+(sNS>0?'<span style="color:var(--red)">'+sNS+'</span>':'0')+'</td><td>'+(sLost>0?'<span style="color:var(--red)">'+sLost+'</span>':'0')+'</td><td>'+(sAlerts>0?'<span style="color:var(--red);font-weight:700">'+sAlerts+'</span>':'0')+'</td><td>'+sAvgDays+'</td><td style="font-weight:700;color:'+rColor+'">'+score+'</td><td style="font-size:11px">'+rating+'</td></tr>';
+  });
+  h+='</tbody></table></div></div>';
 
   // Patient Leakage Analytics
   var lostRefs=filteredRefs.filter(function(r){return r.status==='Patient Lost'});
@@ -3020,30 +3104,86 @@ function renderCmPage(page) {
   else if(page==='cm-detail'&&cmDetailId)showCmDetail(cmDetailId);
 }
 
+var cmMgrDateFrom='',cmMgrDateTo='';
+function applyCmDateFilter(){cmMgrDateFrom=document.getElementById('cmMgrFrom').value||'';cmMgrDateTo=document.getElementById('cmMgrTo').value||'';renderCmDashboard(document.getElementById('sec-cm-dashboard'));}
+function clearCmDateFilter(){cmMgrDateFrom='';cmMgrDateTo='';renderCmDashboard(document.getElementById('sec-cm-dashboard'));}
+
 function renderCmDashboard(el) {
-  const active=cases.filter(c=>c.status==='Active'), inLit=cases.filter(c=>c.status==='In Litigation'), settled=cases.filter(c=>c.status==='Settled/Closed'), dropped=cases.filter(c=>c.status==='Dropped');
-  const alerts=cmAlerts();
-  let h='<div class="page-title">Case Management</div><div class="page-subtitle">Overview of active cases, alerts, and workloads.</div>';
-  h+='<div class="stats-row" style="grid-template-columns:repeat(6,1fr)">'+stat('Active',active.length,'teal')+stat('In Litigation',inLit.length,'gold')+stat('Alerts',alerts.length,'red')+stat('Settled/Closed',settled.length,'')+stat('Dropped',dropped.length,'red')+stat('Total',cases.length,'')+'</div>';
-  if(alerts.length>0) alerts.slice(0,5).forEach((a,i)=>{h+=renderCmAlertCard(a,i);});
-  // Staff workload summary
-  h+='<div class="table-card"><div class="table-header"><h3>Staff Workload</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Case Manager</th><th>Active</th><th>In Litigation</th><th>Alerts</th><th>Settled</th><th>Dropped</th><th>Total</th></tr></thead><tbody>';
+  var fc=cases;
+  if(cmMgrDateFrom)fc=fc.filter(function(c){return(c.createdDate||'')>=cmMgrDateFrom});
+  if(cmMgrDateTo)fc=fc.filter(function(c){return(c.createdDate||'')<=cmMgrDateTo});
+
+  var active=fc.filter(function(c){return c.status==='Active'});
+  var inLit=fc.filter(function(c){return c.status==='In Litigation'});
+  var settled=fc.filter(function(c){return c.status==='Settled/Closed'});
+  var dropped=fc.filter(function(c){return c.status==='Dropped'});
+  var missingClaim=fc.filter(function(c){return c.missingInfo&&c.missingInfo.indexOf('Missing Claim Info')!==-1});
+  var introNotSent=fc.filter(function(c){return c.status==='Active'&&!c.introEmailSentDate});
+  var alerts=cmAlerts();
+
+  // Avg case length
+  var settledWithDates=fc.filter(function(c){return c.settledDate&&c.createdDate});
+  var avgDays=0;if(settledWithDates.length>0){var totalD=0;settledWithDates.forEach(function(c){totalD+=daysBtw(c.createdDate,c.settledDate)});avgDays=Math.round(totalD/settledWithDates.length);}
+  var activeDays=0;if(active.length>0){var totalAD=0;active.forEach(function(c){totalAD+=daysBtw(c.createdDate||today(),today())});activeDays=Math.round(totalAD/active.length);}
+
+  let h='<div class="page-title">Case Management — Manager Analytics</div>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">'+downloadBtn('Export Cases CSV','exportCases()')+downloadBtn('📊 Print CM Report','downloadCmVisualReport()')+'</div>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap"><span style="font-size:11px;font-weight:600;color:var(--navy)">Date Range:</span><input type="date" class="search-input" id="cmMgrFrom" value="'+cmMgrDateFrom+'" style="width:140px"><span style="font-size:11px;color:var(--gray-400)">to</span><input type="date" class="search-input" id="cmMgrTo" value="'+cmMgrDateTo+'" style="width:140px"><button class="btn-primary" onclick="applyCmDateFilter()" style="font-size:11px;padding:7px 14px">Apply</button>';
+  if(cmMgrDateFrom||cmMgrDateTo)h+='<button class="btn-resolve" onclick="clearCmDateFilter()" style="font-size:10px">Clear</button>';
+  h+='</div>';
+
+  h+='<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('Total Cases',fc.length,'teal')+stat('Active',active.length,'teal')+stat('In Litigation',inLit.length,'gold')+stat('Open Alerts',alerts.length,'red')+'</div>';
+  h+='<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('Settled/Closed',settled.length,'')+stat('Dropped',dropped.length,'red')+stat('Avg Case Length',avgDays+' days','')+stat('Avg Active Age',activeDays+' days','')+'</div>';
+  h+='<div class="stats-row" style="grid-template-columns:repeat(3,1fr)">'+stat('Missing Claim Info',missingClaim.length,'gold')+stat('Intro Email Pending',introNotSent.length,'gold')+stat('Settlement Rate',fc.length>0?Math.round(settled.length/fc.length*100)+'%':'0%','teal')+'</div>';
+
+  // Visual charts
+  var statusData={'Active':active.length,'In Litigation':inLit.length,'Settled/Closed':settled.length,'Dropped':dropped.length};
+  var ctData={};fc.forEach(function(c){var t=c.caseType||'Unknown';ctData[t]=(ctData[t]||0)+1;});
+  var locData={};fc.forEach(function(c){var l=c.location||'Unknown';locData[l]=(locData[l]||0)+1;});
+  h+='<div class="table-card"><div class="table-header"><h3>Visual Overview</h3></div><div style="padding:16px 18px;display:flex;gap:32px;flex-wrap:wrap">';
+  h+='<div><div style="font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin-bottom:8px">Case Status</div>'+renderPieChart(Object.entries(statusData).map(function(e,i){var cols={'Active':'#1a7f7a','In Litigation':'#c8973a','Settled/Closed':'#27ae60','Dropped':'#c0392b'};return{label:e[0],value:e[1],color:cols[e[0]]||CHART_COLORS[i]}}))+'</div>';
+  h+='<div><div style="font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin-bottom:8px">Case Types</div>'+renderPieChart(Object.entries(ctData).map(function(e,i){return{label:e[0],value:e[1],color:CHART_COLORS[i%CHART_COLORS.length]}}))+'</div>';
+  h+='</div></div>';
+
+  // Location breakdown
+  h+='<div class="table-card"><div class="table-header"><h3>Cases by Location</h3></div><div style="padding:8px 18px">'+renderBarChart(Object.entries(locData).sort(function(a,b){return b[1]-a[1]}).map(function(e,i){return{label:e[0],value:e[1],color:CHART_COLORS[i%CHART_COLORS.length]}}))+'</div></div>';
+
+  // ═══ STAFF SCORECARDS ═══
+  h+='<div class="table-card" style="border-left:4px solid var(--teal)"><div class="table-header"><h3>📊 Case Manager Scorecards</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Manager</th><th>Active</th><th>In Lit.</th><th>Settled</th><th>Dropped</th><th>Alerts</th><th>Missing Info</th><th>Avg Days</th><th>Intro Sent %</th><th>Score</th><th>Rating</th></tr></thead><tbody>';
   CM_STAFF.forEach(function(s){
-    var sc=cases.filter(function(c){return c.assigned===s});
+    var sc=fc.filter(function(c){return c.assigned===s});
     var sa=sc.filter(function(c){return c.status==='Active'}).length;
     var sl=sc.filter(function(c){return c.status==='In Litigation'}).length;
     var ss=sc.filter(function(c){return c.status==='Settled/Closed'}).length;
     var sd=sc.filter(function(c){return c.status==='Dropped'}).length;
     var sal=alerts.filter(function(a){return a.assigned===s}).length;
-    h+='<tr><td style="font-weight:600">'+esc(s)+'</td><td>'+sa+'</td><td>'+sl+'</td><td>'+(sal>0?'<span style="color:var(--red);font-weight:700">'+sal+'</span>':'0')+'</td><td>'+ss+'</td><td>'+sd+'</td><td style="font-weight:700">'+sc.length+'</td></tr>';
+    var smi=sc.filter(function(c){return c.missingInfo&&c.missingInfo.indexOf('Missing Claim Info')!==-1}).length;
+    var sDays=0;var sSettled=sc.filter(function(c){return c.settledDate&&c.createdDate});
+    if(sSettled.length>0){var td=0;sSettled.forEach(function(c){td+=daysBtw(c.createdDate,c.settledDate)});sDays=Math.round(td/sSettled.length);}
+    var introTotal=sc.filter(function(c){return c.status==='Active'||c.status==='In Litigation'||c.status==='Settled/Closed'}).length;
+    var introSent=sc.filter(function(c){return c.introEmailSentDate}).length;
+    var introPct=introTotal>0?Math.round(introSent/introTotal*100):0;
+    // Score: higher is better. Based on settlement rate, alert handling, intro email compliance
+    var score=0;
+    if(sc.length>0)score+=Math.round(ss/sc.length*30); // 30 pts for settlement rate
+    score+=Math.max(0,30-sal*3); // 30 pts minus 3 per open alert
+    score+=Math.round(introPct*0.2); // 20 pts for intro email %
+    score+=Math.max(0,20-smi*4); // 20 pts minus 4 per missing claim
+    score=Math.min(100,Math.max(0,score));
+    var rating=score>=80?'⭐ Excellent':score>=60?'✅ Good':score>=40?'⚠️ Needs Improvement':'🔴 Action Required';
+    var rColor=score>=80?'var(--teal)':score>=60?'var(--navy)':score>=40?'var(--gold)':'var(--red)';
+    h+='<tr><td style="font-weight:700">'+esc(s)+'</td><td>'+sa+'</td><td>'+sl+'</td><td>'+ss+'</td><td>'+sd+'</td><td>'+(sal>0?'<span style="color:var(--red);font-weight:700">'+sal+'</span>':'0')+'</td><td>'+(smi>0?'<span style="color:var(--gold);font-weight:700">'+smi+'</span>':'0')+'</td><td>'+sDays+'</td><td>'+introPct+'%</td><td style="font-weight:700;color:'+rColor+'">'+score+'</td><td style="font-size:11px">'+rating+'</td></tr>';
   });
   h+='</tbody></table></div></div>';
-  h+='<div class="table-card"><div class="table-header"><h3>Recent Cases</h3></div><div class="table-scroll"><table class="tbl" style="min-width:700px"><thead><tr><th>Patient</th><th>Type</th><th>Location</th><th>Assigned</th><th>Status</th><th>Days</th><th>Appt</th></tr></thead><tbody>';
+
+  if(alerts.length>0){h+='<div class="table-card"><div class="table-header"><h3>Active Alerts ('+alerts.length+')</h3></div><div style="padding:10px">';alerts.slice(0,8).forEach(function(a,i){h+=renderCmAlertCard(a,i)});h+='</div></div>';}
+
+  // Recent cases
   var dashAlertIds={};try{alerts.forEach(function(a){dashAlertIds[a.caseId]=true})}catch(e){}
-  cases.slice().sort((a,b)=>(b.createdDate||'').localeCompare(a.createdDate||'')).slice(0,10).forEach(c=>{
-    const days=c.createdDate?daysBtw(c.createdDate,c.settledDate||today()):0;const dc=days>90?'danger':days>45?'warn':'';
-    var al=dashAlertIds[c.id]||false;
-    var stClass=c.status==='Active'?'status-active':c.status==='In Litigation'?'status-pending':'status-settled';
+  h+='<div class="table-card"><div class="table-header"><h3>Recent Cases</h3></div><div class="table-scroll"><table class="tbl" style="min-width:700px"><thead><tr><th>Patient</th><th>Type</th><th>Location</th><th>Assigned</th><th>Status</th><th>Days</th><th>Appt</th></tr></thead><tbody>';
+  fc.slice().sort(function(a,b){return(b.createdDate||'').localeCompare(a.createdDate||'')}).slice(0,10).forEach(function(c){
+    var days=c.createdDate?daysBtw(c.createdDate,c.settledDate||today()):0;var dc=days>90?'danger':days>45?'warn':'';
+    var al=dashAlertIds[c.id]||false;var stClass=c.status==='Active'?'status-active':c.status==='In Litigation'?'status-pending':'status-settled';
     h+='<tr class="'+(al?'has-alert':'')+'"><td><span class="patient-name" onclick="showCmDetail(\''+c.id+'\')">'+(al?'<span class="alert-dot"></span>':'')+esc(c.patientName)+'</span></td><td><span class="type-badge">'+esc(c.caseType)+'</span></td><td style="font-size:11px">'+esc(c.location||'—')+'</td><td style="font-size:11px">'+esc(c.assigned)+'</td><td><span class="status-badge '+stClass+'">'+esc(c.status)+'</span></td><td><span class="days-count '+dc+'">'+days+'</span></td><td style="font-size:11px">'+fmtDate(c.apptDate)+'</td></tr>';
   });
   h+='</tbody></table></div></div>';
