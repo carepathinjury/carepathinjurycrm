@@ -3084,13 +3084,13 @@ function renderCmPage(page) {
   else if(page==='cm-contacts')renderCmContacts(el);
   else if(page==='cm-faxlog')renderCmFaxLog(el);
   else if(page==='cm-my-metrics')renderCmMyMetrics(el);
-  else if(page==='cm-mgr-dash')renderCmMgrDash(el);
+  else if(page==='cm-mgr-dash')renderCmDashboard(el);
   else if(page==='cm-detail'&&cmDetailId)showCmDetail(cmDetailId);
 }
 
 var cmMgrDateFrom='',cmMgrDateTo='';
-function applyCmDateFilter(){cmMgrDateFrom=document.getElementById('cmMgrFrom').value||'';cmMgrDateTo=document.getElementById('cmMgrTo').value||'';renderCmDashboard(document.getElementById('sec-cm-dashboard'));}
-function clearCmDateFilter(){cmMgrDateFrom='';cmMgrDateTo='';renderCmDashboard(document.getElementById('sec-cm-dashboard'));}
+function applyCmDateFilter(){cmMgrDateFrom=document.getElementById('cmMgrFrom').value||'';cmMgrDateTo=document.getElementById('cmMgrTo').value||'';renderCmDashboard(document.getElementById('sec-cm-mgr-dash'));}
+function clearCmDateFilter(){cmMgrDateFrom='';cmMgrDateTo='';renderCmDashboard(document.getElementById('sec-cm-mgr-dash'));}
 
 function renderCmDashboard(el) {
   var fc=cases;
@@ -3132,8 +3132,8 @@ function renderCmDashboard(el) {
   // Location breakdown
   h+='<div class="table-card"><div class="table-header"><h3>Cases by Location</h3></div><div style="padding:8px 18px">'+renderBarChart(Object.entries(locData).sort(function(a,b){return b[1]-a[1]}).map(function(e,i){return{label:e[0],value:e[1],color:CHART_COLORS[i%CHART_COLORS.length]}}))+'</div></div>';
 
-  // ═══ STAFF SCORECARDS ═══
-  h+='<div class="table-card" style="border-left:4px solid var(--teal)"><div class="table-header"><h3>📊 Case Manager Scorecards</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Manager</th><th>Active</th><th>In Lit.</th><th>Settled</th><th>Dropped</th><th>Alerts</th><th>Missing Info</th><th>Avg Days</th><th>Intro Sent %</th><th>Score</th><th>Rating</th></tr></thead><tbody>';
+  // ═══ ENHANCED STAFF SCORECARDS ═══
+  h+='<div style="margin-top:20px"><div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:4px">📊 Case Manager Score Cards</div><div style="font-size:11px;color:var(--gray-500);margin-bottom:16px">Individual performance summary — case metrics, alert handling, and compliance</div></div>';
   CM_STAFF.forEach(function(s){
     var sc=fc.filter(function(c){return c.assigned===s});
     var sa=sc.filter(function(c){return c.status==='Active'}).length;
@@ -3144,21 +3144,72 @@ function renderCmDashboard(el) {
     var smi=sc.filter(function(c){return c.missingInfo&&c.missingInfo.indexOf('Missing Claim Info')!==-1}).length;
     var sDays=0;var sSettled=sc.filter(function(c){return c.settledDate&&c.createdDate});
     if(sSettled.length>0){var td=0;sSettled.forEach(function(c){td+=daysBtw(c.createdDate,c.settledDate)});sDays=Math.round(td/sSettled.length);}
+    var sActiveDays=0;var sActive=sc.filter(function(c){return c.status==='Active'&&c.createdDate});
+    if(sActive.length>0){var tad=0;sActive.forEach(function(c){tad+=daysBtw(c.createdDate,today())});sActiveDays=Math.round(tad/sActive.length);}
     var introTotal=sc.filter(function(c){return c.status==='Active'||c.status==='In Litigation'||c.status==='Settled/Closed'}).length;
     var introSent=sc.filter(function(c){return c.introEmailSentDate}).length;
     var introPct=introTotal>0?Math.round(introSent/introTotal*100):0;
-    // Score: higher is better. Based on settlement rate, alert handling, intro email compliance
+    var adjResolved=sc.filter(function(c){return c.adjusterResolved}).length;
+    var adjNeeded=sc.filter(function(c){return c.status==='Active'&&!c.adjusterResolved}).length;
+    var pipResolved=sc.filter(function(c){return c.pipResolved}).length;
+    // Score
     var score=0;
-    if(sc.length>0)score+=Math.round(ss/sc.length*30); // 30 pts for settlement rate
-    score+=Math.max(0,30-sal*3); // 30 pts minus 3 per open alert
-    score+=Math.round(introPct*0.2); // 20 pts for intro email %
-    score+=Math.max(0,20-smi*4); // 20 pts minus 4 per missing claim
+    if(sc.length>0)score+=Math.round(ss/sc.length*30);
+    score+=Math.max(0,30-sal*3);
+    score+=Math.round(introPct*0.2);
+    score+=Math.max(0,20-smi*4);
     score=Math.min(100,Math.max(0,score));
-    var rating=score>=80?'⭐ Excellent':score>=60?'✅ Good':score>=40?'⚠️ Needs Improvement':'🔴 Action Required';
-    var rColor=score>=80?'var(--teal)':score>=60?'var(--navy)':score>=40?'var(--gold)':'var(--red)';
-    h+='<tr><td style="font-weight:700">'+esc(s)+'</td><td>'+sa+'</td><td>'+sl+'</td><td>'+ss+'</td><td>'+sd+'</td><td>'+(sal>0?'<span style="color:var(--red);font-weight:700">'+sal+'</span>':'0')+'</td><td>'+(smi>0?'<span style="color:var(--gold);font-weight:700">'+smi+'</span>':'0')+'</td><td>'+sDays+'</td><td>'+introPct+'%</td><td style="font-weight:700;color:'+rColor+'">'+score+'</td><td style="font-size:11px">'+rating+'</td></tr>';
+    var rating=score>=80?'Excellent':score>=60?'Good':score>=40?'Needs Improvement':'Action Required';
+    var rColor=score>=80?'#1a7f7a':score>=60?'#2c3e50':score>=40?'#c8973a':'#c0392b';
+    var rBg=score>=80?'rgba(26,127,122,0.08)':score>=60?'rgba(44,62,80,0.06)':score>=40?'rgba(200,151,58,0.08)':'rgba(192,57,43,0.08)';
+    var initials=s.split(' ').map(function(w){return w[0]}).join('').substring(0,2).toUpperCase();
+    if(initials.length<2)initials=s.substring(0,2).toUpperCase();
+    var iColor=STAFF_COLORS[s]||'#1a7f7a';
+
+    h+='<div class="table-card" style="border-left:4px solid '+iColor+';margin-bottom:14px"><div style="padding:16px 20px">';
+    // Header row
+    h+='<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">';
+    h+='<div style="width:44px;height:44px;border-radius:10px;background:'+iColor+';color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px">'+initials+'</div>';
+    h+='<div><div style="font-size:15px;font-weight:700;color:var(--navy)">'+esc(s)+'</div><div style="font-size:11px;color:var(--gray-500)">CASE MANAGER · '+sc.length+' total cases</div></div>';
+    h+='<div style="margin-left:auto;text-align:center"><div style="font-size:28px;font-weight:800;color:'+rColor+'">'+score+'</div><div style="font-size:10px;font-weight:600;color:'+rColor+'">SCORE</div></div>';
+    h+='</div>';
+
+    // Case workload
+    h+='<div style="font-size:10px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin-bottom:8px">Case Workload</div>';
+    h+='<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">';
+    h+='<div style="text-align:center;min-width:70px;padding:8px 12px;background:rgba(26,127,122,0.06);border-radius:8px"><div style="font-size:20px;font-weight:700;color:var(--teal)">'+sa+'</div><div style="font-size:9px;color:var(--gray-500)">Active</div></div>';
+    h+='<div style="text-align:center;min-width:70px;padding:8px 12px;background:rgba(200,151,58,0.06);border-radius:8px"><div style="font-size:20px;font-weight:700;color:var(--gold)">'+sl+'</div><div style="font-size:9px;color:var(--gray-500)">In Litigation</div></div>';
+    h+='<div style="text-align:center;min-width:70px;padding:8px 12px;background:rgba(39,174,96,0.06);border-radius:8px"><div style="font-size:20px;font-weight:700;color:#27ae60">'+ss+'</div><div style="font-size:9px;color:var(--gray-500)">Settled</div></div>';
+    h+='<div style="text-align:center;min-width:70px;padding:8px 12px;background:rgba(192,57,43,0.06);border-radius:8px"><div style="font-size:20px;font-weight:700;color:var(--red)">'+sd+'</div><div style="font-size:9px;color:var(--gray-500)">Dropped</div></div>';
+    h+='</div>';
+
+    // Performance metrics with progress bars
+    h+='<div style="font-size:10px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin-bottom:8px">Performance vs Goals</div>';
+    function progBar(label,val,goal,color){
+      var pct=goal>0?Math.min(100,Math.round(val/goal*100)):0;
+      return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><div style="width:140px;font-size:11px;color:var(--navy)">'+label+'</div><div style="flex:1;background:#eee;height:8px;border-radius:4px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:'+color+';border-radius:4px"></div></div><div style="width:50px;text-align:right;font-size:11px;font-weight:600;color:'+(pct>=80?'var(--teal)':pct>=50?'var(--gold)':'var(--red)')+'">'+val+' /'+goal+'</div></div>';
+    }
+    h+=progBar('Intro Emails Sent',introSent,introTotal,'#1a7f7a');
+    h+=progBar('Claims Resolved',adjResolved,adjResolved+adjNeeded,'#c8973a');
+    h+=progBar('PIP Resolved',pipResolved,sc.filter(function(c){return c.caseType==='MVA'||c.caseType==='NJ MVA'}).length,'#3498db');
+    h+=progBar('Missing Info Cleared',Math.max(0,sc.length-smi),sc.length,'#27ae60');
+
+    // Key metrics row
+    h+='<div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap">';
+    h+='<div style="font-size:11px"><span style="color:var(--gray-500)">Avg Case Length:</span> <span style="font-weight:700">'+sDays+' days</span></div>';
+    h+='<div style="font-size:11px"><span style="color:var(--gray-500)">Avg Active Age:</span> <span style="font-weight:700">'+sActiveDays+' days</span></div>';
+    h+='<div style="font-size:11px"><span style="color:var(--gray-500)">Open Alerts:</span> <span style="font-weight:700;color:'+(sal>0?'var(--red)':'var(--teal)')+'">'+sal+'</span></div>';
+    h+='<div style="font-size:11px"><span style="color:var(--gray-500)">Missing Info:</span> <span style="font-weight:700;color:'+(smi>0?'var(--gold)':'var(--teal)')+'">'+smi+'</span></div>';
+    h+='</div>';
+
+    // Rating
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--gray-200)">';
+    h+='<div style="font-size:11px;color:var(--gray-500)">Rank #'+(CM_STAFF.indexOf(s)+1)+' of '+CM_STAFF.length+' case managers</div>';
+    h+='<div style="font-size:12px;font-weight:700;color:'+rColor+';background:'+rBg+';padding:4px 12px;border-radius:6px">'+rating+'</div>';
+    h+='</div>';
+
+    h+='</div></div>';
   });
-  h+='</tbody></table></div></div>';
 
   if(alerts.length>0){h+='<div class="table-card"><div class="table-header"><h3>Active Alerts ('+alerts.length+')</h3></div><div style="padding:10px">';alerts.slice(0,8).forEach(function(a,i){h+=renderCmAlertCard(a,i)});h+='</div></div>';}
 
