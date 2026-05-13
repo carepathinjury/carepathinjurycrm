@@ -2436,8 +2436,8 @@ function renderCrmMgrMetrics(el){
   wk.forEach(d=>{const isT=d===today();let dt=0;h+='<tr style="'+(isT?'background:rgba(26,127,122,0.04)':'')+'"><td style="font-weight:600;font-size:11px;'+(isT?'color:var(--teal)':'')+'">'+dayName(d)+' '+fmtDate(d)+'</td>';CRM_STAFF.forEach(s=>{const auto=crmAutoMetrics(s,d);const man=getCrmMet(s,d);let t=0;Object.values(auto).forEach(v=>t+=v);CRM_MANUAL_FIELDS.forEach(f=>t+=(parseInt(man[f.key])||0));dt+=t;h+='<td style="text-align:center;font-size:11px;color:'+(t>0?STAFF_COLORS[s]:'var(--gray-400)')+'">'+t+'</td>'});h+='<td style="text-align:center;font-weight:700;font-size:11px">'+dt+'</td></tr>'});
   h+='</tbody></table></div></div>';
 
-  // ═══ SCHEDULER SCORECARDS ═══
-  h+='<div class="table-card" style="border-left:4px solid var(--teal)"><div class="table-header"><h3>📊 Scheduler Scorecards</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Scheduler</th><th>Assigned</th><th>Scheduled</th><th>Sched %</th><th>Completed</th><th>No-Shows</th><th>Lost</th><th>Avg Days to Sched</th><th>Alerts Open</th><th>Calls/Wk</th><th>Score</th><th>Rating</th></tr></thead><tbody>';
+  // ═══ SCHEDULER SCORE CARDS ═══
+  h+='<div style="margin-top:20px"><div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:4px">📊 Scheduler Score Cards</div><div style="font-size:11px;color:var(--gray-500);margin-bottom:16px">Individual performance summary — scheduling efficiency, patient outcomes, and activity</div></div>';
   var allCrmAlerts=crmAlerts();
   CRM_STAFF.forEach(function(s){
     var sr=refs.filter(function(r){return r.alertAssignedTo===s||r.registeredBy===s});
@@ -2446,25 +2446,72 @@ function renderCrmMgrMetrics(el){
     var sSchedPct=sTotal>0?Math.round(sSched/sTotal*100):0;
     var sComp=sr.filter(function(r){return r.apptOutcome==='completed'}).length;
     var sNoShow=sr.filter(function(r){return r.apptOutcome==='no_show'}).length;
+    var sCancelled=sr.filter(function(r){return r.apptOutcome==='cancelled'}).length;
     var sLost=sr.filter(function(r){return r.status==='Patient Lost'}).length;
+    var sPending=sr.filter(function(r){return!r.apptDate&&r.status!=='Patient Lost'&&r.status!=='Completed'}).length;
     var sAlerts=allCrmAlerts.filter(function(a){return a.assignedTo===s}).length;
     var schedWithDays=sr.filter(function(r){return r.daysToSchedule!=null&&r.daysToSchedule>=0});
     var sAvgDays=schedWithDays.length>0?Math.round(schedWithDays.reduce(function(sum,r){return sum+r.daysToSchedule},0)/schedWithDays.length):0;
-    var sCalls=0;var met=getCrmMet(s,today());sCalls=parseInt(met.phoneCalls)||0;
+    // Weekly metrics
+    var wk=getWeekDates(0);var wkCalls=0;var wkEmails=0;
+    wk.forEach(function(d){var m=getCrmMet(s,d);wkCalls+=parseInt(m.phoneCalls)||0;wkEmails+=parseInt(m.emailsSent)||0;});
+    // Score
     var score=0;
     score+=Math.min(30,sSchedPct>0?Math.round(sSchedPct*0.3):0);
     score+=Math.max(0,25-sAlerts*2);
     score+=Math.max(0,20-sAvgDays);
     var compPct=sSched>0?Math.round(sComp/sSched*100):0;
     score+=Math.round(compPct*0.15);
-    score+=Math.min(10,sCalls);
+    score+=Math.min(10,wkCalls);
     score=Math.min(100,Math.max(0,score));
-    var rating=score>=80?'⭐ Excellent':score>=60?'✅ Good':score>=40?'⚠️ Needs Improvement':'🔴 Action Required';
-    var rColor=score>=80?'var(--teal)':score>=60?'var(--navy)':score>=40?'var(--gold)':'var(--red)';
-    h+='<tr><td style="font-weight:700">'+esc(s)+'</td><td>'+sTotal+'</td><td>'+sSched+'</td><td>'+sSchedPct+'%</td><td>'+sComp+'</td><td>'+(sNoShow>0?'<span style="color:var(--red)">'+sNoShow+'</span>':'0')+'</td><td>'+(sLost>0?'<span style="color:var(--red)">'+sLost+'</span>':'0')+'</td><td>'+sAvgDays+'</td><td>'+(sAlerts>0?'<span style="color:var(--red);font-weight:700">'+sAlerts+'</span>':'0')+'</td><td>'+sCalls+'</td><td style="font-weight:700;color:'+rColor+'">'+score+'</td><td style="font-size:11px">'+rating+'</td></tr>';
+    var rating=score>=80?'Excellent':score>=60?'Good':score>=40?'Needs Improvement':'Action Required';
+    var rColor=score>=80?'#1a7f7a':score>=60?'#2c3e50':score>=40?'#c8973a':'#c0392b';
+    var rBg=score>=80?'rgba(26,127,122,0.08)':score>=60?'rgba(44,62,80,0.06)':score>=40?'rgba(200,151,58,0.08)':'rgba(192,57,43,0.08)';
+    var initials=s.split(' ').map(function(w){return w[0]}).join('').substring(0,2).toUpperCase();
+    if(initials.length<2)initials=s.substring(0,2).toUpperCase();
+    var iColor=STAFF_COLORS[s]||'#1a7f7a';
+
+    h+='<div class="table-card" style="border-left:4px solid '+iColor+';margin-bottom:14px"><div style="padding:16px 20px">';
+    // Header
+    h+='<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">';
+    h+='<div style="width:44px;height:44px;border-radius:10px;background:'+iColor+';color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px">'+initials+'</div>';
+    h+='<div><div style="font-size:15px;font-weight:700;color:var(--navy)">'+esc(s)+'</div><div style="font-size:11px;color:var(--gray-500)">SCHEDULER · '+sTotal+' assigned referrals</div></div>';
+    h+='<div style="margin-left:auto;text-align:center"><div style="font-size:28px;font-weight:800;color:'+rColor+'">'+score+'</div><div style="font-size:10px;font-weight:600;color:'+rColor+'">SCORE</div></div>';
+    h+='</div>';
+
+    // Workload boxes
+    h+='<div style="font-size:10px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin-bottom:8px">Scheduling Pipeline</div>';
+    h+='<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">';
+    h+='<div style="text-align:center;min-width:70px;padding:8px 12px;background:rgba(200,151,58,0.06);border-radius:8px"><div style="font-size:20px;font-weight:700;color:var(--gold)">'+sPending+'</div><div style="font-size:9px;color:var(--gray-500)">Pending</div></div>';
+    h+='<div style="text-align:center;min-width:70px;padding:8px 12px;background:rgba(26,127,122,0.06);border-radius:8px"><div style="font-size:20px;font-weight:700;color:var(--teal)">'+sSched+'</div><div style="font-size:9px;color:var(--gray-500)">Scheduled</div></div>';
+    h+='<div style="text-align:center;min-width:70px;padding:8px 12px;background:rgba(39,174,96,0.06);border-radius:8px"><div style="font-size:20px;font-weight:700;color:#27ae60">'+sComp+'</div><div style="font-size:9px;color:var(--gray-500)">Completed</div></div>';
+    h+='<div style="text-align:center;min-width:70px;padding:8px 12px;background:rgba(192,57,43,0.06);border-radius:8px"><div style="font-size:20px;font-weight:700;color:var(--red)">'+sNoShow+'</div><div style="font-size:9px;color:var(--gray-500)">No-Shows</div></div>';
+    h+='<div style="text-align:center;min-width:70px;padding:8px 12px;background:rgba(192,57,43,0.06);border-radius:8px"><div style="font-size:20px;font-weight:700;color:var(--red)">'+sLost+'</div><div style="font-size:9px;color:var(--gray-500)">Lost</div></div>';
+    h+='</div>';
+
+    // Performance bars
+    h+='<div style="font-size:10px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin-bottom:8px">Performance vs Goals</div>';
+    function pb(lbl,val,goal,col){var p=goal>0?Math.min(100,Math.round(val/goal*100)):0;return'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><div style="width:140px;font-size:11px;color:var(--navy)">'+lbl+'</div><div style="flex:1;background:#eee;height:8px;border-radius:4px;overflow:hidden"><div style="width:'+p+'%;height:100%;background:'+col+';border-radius:4px"></div></div><div style="width:50px;text-align:right;font-size:11px;font-weight:600;color:'+(p>=80?'var(--teal)':p>=50?'var(--gold)':'var(--red)')+'">'+val+' /'+goal+'</div></div>';}
+    h+=pb('Scheduled',sSched,sTotal,'#1a7f7a');
+    h+=pb('Appt Completed',sComp,sSched||1,'#27ae60');
+    h+=pb('Weekly Calls',wkCalls,25,'#3498db');
+    h+=pb('Weekly Emails',wkEmails,20,'#c8973a');
+
+    // Key metrics
+    h+='<div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap">';
+    h+='<div style="font-size:11px"><span style="color:var(--gray-500)">Avg Days to Schedule:</span> <span style="font-weight:700">'+sAvgDays+'</span></div>';
+    h+='<div style="font-size:11px"><span style="color:var(--gray-500)">Scheduling Rate:</span> <span style="font-weight:700">'+sSchedPct+'%</span></div>';
+    h+='<div style="font-size:11px"><span style="color:var(--gray-500)">Open Alerts:</span> <span style="font-weight:700;color:'+(sAlerts>0?'var(--red)':'var(--teal)')+'">'+sAlerts+'</span></div>';
+    h+='<div style="font-size:11px"><span style="color:var(--gray-500)">No-Show Rate:</span> <span style="font-weight:700;color:'+(sNoShow>0?'var(--red)':'var(--teal)')+'">'+(sSched>0?Math.round(sNoShow/sSched*100):0)+'%</span></div>';
+    h+='</div>';
+
+    // Rating
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--gray-200)">';
+    h+='<div style="font-size:11px;color:var(--gray-500)">Rank #'+(CRM_STAFF.indexOf(s)+1)+' of '+CRM_STAFF.length+' schedulers</div>';
+    h+='<div style="font-size:12px;font-weight:700;color:'+rColor+';background:'+rBg+';padding:4px 12px;border-radius:6px">'+rating+'</div>';
+    h+='</div>';
+    h+='</div></div>';
   });
-  h+='</tbody></table></div>';
-  h+='<div style="padding:10px 18px;font-size:10px;color:var(--gray-500);border-top:1px solid var(--gray-200)">Score: Scheduling rate (30) + Alert management (25) + Speed to schedule (20) + Completion rate (15) + Call activity (10)</div></div>';
 
   el.innerHTML=h;
 }
@@ -4988,6 +5035,54 @@ function renderPsrMgrDash(el){
     openTk.sort((a,b)=>{const p={Urgent:0,High:1,Normal:2};return(p[a.priority]||2)-(p[b.priority]||2)}).forEach(t=>{const r=t.refId?refs.find(x=>x.id===t.refId):null;const pColor=t.priority==='Urgent'?'var(--red)':t.priority==='High'?'var(--gold)':'var(--gray-600)';h+='<tr><td style="font-weight:700;font-size:11px;color:'+pColor+'">'+esc(t.priority)+'</td><td style="font-weight:600">'+esc(t.subject)+'</td><td style="font-size:11px">'+esc(r?r.patientName:'—')+'</td><td style="font-size:11px">'+esc(t.category)+'</td><td style="font-size:11px">'+esc(t.assignedTo)+'</td><td style="font-size:11px">'+fmtDate(t.createdDate)+'</td></tr>'});
     h+='</tbody></table></div></div>';
   }
+
+  // ═══ PSR SCORE CARDS ═══
+  h+='<div style="margin-top:20px"><div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:4px">📊 Call Center Score Cards</div><div style="font-size:11px;color:var(--gray-500);margin-bottom:16px">Individual performance summary — call handling, ticket resolution, and activity</div></div>';
+  PSR_STAFF.forEach(function(s){
+    var sCalls=callLog.filter(function(c){return c.loggedBy===s});
+    var sWkCalls=sCalls.filter(function(c){return wk.includes(c.date)}).length;
+    var sTk=tickets.filter(function(t){return t.assignedTo===s||t.createdBy===s});
+    var sTkOpen=sTk.filter(function(t){return t.status!=='Resolved'}).length;
+    var sTkResolved=sTk.filter(function(t){return t.status==='Resolved'}).length;
+    var sTkUrgent=sTk.filter(function(t){return t.priority==='Urgent'&&t.status!=='Resolved'}).length;
+    var wkManual={};PSR_MANUAL_FIELDS.forEach(function(f){wkManual[f.key]=0;});
+    wk.forEach(function(d){var m=getPsrMet(s,d);PSR_MANUAL_FIELDS.forEach(function(f){wkManual[f.key]+=parseInt(m[f.key])||0;});});
+    var score=0;
+    score+=Math.min(25,sWkCalls);
+    score+=Math.max(0,25-sTkOpen*5);
+    score+=Math.min(25,sTkResolved*3);
+    var manualTotal=0;PSR_MANUAL_FIELDS.forEach(function(f){manualTotal+=wkManual[f.key];});
+    score+=Math.min(25,manualTotal);
+    score=Math.min(100,Math.max(0,score));
+    var rating=score>=80?'Excellent':score>=60?'Good':score>=40?'Needs Improvement':'Action Required';
+    var rColor=score>=80?'#1a7f7a':score>=60?'#2c3e50':score>=40?'#c8973a':'#c0392b';
+    var rBg=score>=80?'rgba(26,127,122,0.08)':score>=60?'rgba(44,62,80,0.06)':score>=40?'rgba(200,151,58,0.08)':'rgba(192,57,43,0.08)';
+    var initials=s.substring(0,2).toUpperCase();
+    var iColor=STAFF_COLORS[s]||'#3498db';
+
+    h+='<div class="table-card" style="border-left:4px solid '+iColor+';margin-bottom:14px"><div style="padding:16px 20px">';
+    h+='<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">';
+    h+='<div style="width:44px;height:44px;border-radius:10px;background:'+iColor+';color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px">'+initials+'</div>';
+    h+='<div><div style="font-size:15px;font-weight:700;color:var(--navy)">'+esc(s)+'</div><div style="font-size:11px;color:var(--gray-500)">PSR · '+sCalls.length+' total calls logged</div></div>';
+    h+='<div style="margin-left:auto;text-align:center"><div style="font-size:28px;font-weight:800;color:'+rColor+'">'+score+'</div><div style="font-size:10px;font-weight:600;color:'+rColor+'">SCORE</div></div>';
+    h+='</div>';
+    h+='<div style="font-size:10px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin-bottom:8px">This Week</div>';
+    h+='<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">';
+    h+='<div style="text-align:center;min-width:70px;padding:8px 12px;background:rgba(26,127,122,0.06);border-radius:8px"><div style="font-size:20px;font-weight:700;color:var(--teal)">'+sWkCalls+'</div><div style="font-size:9px;color:var(--gray-500)">Calls</div></div>';
+    h+='<div style="text-align:center;min-width:70px;padding:8px 12px;background:rgba(200,151,58,0.06);border-radius:8px"><div style="font-size:20px;font-weight:700;color:var(--gold)">'+sTkOpen+'</div><div style="font-size:9px;color:var(--gray-500)">Open Tickets</div></div>';
+    h+='<div style="text-align:center;min-width:70px;padding:8px 12px;background:rgba(39,174,96,0.06);border-radius:8px"><div style="font-size:20px;font-weight:700;color:#27ae60">'+sTkResolved+'</div><div style="font-size:9px;color:var(--gray-500)">Resolved</div></div>';
+    if(sTkUrgent>0)h+='<div style="text-align:center;min-width:70px;padding:8px 12px;background:rgba(192,57,43,0.06);border-radius:8px"><div style="font-size:20px;font-weight:700;color:var(--red)">'+sTkUrgent+'</div><div style="font-size:9px;color:var(--gray-500)">Urgent</div></div>';
+    h+='</div>';
+    h+='<div style="font-size:10px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin-bottom:8px">Self-Reported Metrics</div>';
+    function pb3(lbl,val,goal,col){var p=goal>0?Math.min(100,Math.round(val/goal*100)):0;return'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><div style="width:160px;font-size:11px;color:var(--navy)">'+lbl+'</div><div style="flex:1;background:#eee;height:8px;border-radius:4px;overflow:hidden"><div style="width:'+p+'%;height:100%;background:'+col+';border-radius:4px"></div></div><div style="width:40px;text-align:right;font-size:11px;font-weight:600;color:'+(p>=80?'var(--teal)':p>=50?'var(--gold)':'var(--red)')+'">'+val+'</div></div>';}
+    PSR_MANUAL_FIELDS.forEach(function(f){h+=pb3(f.label,wkManual[f.key],20,'#3498db');});
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--gray-200)">';
+    h+='<div style="font-size:11px;color:var(--gray-500)">Rank #'+(PSR_STAFF.indexOf(s)+1)+' of '+PSR_STAFF.length+' PSR agents</div>';
+    h+='<div style="font-size:12px;font-weight:700;color:'+rColor+';background:'+rBg+';padding:4px 12px;border-radius:6px">'+rating+'</div>';
+    h+='</div>';
+    h+='</div></div>';
+  });
+
   el.innerHTML=h;
 }
 
