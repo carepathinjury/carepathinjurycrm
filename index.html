@@ -1906,6 +1906,12 @@ function setupUIForRole() {
     tabs.querySelector('[data-module="cm"]').style.display = 'none';
     tabs.querySelector('[data-module="psr"]').style.display = 'none';
   }
+  if (userRole === 'nj_mva') {
+    tabs.querySelector('[data-module="crm"]').style.display = 'none';
+    tabs.querySelector('[data-module="cm"]').style.display = 'none';
+    tabs.querySelector('[data-module="psr"]').style.display = 'none';
+    tabs.querySelector('[data-module="mkt"]').style.display = 'none';
+  }
   if (userRole === 'psr') {
     // PSR can access CRM and CM for reference — no tabs hidden
   }
@@ -1919,9 +1925,9 @@ function setupUIForRole() {
   document.getElementById('psrNavMgrDash').style.display = showMgr ? 'flex' : 'none';
   // NJ MVA access
   var njmvaTab=document.querySelector('.top-tab[data-module="njmva"]');
-  if(njmvaTab)njmvaTab.style.display=(userRole==='nj_mva'||currentUser==='Manager')?'':'none';
+  if(njmvaTab)njmvaTab.style.display=(userRole==='nj_mva'||userRole==='manager'||managerUnlocked)?'':'none';
   var njmvaMgr=document.getElementById('njmvaNavMgrDash');
-  if(njmvaMgr)njmvaMgr.style.display=(currentUser==='Manager'||userRole==='nj_mva')?'flex':'none';
+  if(njmvaMgr)njmvaMgr.style.display=(userRole==='manager'||managerUnlocked||userRole==='nj_mva')?'flex':'none';
 }
 
 function switchModule(mod) {
