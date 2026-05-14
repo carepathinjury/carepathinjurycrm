@@ -5736,20 +5736,45 @@ function renderNjmvaCarriers(el){
   el.innerHTML=h;
 }
 function addNewCarrier(){
-  var name=prompt('Carrier Name:');if(!name)return;
-  var fax=prompt('Fax Number:')||'';
-  var phone=prompt('Phone Number:')||'';
-  var notes=prompt('Notes (requirements, DPRP info, etc.):')||'';
-  njmvaCarriers.push({name:name,fax:fax,phone:phone,notes:notes});
+  var h='<div style="padding:20px"><h3 style="margin:0 0 16px;color:var(--navy)">Add New Carrier</h3>';
+  h+='<div class="form-grid">';
+  h+='<div class="form-group" style="grid-column:1/-1"><label>Carrier Name <span style="color:var(--red)">*</span></label><input id="newCarrierName" placeholder="e.g. Erie Insurance"></div>';
+  h+='<div class="form-group"><label>Fax Number</label><input id="newCarrierFax" placeholder="e.g. 866-257-2323"></div>';
+  h+='<div class="form-group"><label>Phone Number</label><input id="newCarrierPhone" placeholder="e.g. 800-555-1234"></div>';
+  h+='<div class="form-group" style="grid-column:1/-1"><label>Notes</label><textarea id="newCarrierNotes" rows="2" placeholder="Pre-cert requirements, DPRP info, email..."></textarea></div>';
+  h+='</div>';
+  h+='<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px"><button class="btn-cancel" onclick="document.getElementById(\'carrierAddPanel\').remove()">Cancel</button><button class="btn-save" onclick="saveNewCarrier()">Save Carrier</button></div></div>';
+  var panel=document.createElement('div');panel.id='carrierAddPanel';panel.className='table-card';panel.style.cssText='border-left:4px solid var(--teal);margin-bottom:16px';panel.innerHTML=h;
+  var container=document.getElementById('sec-njmva-carriers');container.insertBefore(panel,container.children[2]||null);
+  document.getElementById('newCarrierName').focus();
+}
+function saveNewCarrier(){
+  var name=document.getElementById('newCarrierName').value.trim();
+  if(!name){alert('Please enter a carrier name.');return;}
+  njmvaCarriers.push({name:name,fax:document.getElementById('newCarrierFax').value.trim(),phone:document.getElementById('newCarrierPhone').value.trim(),notes:document.getElementById('newCarrierNotes').value.trim()});
+  var panel=document.getElementById('carrierAddPanel');if(panel)panel.remove();
   renderNjmvaCarriers(document.getElementById('sec-njmva-carriers'));
 }
 function editCarrier(idx){
   var c=njmvaCarriers[idx];if(!c)return;
-  var name=prompt('Carrier Name:',c.name);if(!name)return;
-  var fax=prompt('Fax Number:',c.fax)||'';
-  var phone=prompt('Phone Number:',c.phone)||'';
-  var notes=prompt('Notes:',c.notes)||'';
-  njmvaCarriers[idx]={name:name,fax:fax,phone:phone,notes:notes};
+  var h='<div style="padding:20px"><h3 style="margin:0 0 16px;color:var(--navy)">Edit Carrier</h3>';
+  h+='<div class="form-grid">';
+  h+='<div class="form-group" style="grid-column:1/-1"><label>Carrier Name <span style="color:var(--red)">*</span></label><input id="editCarrierName" value="'+esc(c.name)+'"></div>';
+  h+='<div class="form-group"><label>Fax Number</label><input id="editCarrierFax" value="'+esc(c.fax)+'"></div>';
+  h+='<div class="form-group"><label>Phone Number</label><input id="editCarrierPhone" value="'+esc(c.phone||'')+'"></div>';
+  h+='<div class="form-group" style="grid-column:1/-1"><label>Notes</label><textarea id="editCarrierNotes" rows="2">'+esc(c.notes||'')+'</textarea></div>';
+  h+='</div>';
+  h+='<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px"><button class="btn-cancel" onclick="document.getElementById(\'carrierEditPanel\').remove()">Cancel</button><button class="btn-save" onclick="saveEditCarrier('+idx+')">Save</button></div></div>';
+  var old=document.getElementById('carrierEditPanel');if(old)old.remove();
+  var panel=document.createElement('div');panel.id='carrierEditPanel';panel.className='table-card';panel.style.cssText='border-left:4px solid var(--gold);margin-bottom:16px';panel.innerHTML=h;
+  var container=document.getElementById('sec-njmva-carriers');container.insertBefore(panel,container.children[2]||null);
+  document.getElementById('editCarrierName').focus();
+}
+function saveEditCarrier(idx){
+  var name=document.getElementById('editCarrierName').value.trim();
+  if(!name){alert('Please enter a carrier name.');return;}
+  njmvaCarriers[idx]={name:name,fax:document.getElementById('editCarrierFax').value.trim(),phone:document.getElementById('editCarrierPhone').value.trim(),notes:document.getElementById('editCarrierNotes').value.trim()};
+  var panel=document.getElementById('carrierEditPanel');if(panel)panel.remove();
   renderNjmvaCarriers(document.getElementById('sec-njmva-carriers'));
 }
 
