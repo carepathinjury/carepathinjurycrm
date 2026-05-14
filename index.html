@@ -536,59 +536,43 @@
 
 <!-- NJ MVA Pre-Cert Modal -->
 <div class="modal-overlay" id="precertModal">
-<div class="modal" style="width:720px;max-height:90vh;overflow-y:auto">
-  <div class="modal-header" style="background:linear-gradient(135deg,#1a2332,#2c3e50);color:white"><h3 id="precertModalTitle" style="color:white">New Pre-Certification</h3><span class="modal-close" onclick="closePrecertModal()" style="color:white">&times;</span></div>
-  <div class="modal-body" style="padding:0">
-    
-    <!-- Section 1: Patient & Carrier -->
-    <div style="padding:16px 20px;border-bottom:1px solid var(--gray-200)">
-      <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;margin-bottom:10px">📋 Patient & Carrier Information</div>
-      <div class="form-row"><label>Patient <span style="color:var(--red)">*</span> <span style="color:var(--gray-400);font-size:10px" id="precertPatientInfo"></span></label><select id="pcRefId" onchange="fillPrecertFromRef()" style="font-size:13px"><option value="">— Select NJ MVA Patient —</option></select></div>
-      <div class="form-row two-col"><div><label>Insurance Carrier <span style="color:var(--red)">*</span></label><input id="pcCarrier" placeholder="e.g. Geico, Progressive, USAA..."></div><div><label>Entity / Location</label><input id="pcLocation"></div></div>
-    </div>
+<div class="modal" style="width:680px;max-height:90vh;overflow-y:auto">
+  <div class="modal-header"><h2 id="precertModalTitle">New Pre-Certification</h2><button class="modal-close" onclick="closePrecertModal()">&times;</button></div>
+  <div class="modal-body"><div class="form-grid">
+    <div class="form-group" style="grid-column:1/-1"><label>Patient <span style="color:var(--red)">*</span></label><select id="pcRefId" onchange="fillPrecertFromRef()" style="width:100%"><option value="">— Select NJ MVA Patient —</option></select><div id="precertPatientInfo" style="font-size:10px;color:var(--gray-500);margin-top:2px"></div></div>
+    <div class="form-group"><label>Insurance Carrier <span style="color:var(--red)">*</span></label><input id="pcCarrier" list="pcCarrierList" placeholder="Select or type carrier"><datalist id="pcCarrierList"></datalist></div>
+    <div class="form-group"><label>Entity / Location</label><select id="pcLocation"><option value="">— Select —</option><option>CarePath Philadelphia</option><option>CarePath Injury</option><option>Allentown</option><option>Wilkes Barre</option><option>Old City</option><option>Hazleton</option><option>Williamsport</option><option>Carlisle</option><option>Lansdale</option><option>Reading</option><option>Port Richmond</option><option>Germantown</option><option>NE Philly</option><option>Darby</option><option>Cherry Hill NJ</option></select></div>
 
-    <!-- Section 2: Appointment & Codes -->
-    <div style="padding:16px 20px;border-bottom:1px solid var(--gray-200)">
-      <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;margin-bottom:10px">📅 Appointment & Procedure Details</div>
-      <div class="form-row two-col"><div><label>Appointment Date</label><input type="date" id="pcApptDate"></div><div><label>Next Appointment Date</label><input type="date" id="pcNextApptDate"></div></div>
-      <div class="form-row two-col"><div><label>DOS Range Included</label><input id="pcDosRange" placeholder="e.g. 05/20/26 - 06/20/26"></div><div><label>CPT Codes for Pre-Cert</label><input id="pcCptCodes" placeholder="e.g. 99214, 20553, E0221"></div></div>
-    </div>
+    <div style="grid-column:1/-1;border-top:1px solid var(--gray-200);padding-top:12px;margin-top:4px"><label style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:0.5px">Appointment & Procedure Details</label></div>
+    <div class="form-group"><label>Appointment Date</label><input type="date" id="pcApptDate"></div>
+    <div class="form-group"><label>Next Appointment Date</label><input type="date" id="pcNextApptDate"></div>
+    <div class="form-group"><label>DOS Range Included</label><input id="pcDosRange" placeholder="e.g. 05/20/26 - 06/20/26"></div>
+    <div class="form-group"><label>CPT Codes</label><input id="pcCptCodes" list="pcCptList" placeholder="e.g. 99214, 20553"><datalist id="pcCptList"><option value="99204 — New Patient Visit"><option value="99214 — Follow Up"><option value="27096, J3301, Q9967 — SIJI"><option value="20553 — TPI"><option value="95860 — EMG"><option value="62321, J1100, Q9967 — CESI"><option value="64483, J1100, Q9967 — TFESI"><option value="62323, J3301, Q9967 — LESI"><option value="20610 — Knee/Joint Injection"><option value="64493, 64494, J3301 — LMBB"><option value="E0221 — Infrared Heating Pad"><option value="97010 — Hot/Cold Pack"><option value="E0745 — EMS Unit"><option value="E0731 — Garment"><option value="64625, J3301 — SI RFA"><option value="0615T — Neurosync/Eye Sync"></datalist></div>
 
-    <!-- Section 3: Submission -->
-    <div style="padding:16px 20px;border-bottom:1px solid var(--gray-200)">
-      <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;margin-bottom:10px">📤 Pre-Certification Submission</div>
-      <div class="form-row two-col"><div><label>Submission Date <span style="color:var(--red)">*</span></label><input type="date" id="pcSubmitDate"></div><div><label>Resubmission Date</label><input type="date" id="pcResubDate"></div></div>
-      <div class="form-row two-col"><div><label>Outcome</label><select id="pcOutcome" style="font-size:13px"><option value="">⏳ Pending Response</option><option value="approved">✅ Approved / Pre-Certified</option><option value="denied_medical">❌ Denied — Medical Necessity</option><option value="denied_eligibility">❌ Denied — Eligibility</option><option value="denied_other">❌ Denied — Other</option><option value="no_response">⚠️ No Response</option><option value="not_required">ℹ️ Pre-Cert Not Required</option><option value="no_show">🚫 Patient No-Show</option><option value="cancelled">🚫 Patient Cancelled</option><option value="rescheduled">🔄 Rescheduled</option></select></div><div><label>Outcome Date</label><input type="date" id="pcOutcomeDate"></div></div>
-      <div class="form-row"><label>Outcome Notes / Next Steps</label><textarea id="pcOutcomeNotes" rows="2" placeholder="Details about the outcome, insurer response, etc."></textarea></div>
-    </div>
+    <div style="grid-column:1/-1;border-top:1px solid var(--gray-200);padding-top:12px;margin-top:4px"><label style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:0.5px">Pre-Certification Submission</label></div>
+    <div class="form-group"><label>Submission Date <span style="color:var(--red)">*</span></label><input type="date" id="pcSubmitDate"></div>
+    <div class="form-group"><label>Resubmission Date</label><input type="date" id="pcResubDate"></div>
+    <div class="form-group"><label>Outcome</label><select id="pcOutcome"><option value="">Pending Response</option><option value="approved">Approved / Pre-Certified</option><option value="denied_medical">Denied — Medical Necessity</option><option value="denied_eligibility">Denied — Eligibility</option><option value="denied_other">Denied — Other</option><option value="no_response">No Response</option><option value="not_required">Pre-Cert Not Required</option><option value="no_show">Patient No-Show</option><option value="cancelled">Patient Cancelled</option><option value="rescheduled">Rescheduled</option></select></div>
+    <div class="form-group"><label>Outcome Date</label><input type="date" id="pcOutcomeDate"></div>
+    <div class="form-group" style="grid-column:1/-1"><label>Outcome Notes / Next Steps</label><textarea id="pcOutcomeNotes" rows="2" placeholder="Insurer response details, next steps..."></textarea></div>
 
-    <!-- Section 4: Pre-Service Appeal -->
-    <div style="padding:16px 20px;border-bottom:1px solid var(--gray-200);background:rgba(200,151,58,0.03)">
-      <div style="font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;margin-bottom:10px">📄 Pre-Service Appeal</div>
-      <div class="form-row two-col"><div><label>Pre-Service Appeal</label><select id="pcAppealNeeded" style="font-size:13px"><option value="no">Not Needed</option><option value="yes">Needed — Not Yet Sent</option><option value="sent">Sent</option></select></div><div><label>Date Sent</label><input type="date" id="pcAppealDate"></div></div>
-      <div class="form-row"><label>Appeal Outcome</label><input id="pcAppealOutcome" placeholder="e.g. Approved, Denied, Pending response..."></div>
-    </div>
+    <div style="grid-column:1/-1;border-top:1px solid var(--gray-200);padding-top:12px;margin-top:4px"><label style="font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.5px">Pre-Service Appeal</label></div>
+    <div class="form-group"><label>Pre-Service Appeal</label><select id="pcAppealNeeded"><option value="no">Not Needed</option><option value="yes">Needed — Not Yet Sent</option><option value="sent">Sent</option></select></div>
+    <div class="form-group"><label>Date Sent</label><input type="date" id="pcAppealDate"></div>
+    <div class="form-group" style="grid-column:1/-1"><label>Appeal Outcome</label><input id="pcAppealOutcome" placeholder="e.g. Approved, Denied, Still Pending..."></div>
 
-    <!-- Section 5: Patient / Billing Status -->
-    <div style="padding:16px 20px;border-bottom:1px solid var(--gray-200)">
-      <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;margin-bottom:10px">💰 Patient Seen & Billing</div>
-      <div class="form-row two-col"><div><label>Was Patient Seen for DOS Listed?</label><select id="pcPatientSeen" style="font-size:13px"><option value="">— Select —</option><option value="yes">Yes</option><option value="no">No</option><option value="no_show">No — Patient No-Show</option><option value="cancelled">No — Cancelled</option><option value="rescheduled">No — Rescheduled</option></select></div><div><label>DOS Paid?</label><input id="pcDosPaid" placeholder="Yes, No, Partial, Deductible..."></div></div>
-    </div>
+    <div style="grid-column:1/-1;border-top:1px solid var(--gray-200);padding-top:12px;margin-top:4px"><label style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:0.5px">Patient Seen & Billing</label></div>
+    <div class="form-group"><label>Was Patient Seen?</label><select id="pcPatientSeen"><option value="">— Select —</option><option value="yes">Yes</option><option value="no">No</option><option value="no_show">No — No Show</option><option value="cancelled">No — Cancelled</option><option value="rescheduled">No — Rescheduled</option></select></div>
+    <div class="form-group"><label>DOS Paid?</label><select id="pcDosPaid"><option value="">— Select —</option><option value="yes">Yes</option><option value="no">No</option><option value="partial">Partial</option><option value="deductible">No — Deductible</option><option value="exhausted">No — PIP Exhausted</option><option value="pending">Pending / Need Follow-Up</option></select></div>
 
-    <!-- Section 6: Post-Service / Arbitration -->
-    <div style="padding:16px 20px;border-bottom:1px solid var(--gray-200);background:rgba(192,57,43,0.03)">
-      <div style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;margin-bottom:10px">⚖️ Post-Service Appeal / Arbitration</div>
-      <div class="form-row two-col"><div><label>Post-Service Action</label><select id="pcPostService" style="font-size:13px"><option value="no">None Needed</option><option value="post_appeal">Post-Service Appeal (Michelle)</option><option value="arbitration">Sent to Arbitration</option></select></div><div><label>Date</label><input type="date" id="pcPostDate"></div></div>
-      <div class="form-row"><label>Arbitration Outcome</label><input id="pcArbOutcome" placeholder="e.g. Won, Lost, Pending..."></div>
-    </div>
+    <div style="grid-column:1/-1;border-top:1px solid var(--gray-200);padding-top:12px;margin-top:4px"><label style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:0.5px">Post-Service Appeal / Arbitration</label></div>
+    <div class="form-group"><label>Post-Service Action</label><select id="pcPostService"><option value="no">None Needed</option><option value="post_appeal">Post-Service Appeal (Michelle)</option><option value="arbitration">Sent to Arbitration</option></select></div>
+    <div class="form-group"><label>Date</label><input type="date" id="pcPostDate"></div>
+    <div class="form-group" style="grid-column:1/-1"><label>Arbitration Outcome</label><select id="pcArbOutcome"><option value="">— Select —</option><option value="pending">Pending</option><option value="won">Won</option><option value="lost">Lost</option><option value="settled">Settled</option></select></div>
 
-    <!-- Section 7: Notes -->
-    <div style="padding:16px 20px">
-      <div style="font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin-bottom:10px">📝 Additional Notes</div>
-      <div class="form-row"><textarea id="pcNotes" rows="3" placeholder="Any other notes, follow-up info, DPRP details, etc."></textarea></div>
-    </div>
-
-  </div>
+    <div style="grid-column:1/-1;border-top:1px solid var(--gray-200);padding-top:12px;margin-top:4px"><label style="font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.5px">Additional Notes</label></div>
+    <div class="form-group" style="grid-column:1/-1"><textarea id="pcNotes" rows="2" placeholder="DPRP info, follow-up details, communication notes..."></textarea></div>
+  </div></div>
   <div class="modal-footer"><button class="btn-delete" id="btnDeletePrecert" style="display:none" onclick="deletePrecert()">Delete</button><button class="btn-cancel" onclick="closePrecertModal()">Cancel</button><button class="btn-save" onclick="savePrecert()">Save Pre-Cert</button></div>
 </div>
 </div>
@@ -5619,11 +5603,37 @@ function renderNjmvaAlerts(el){
   var h='<div class="page-title">NJ MVA Alerts</div><div class="page-subtitle">'+alerts.length+' items need attention</div>';
   if(alerts.length===0)h+='<div class="table-card" style="padding:30px;text-align:center;color:var(--gray-400)">No alerts — all caught up! 🎉</div>';
   alerts.forEach(function(a){
+    var borderColor=a.type==='new_njmva'?(a.priority==='urgent'?'var(--red)':'var(--gold)'):a.type==='needs_appeal'?'var(--red)':'var(--gold)';
+    var tagColor=a.type==='new_njmva'?(a.priority==='urgent'?'var(--red)':'var(--gold)'):a.type==='needs_appeal'?'var(--red)':'var(--gold)';
+    var tagText=a.type==='new_njmva'?(a.priority==='urgent'?'URGENT':'NEW'):a.type==='appt_passed'?'NEXT APPT':a.type==='needs_appeal'?'APPEAL':'FOLLOW UP';
+    var clickAction=a.type==='new_njmva'?' onclick="openNewPrecertModal(\''+a.id+'\')" style="cursor:pointer"':'';
+
+    h+='<div class="table-card" style="border-left:4px solid '+borderColor+';margin-bottom:10px"'+clickAction+'>';
+    h+='<div style="padding:14px 18px;display:flex;align-items:center;gap:14px">';
+    h+='<div style="background:'+tagColor+';color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:4px;white-space:nowrap">'+tagText+'</div>';
+    h+='<div style="flex:1">';
+
     if(a.type==='new_njmva'){
-      h+='<div class="table-card" style="border-left:4px solid var(--gold);padding:14px 18px;margin-bottom:8px;cursor:pointer" onclick="openNewPrecertModal(\''+a.id+'\')"><div style="display:flex;justify-content:space-between;align-items:center"><div><strong>'+esc(a.patientName)+'</strong><br><span style="font-size:11px;color:var(--gray-500)">Appointment: '+fmtDate(a.apptDate)+' · '+esc(a.location||'')+'</span></div><div style="color:var(--gold);font-weight:700;font-size:12px">FILE PRE-CERT →</div></div></div>';
-    } else {
-      h+='<div class="table-card" style="border-left:4px solid var(--red);padding:14px 18px;margin-bottom:8px"><div><strong>'+esc(a.patientName)+'</strong> — '+esc(a.carrier||'')+'<br><span style="font-size:11px;color:var(--red)">No response after '+a.submittedDaysAgo+' days. Pre-service appeal needed.</span></div></div>';
+      h+='<div style="font-weight:700;color:var(--navy)">'+esc(a.patientName)+'</div>';
+      h+='<div style="font-size:11px;color:var(--gray-500);margin-top:2px">Appointment: '+fmtDate(a.apptDate)+' · '+esc(a.location||'—');
+      if(a.daysUntilAppt<=0)h+=' · <span style="color:var(--red);font-weight:700">TODAY / PAST DUE</span>';
+      else h+=' · '+a.daysUntilAppt+' days away';
+      h+='</div><div style="font-size:11px;color:var(--navy);margin-top:4px">File pre-certification for this patient.</div>';
+    } else if(a.type==='appt_passed'){
+      h+='<div style="font-weight:700;color:var(--navy)">'+esc(a.patientName)+'</div>';
+      h+='<div style="font-size:11px;color:var(--gray-500);margin-top:2px">Appointment on '+fmtDate(a.apptDate)+' passed '+a.daysPast+' day'+(a.daysPast!==1?'s':'')+' ago.</div>';
+      h+='<div style="font-size:11px;color:var(--gold);font-weight:600;margin-top:4px">Enter next appointment date and ensure pre-cert is filed.</div>';
+    } else if(a.type==='needs_appeal'){
+      h+='<div style="font-weight:700;color:var(--navy)">'+esc(a.patientName)+'</div>';
+      h+='<div style="font-size:11px;color:var(--gray-500);margin-top:2px">Carrier: '+esc(a.carrier||'—')+' · Submitted '+a.submittedDaysAgo+' days ago</div>';
+      h+='<div style="font-size:11px;color:var(--red);font-weight:600;margin-top:4px">No response — pre-service appeal needed.</div>';
+    } else if(a.type==='appeal_followup'){
+      h+='<div style="font-weight:700;color:var(--navy)">'+esc(a.patientName)+'</div>';
+      h+='<div style="font-size:11px;color:var(--gray-500);margin-top:2px">Carrier: '+esc(a.carrier||'—')+' · Appeal sent '+a.daysSinceAppeal+' days ago</div>';
+      h+='<div style="font-size:11px;color:var(--gold);font-weight:600;margin-top:4px">Follow up on pre-service appeal response.</div>';
     }
+
+    h+='</div></div></div>';
   });
   el.innerHTML=h;
 }
@@ -5701,7 +5711,8 @@ function renderNjmvaAnalytics(el){
   njmvaPrecerts.forEach(function(p){stages[p.stage]=(stages[p.stage]||0)+1;});
   h+='<div class="table-card"><div class="table-header"><h3>Pipeline Stages</h3></div><div style="padding:16px 18px">'+renderBarChart(Object.entries(stages).filter(function(e){return e[1]>0}).map(function(e,i){return{label:e[0].replace(/_/g,' '),value:e[1],color:CHART_COLORS[i%CHART_COLORS.length]}}))+'</div></div>';
 
-  // Jexter scorecard
+  // Jexter scorecard — manager only
+  if(managerUnlocked){
   h+='<div class="table-card" style="border-left:4px solid #3498db;margin-top:16px"><div style="padding:16px 20px">';
   h+='<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">';
   h+='<div style="width:44px;height:44px;border-radius:10px;background:#3498db;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px">JJ</div>';
@@ -5715,6 +5726,7 @@ function renderNjmvaAnalytics(el){
   h+='<div style="text-align:center;min-width:70px;padding:8px 12px;background:rgba(200,151,58,0.06);border-radius:8px"><div style="font-size:20px;font-weight:700;color:var(--gold)">'+appeals+'</div><div style="font-size:9px;color:var(--gray-500)">Appeals Sent</div></div>';
   h+='<div style="text-align:center;min-width:70px;padding:8px 12px;background:rgba(192,57,43,0.06);border-radius:8px"><div style="font-size:20px;font-weight:700;color:var(--red)">'+arb+'</div><div style="font-size:9px;color:var(--gray-500)">Arbitration</div></div>';
   h+='</div></div></div>';
+  } // end manager scorecard
 
   el.innerHTML=h;
 }
@@ -5724,16 +5736,26 @@ function openNewPrecertModal(refId){
   editingPrecertId=null;
   document.getElementById('precertModalTitle').textContent='New Pre-Certification';
   document.getElementById('btnDeletePrecert').style.display='none';
-  // Populate ref dropdown with NJ MVA refs
-  var sel=document.getElementById('pcRefId');sel.innerHTML='<option value="">Select NJ MVA Patient...</option>';
+  var sel=document.getElementById('pcRefId');sel.innerHTML='<option value="">— Select NJ MVA Patient —</option>';
   refs.filter(function(r){return r.caseType==='NJ MVA'}).forEach(function(r){
     sel.innerHTML+='<option value="'+r.id+'"'+(refId===r.id?' selected':'')+'>'+esc(r.patientName)+' (DOI: '+fmtDate(r.doi)+')</option>';
   });
-  // Clear fields
-  ['pcCarrier','pcLocation','pcDosRange','pcCptCodes','pcSubmitDate','pcResubDate','pcOutcome','pcOutcomeDate','pcOutcomeNotes','pcAppealNeeded','pcAppealDate','pcAppealOutcome','pcPatientSeen','pcDosPaid','pcPostService','pcPostDate','pcArbOutcome','pcNotes','pcApptDate','pcNextApptDate'].forEach(function(id){
-    var el=document.getElementById(id);if(el)el.value='';
-  });
-  if(refId)fillPrecertFromRef();
+  // Populate carrier datalist
+  var carrierSet={};njmvaPrecerts.forEach(function(p){if(p.carrier)carrierSet[p.carrier]=true;});
+  ['USAA','Allstate','NJ Manufacturers','Progressive','Geico Insurance','State Farm','Plymouth Rock Assurance','Cure Auto Insurance','AAA Insurance','National General','Liberty Mutual','Travelers Insurance','Farmers Insurance','Good2Go','Bristol West','National Specialty Insurance','Encompass Insurance','The Hartford'].forEach(function(c){carrierSet[c]=true;});
+  var dl=document.getElementById('pcCarrierList');dl.innerHTML='';
+  Object.keys(carrierSet).sort().forEach(function(c){dl.innerHTML+='<option value="'+esc(c)+'">';});
+  // Clear
+  ['pcCarrier','pcDosRange','pcCptCodes','pcSubmitDate','pcResubDate','pcOutcomeDate','pcOutcomeNotes','pcAppealDate','pcAppealOutcome','pcPostDate','pcNotes','pcApptDate','pcNextApptDate'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('pcLocation').value='';
+  document.getElementById('pcOutcome').value='';
+  document.getElementById('pcAppealNeeded').value='no';
+  document.getElementById('pcPatientSeen').value='';
+  document.getElementById('pcDosPaid').value='';
+  document.getElementById('pcPostService').value='no';
+  document.getElementById('pcArbOutcome').value='';
+  document.getElementById('precertPatientInfo').textContent='';
+  if(refId){document.getElementById('pcRefId').value=refId;fillPrecertFromRef();}
   document.getElementById('precertModal').classList.add('show');
 }
 
