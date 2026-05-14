@@ -541,7 +541,7 @@
   <div class="modal-body"><div class="form-grid">
     <div class="form-group" style="grid-column:1/-1"><label>Patient <span style="color:var(--red)">*</span></label><select id="pcRefId" onchange="fillPrecertFromRef()" style="width:100%"><option value="">— Select NJ MVA Patient —</option></select><div id="precertPatientInfo" style="font-size:10px;color:var(--gray-500);margin-top:2px"></div></div>
     <div class="form-group"><label>Insurance Carrier <span style="color:var(--red)">*</span></label><input id="pcCarrier" list="pcCarrierList" placeholder="Select or type carrier"><datalist id="pcCarrierList"></datalist></div>
-    <div class="form-group"><label>Entity / Location</label><select id="pcLocation"><option value="">— Select —</option><option>CarePath Philadelphia</option><option>CarePath Injury</option><option>Allentown</option><option>Wilkes Barre</option><option>Old City</option><option>Hazleton</option><option>Williamsport</option><option>Carlisle</option><option>Lansdale</option><option>Reading</option><option>Port Richmond</option><option>Germantown</option><option>NE Philly</option><option>Darby</option><option>Cherry Hill NJ</option></select></div>
+    <div class="form-group"><label>Entity / Location</label><select id="pcLocation"><option value="">— Select —</option><option>Allentown</option><option>Wilkes Barre</option><option>Old City</option><option>Hazleton</option><option>Williamsport</option><option>Carlisle</option><option>Lansdale</option><option>Reading</option><option>Port Richmond</option><option>Germantown</option><option>NE Philly</option><option>Darby</option><option>Cherry Hill NJ</option></select></div>
 
     <div style="grid-column:1/-1;border-top:1px solid var(--gray-200);padding-top:12px;margin-top:4px"><label style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:0.5px">Appointment & Procedure Details</label></div>
     <div class="form-group"><label>Appointment Date</label><input type="date" id="pcApptDate"></div>
@@ -1221,28 +1221,32 @@ function savePsrMet(){if(_useNewTables){for(var k in psrMetrics){var m=psrMetric
 function _dbMetricSavePsr(staff,date,psrData){
   _lastLocalSave=Date.now();
   var row={staff:staff,date:date,module:'psr',data:psrData,phone_calls:0,emails_sent:0,faxes_sent:0,updated_at:new Date().toISOString()};
-  fetch(SUPABASE_URL+'/rest/v1/daily_metrics?staff=eq.'+encodeURIComponent(staff)+'&date=eq.'+encodeURIComponent(date)+'&module=eq.psr',{
-    method:'PATCH',
-    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-    body:JSON.stringify({data:psrData,updated_at:new Date().toISOString()})
-  }).then(function(resp){
-    if(resp.ok||resp.status===204){
-      fetch(SUPABASE_URL+'/rest/v1/daily_metrics?staff=eq.'+encodeURIComponent(staff)+'&date=eq.'+encodeURIComponent(date)+'&module=eq.psr&select=staff',{
-        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
-      }).then(function(r){return r.json()}).then(function(rows){
-        if(rows.length===0){
-          fetch(SUPABASE_URL+'/rest/v1/daily_metrics',{
-            method:'POST',
-            headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
-            body:JSON.stringify(row)
-          }).then(function(r2){
-            if(r2.ok||r2.status===201) showSaveSuccess();
-            else showSaveError();
-          });
-        } else { showSaveSuccess(); }
+  // First check if row exists
+  fetch(SUPABASE_URL+'/rest/v1/daily_metrics?staff=eq.'+encodeURIComponent(staff)+'&date=eq.'+encodeURIComponent(date)+'&module=eq.psr&select=id,staff',{
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+  }).then(function(r){return r.json()}).then(function(rows){
+    if(rows.length>0){
+      // UPDATE existing
+      fetch(SUPABASE_URL+'/rest/v1/daily_metrics?staff=eq.'+encodeURIComponent(staff)+'&date=eq.'+encodeURIComponent(date)+'&module=eq.psr',{
+        method:'PATCH',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body:JSON.stringify({data:psrData,updated_at:new Date().toISOString()})
+      }).then(function(resp){
+        if(resp.ok||resp.status===204){showSaveSuccess();console.log('✅ PSR metrics UPDATED for '+staff+' '+date);}
+        else{resp.text().then(function(t){console.error('PSR PATCH error:',resp.status,t)});showSaveError();}
       });
-    } else { showSaveError(); }
-  }).catch(function(e){showSaveError()});
+    } else {
+      // INSERT new
+      fetch(SUPABASE_URL+'/rest/v1/daily_metrics',{
+        method:'POST',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body:JSON.stringify(row)
+      }).then(function(resp){
+        if(resp.ok||resp.status===201){showSaveSuccess();console.log('✅ PSR metrics INSERTED for '+staff+' '+date);}
+        else{resp.text().then(function(t){console.error('PSR INSERT error:',resp.status,t)});showSaveError();}
+      });
+    }
+  }).catch(function(e){console.error('PSR metrics save error:',e);showSaveError()});
 }
 
 function _dbMetricSave(staff,date,module,calls,emails,faxes){
@@ -5055,7 +5059,16 @@ function renderPsrStaffPage(el,staff){
 const PSR_MANUAL_FIELDS=[{key:'confirmationsCompleted',label:'Confirmations Completed'},{key:'serviceCallsResolved',label:'Service Calls Resolved'},{key:'inboundHandled',label:'Inbound Calls Handled'},{key:'outboundMade',label:'Outbound Calls Made'}];
 function psrMetKey(s,d){return'psr_'+s+'_'+d}
 function getPsrMet(s,d){return psrMetrics[psrMetKey(s,d)]||{}}
-function setPsrMet(s,d,data){psrMetrics[psrMetKey(s,d)]={...data,staff:s,date:d};savePsrMet()}
+function setPsrMet(s,d,data){
+  psrMetrics[psrMetKey(s,d)]={...data,staff:s,date:d};
+  // Save only this specific metric
+  if(_useNewTables){
+    var psrData={};PSR_MANUAL_FIELDS.forEach(function(f){psrData[f.key]=data[f.key]||0});
+    _dbMetricSavePsr(s,d,psrData);
+  } else {
+    _legacySave('cp11_psrmet',psrMetrics);
+  }
+}
 
 function psrAutoMetrics(staff,date){
   return{
@@ -5582,18 +5595,46 @@ function renderNjmvaDashboard(el){
 }
 
 // Full log
+var njmvaLogSort='newest',njmvaLogCarrier='',njmvaLogOutcome='';
 function renderNjmvaLog(el){
-  var h='<div class="page-title">Pre-Certification Log</div><div class="page-subtitle">All '+njmvaPrecerts.length+' submissions</div>';
-  h+='<div style="margin-bottom:12px"><button class="btn-primary" onclick="openNewPrecertModal()" style="font-size:11px;padding:7px 14px">+ New Submission</button></div>';
-  h+='<div class="table-card"><div class="table-header"><h3>All Submissions</h3><div class="table-controls"><input class="search-input" id="njmvaSearch" placeholder="Search..." oninput="renderNjmvaLog(document.getElementById(\'sec-njmva-log\'))"></div></div>';
+  var searchEl=document.getElementById('njmvaSearch');var searchVal=searchEl?searchEl.value:'';
+  // Get unique carriers and outcomes for filters
+  var carriers={};var outcomes={};
+  njmvaPrecerts.forEach(function(p){if(p.carrier)carriers[p.carrier]=true;if(p.outcome)outcomes[p.outcome]=true;});
+  var h='<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">Pre-Certification Log</div><div style="margin-left:auto"><button class="btn-primary" onclick="openNewPrecertModal()" style="font-size:11px;padding:7px 14px">+ New Submission</button></div></div>';
+  h+='<div class="page-subtitle">'+njmvaPrecerts.length+' total submissions</div>';
+  h+='<div class="table-card"><div class="table-header"><h3>All Submissions</h3><div class="table-controls">';
+  // Carrier filter
+  h+='<select class="search-input" style="width:auto" onchange="njmvaLogCarrier=this.value;renderNjmvaLog(document.getElementById(\'sec-njmva-log\'))"><option value="">All Carriers</option>';
+  Object.keys(carriers).sort().forEach(function(c){h+='<option value="'+esc(c)+'"'+(njmvaLogCarrier===c?' selected':'')+'>'+esc(c)+'</option>';});
+  h+='</select>';
+  // Outcome filter
+  h+='<select class="search-input" style="width:auto" onchange="njmvaLogOutcome=this.value;renderNjmvaLog(document.getElementById(\'sec-njmva-log\'))"><option value="">All Outcomes</option>';
+  var outcomeLabels={approved:'Approved',denied_medical:'Denied — Medical',denied_eligibility:'Denied — Eligibility',denied_other:'Denied — Other',no_response:'No Response',not_required:'Not Required',no_show:'No-Show',cancelled:'Cancelled',rescheduled:'Rescheduled'};
+  Object.keys(outcomes).sort().forEach(function(o){h+='<option value="'+esc(o)+'"'+(njmvaLogOutcome===o?' selected':'')+'>'+esc(outcomeLabels[o]||o)+'</option>';});
+  h+='</select>';
+  // Sort
+  h+='<select class="search-input" style="width:auto" onchange="njmvaLogSort=this.value;renderNjmvaLog(document.getElementById(\'sec-njmva-log\'))"><option value="newest"'+(njmvaLogSort==='newest'?' selected':'')+'>Newest First</option><option value="oldest"'+(njmvaLogSort==='oldest'?' selected':'')+'>Oldest First</option><option value="patient"'+(njmvaLogSort==='patient'?' selected':'')+'>Patient A–Z</option><option value="carrier"'+(njmvaLogSort==='carrier'?' selected':'')+'>By Carrier</option></select>';
+  // Search
+  h+='<input class="search-input" id="njmvaSearch" value="'+esc(searchVal)+'" placeholder="Search..." oninput="renderNjmvaLog(document.getElementById(\'sec-njmva-log\'))">';
+  h+='</div></div>';
   h+='<div class="table-scroll"><table class="tbl" style="min-width:1100px"><thead><tr><th>Patient</th><th>Carrier</th><th>DOS Range</th><th>CPT</th><th>Submitted</th><th>Outcome</th><th>Appeal</th><th>Patient Seen?</th><th>DOS Paid?</th><th>Post-Svc</th></tr></thead><tbody>';
-  var search=(document.getElementById('njmvaSearch')||{}).value||'';search=search.toLowerCase();
-  var list=njmvaPrecerts.slice().sort(function(a,b){return(b.submission_date||b.created_date||'').localeCompare(a.submission_date||a.created_date||'')});
-  if(search)list=list.filter(function(p){return(p.patient_name||'').toLowerCase().includes(search)||(p.carrier||'').toLowerCase().includes(search)||(p.cpt_codes||'').toLowerCase().includes(search)});
+  var search=searchVal.toLowerCase();
+  var list=njmvaPrecerts.slice();
+  if(njmvaLogCarrier)list=list.filter(function(p){return p.carrier===njmvaLogCarrier;});
+  if(njmvaLogOutcome)list=list.filter(function(p){return p.outcome===njmvaLogOutcome;});
+  if(search)list=list.filter(function(p){return(p.patient_name||'').toLowerCase().includes(search)||(p.carrier||'').toLowerCase().includes(search)||(p.cpt_codes||'').toLowerCase().includes(search)||(p.dos_range||'').toLowerCase().includes(search)||(p.notes||'').toLowerCase().includes(search)});
+  if(njmvaLogSort==='newest')list.sort(function(a,b){return(b.submission_date||b.created_date||'').localeCompare(a.submission_date||a.created_date||'')});
+  else if(njmvaLogSort==='oldest')list.sort(function(a,b){return(a.submission_date||a.created_date||'').localeCompare(b.submission_date||b.created_date||'')});
+  else if(njmvaLogSort==='patient')list.sort(function(a,b){return(a.patient_name||'').localeCompare(b.patient_name||'')});
+  else if(njmvaLogSort==='carrier')list.sort(function(a,b){return(a.carrier||'').localeCompare(b.carrier||'')});
+  if(list.length===0)h+='<tr><td colspan="10" style="text-align:center;color:var(--gray-400);padding:20px">No submissions match filters</td></tr>';
   list.forEach(function(p){
-    h+='<tr onclick="editPrecert(\''+p.id+'\')" style="cursor:pointer"><td style="font-weight:600;font-size:12px">'+esc(p.patient_name||'—')+'</td><td style="font-size:11px">'+esc(p.carrier||'—')+'</td><td style="font-size:10px">'+esc(p.dos_range||'—')+'</td><td style="font-size:10px">'+esc(p.cpt_codes||'—')+'</td><td style="font-size:11px">'+fmtDate(p.submission_date)+'</td><td style="font-size:11px">'+(p.outcome||'<span style="color:var(--gold)">Pending</span>')+'</td><td style="font-size:10px">'+(p.pre_service_appeal_date?'Sent '+fmtDate(p.pre_service_appeal_date):(p.pre_service_appeal_needed?'<span style="color:var(--red)">Needed</span>':'—'))+'</td><td style="font-size:10px">'+(p.patient_seen?'Yes':'—')+'</td><td style="font-size:10px">'+esc(p.dos_paid||'—')+'</td><td style="font-size:10px">'+(p.post_service_needed?'Post-Svc':(p.arbitration_needed?'<span style="color:var(--red)">Arb</span>':'—'))+'</td></tr>';
+    var outLabel=p.outcome?(outcomeLabels[p.outcome]||p.outcome):'<span style="color:var(--gold)">Pending</span>';
+    h+='<tr onclick="editPrecert(\''+p.id+'\')" style="cursor:pointer"><td style="font-weight:600;font-size:12px">'+esc(p.patient_name||'—')+'</td><td style="font-size:11px">'+esc(p.carrier||'—')+'</td><td style="font-size:10px">'+esc(p.dos_range||'—')+'</td><td style="font-size:10px">'+esc(p.cpt_codes||'—')+'</td><td style="font-size:11px">'+fmtDate(p.submission_date)+'</td><td style="font-size:11px">'+outLabel+'</td><td style="font-size:10px">'+(p.pre_service_appeal_date?'Sent '+fmtDate(p.pre_service_appeal_date):(p.pre_service_appeal_needed?'<span style="color:var(--red)">Needed</span>':'—'))+'</td><td style="font-size:10px">'+(p.patient_seen?'Yes':'—')+'</td><td style="font-size:10px">'+esc(p.dos_paid||'—')+'</td><td style="font-size:10px">'+(p.post_service_needed?'Post-Svc':(p.arbitration_needed?'<span style="color:var(--red)">Arb</span>':'—'))+'</td></tr>';
   });
-  h+='</tbody></table></div></div>';
+  h+='</tbody></table></div>';
+  h+='<div style="padding:8px 18px;font-size:10px;color:var(--gray-500);border-top:1px solid var(--gray-200)">Showing '+list.length+' of '+njmvaPrecerts.length+' submissions</div></div>';
   el.innerHTML=h;
 }
 
@@ -5618,19 +5659,20 @@ function renderNjmvaAlerts(el){
       h+='<div style="font-size:11px;color:var(--gray-500);margin-top:2px">Appointment: '+fmtDate(a.apptDate)+' · '+esc(a.location||'—');
       if(a.daysUntilAppt<=0)h+=' · <span style="color:var(--red);font-weight:700">TODAY / PAST DUE</span>';
       else h+=' · '+a.daysUntilAppt+' days away';
-      h+='</div><div style="font-size:11px;color:var(--navy);margin-top:4px">File pre-certification for this patient.</div>';
+      h+='</div>';
+      h+='<div style="margin-top:8px"><button class="btn-primary" onclick="event.stopPropagation();openNewPrecertModal(\''+a.id+'\')" style="font-size:11px;padding:5px 14px">File Pre-Cert →</button></div>';
     } else if(a.type==='appt_passed'){
       h+='<div style="font-weight:700;color:var(--navy)">'+esc(a.patientName)+'</div>';
       h+='<div style="font-size:11px;color:var(--gray-500);margin-top:2px">Appointment on '+fmtDate(a.apptDate)+' passed '+a.daysPast+' day'+(a.daysPast!==1?'s':'')+' ago.</div>';
-      h+='<div style="font-size:11px;color:var(--gold);font-weight:600;margin-top:4px">Enter next appointment date and ensure pre-cert is filed.</div>';
+      h+='<div style="margin-top:8px"><button class="btn-primary" onclick="event.stopPropagation();editPrecert(\''+a.precertId+'\')" style="font-size:11px;padding:5px 14px;background:var(--gold)">Enter Next Appt Date →</button></div>';
     } else if(a.type==='needs_appeal'){
       h+='<div style="font-weight:700;color:var(--navy)">'+esc(a.patientName)+'</div>';
-      h+='<div style="font-size:11px;color:var(--gray-500);margin-top:2px">Carrier: '+esc(a.carrier||'—')+' · Submitted '+a.submittedDaysAgo+' days ago</div>';
-      h+='<div style="font-size:11px;color:var(--red);font-weight:600;margin-top:4px">No response — pre-service appeal needed.</div>';
+      h+='<div style="font-size:11px;color:var(--gray-500);margin-top:2px">Carrier: '+esc(a.carrier||'—')+' · Submitted '+a.submittedDaysAgo+' days ago — no response.</div>';
+      h+='<div style="margin-top:8px"><button class="btn-primary" onclick="event.stopPropagation();editPrecert(\''+a.precertId+'\')" style="font-size:11px;padding:5px 14px;background:var(--red)">File Pre-Service Appeal →</button></div>';
     } else if(a.type==='appeal_followup'){
       h+='<div style="font-weight:700;color:var(--navy)">'+esc(a.patientName)+'</div>';
-      h+='<div style="font-size:11px;color:var(--gray-500);margin-top:2px">Carrier: '+esc(a.carrier||'—')+' · Appeal sent '+a.daysSinceAppeal+' days ago</div>';
-      h+='<div style="font-size:11px;color:var(--gold);font-weight:600;margin-top:4px">Follow up on pre-service appeal response.</div>';
+      h+='<div style="font-size:11px;color:var(--gray-500);margin-top:2px">Carrier: '+esc(a.carrier||'—')+' · Appeal sent '+a.daysSinceAppeal+' days ago.</div>';
+      h+='<div style="margin-top:8px"><button class="btn-primary" onclick="event.stopPropagation();editPrecert(\''+a.precertId+'\')" style="font-size:11px;padding:5px 14px;background:var(--gold)">Update Appeal Outcome →</button></div>';
     }
 
     h+='</div></div></div>';
@@ -5650,33 +5692,65 @@ function renderNjmvaByStage(el,stage,title){
   el.innerHTML=h;
 }
 
-// Carrier contacts (from the NJ MVA Guide)
+// Carrier contacts — stored in memory, editable
+var njmvaCarriers=[
+  {name:'USAA',fax:'(877) 395-7127',phone:'877-647-0012',notes:'Insight Services Group (ISG), P.O. Box 5000, Daphne, AL 36526'},
+  {name:'Allstate NJ',fax:'856-910-2501',phone:'800-726-6033',notes:'Via MedLogix. Email: precert@medlogix.com'},
+  {name:'NJ Manufacturers',fax:'609-493-1565',phone:'609-883-1300',notes:'Appeal fax: 609-963-6075'},
+  {name:'Progressive',fax:'866-841-8312',phone:'',notes:'Pre-certs & pre-service appeals'},
+  {name:'Geico Insurance',fax:'866-257-2323',phone:'',notes:'Submit within 30 days of denial'},
+  {name:'State Farm',fax:'(856) 910-2501',phone:'',notes:'Via MedLogix'},
+  {name:'Plymouth Rock Assurance',fax:'732-978-7100',phone:'',notes:'Initial consults may not need pre-cert. Respond within 14 days.'},
+  {name:'Cure Auto Insurance',fax:'856-910-2501',phone:'800-229-9151',notes:'Via MedLogix'},
+  {name:'AAA Insurance',fax:'866-351-6026',phone:'888-980-9422',notes:''},
+  {name:'National General',fax:'866-327-9318',phone:'800-407-0704',notes:'Email: njdprplus@reviewstat.com'},
+  {name:'Liberty Mutual',fax:'888-325-8127',phone:'',notes:''},
+  {name:'Travelers Insurance',fax:'866-296-4180',phone:'800-238-6225',notes:'Office visits/x-rays don\'t need pre-cert'},
+  {name:'Farmers Insurance',fax:'856-910-2501',phone:'856-910-2500',notes:'Via MedLogix'},
+  {name:'Good2Go',fax:'610-832-1147',phone:'888-303-3430',notes:''},
+  {name:'Bristol West',fax:'(856) 910-2501',phone:'',notes:'Via MedLogix'},
+  {name:'The Hartford',fax:'866-771-6001',phone:'800-423-6789',notes:'Office visits/x-rays don\'t need pre-cert'},
+  {name:'National Specialty Insurance',fax:'866-513-3351',phone:'888-851-7473',notes:''},
+  {name:'Encompass Insurance',fax:'856-910-2501',phone:'800-293-9795',notes:'Via MedLogix'}
+];
+var njmvaCarrierSearch='',njmvaCarrierSort='name';
 function renderNjmvaCarriers(el){
-  var carriers=[
-    {name:'USAA',fax:'(877) 395-7127',phone:'877-647-0012',notes:'Insight Services Group (ISG), P.O. Box 5000, Daphne, AL 36526'},
-    {name:'Allstate NJ',fax:'856-910-2501',phone:'800-726-6033',notes:'Via MedLogix. Email: precert@medlogix.com'},
-    {name:'NJ Manufacturers',fax:'609-493-1565',phone:'609-883-1300',notes:'Appeal fax: 609-963-6075'},
-    {name:'Progressive',fax:'866-841-8312',phone:'',notes:'Pre-certs & pre-service appeals'},
-    {name:'Geico',fax:'866-257-2323',phone:'',notes:'Submit within 30 days of denial'},
-    {name:'State Farm',fax:'(856) 910-2501',phone:'',notes:'Via MedLogix'},
-    {name:'Plymouth Rock',fax:'732-978-7100',phone:'',notes:'Initial consults may not need pre-cert. Respond within 14 days.'},
-    {name:'Cure Auto',fax:'856-910-2501',phone:'800-229-9151',notes:'Via MedLogix'},
-    {name:'AAA Insurance',fax:'866-351-6026',phone:'888-980-9422',notes:''},
-    {name:'National General',fax:'866-327-9318',phone:'800-407-0704',notes:'Email: njdprplus@reviewstat.com'},
-    {name:'Liberty Mutual',fax:'888-325-8127',phone:'',notes:''},
-    {name:'Travelers',fax:'866-296-4180',phone:'800-238-6225',notes:'Office visits/x-rays don\'t need pre-cert'},
-    {name:'Farmers Insurance',fax:'856-910-2501',phone:'856-910-2500',notes:'Via MedLogix'},
-    {name:'Good2Go',fax:'610-832-1147',phone:'888-303-3430',notes:''},
-    {name:'Bristol West',fax:'(856) 910-2501',phone:'',notes:'Via MedLogix'},
-    {name:'The Hartford',fax:'866-771-6001',phone:'800-423-6789',notes:'Office visits/x-rays don\'t need pre-cert'},
-    {name:'National Specialty',fax:'866-513-3351',phone:'888-851-7473',notes:''},
-    {name:'Encompass',fax:'856-910-2501',phone:'800-293-9795',notes:'Via MedLogix'}
-  ];
-  var h='<div class="page-title">NJ Carrier Contacts</div><div class="page-subtitle">Pre-certification fax numbers and contact info</div>';
-  h+='<div class="table-card"><div class="table-scroll"><table class="tbl"><thead><tr><th>Carrier</th><th>Fax</th><th>Phone</th><th>Notes</th></tr></thead><tbody>';
-  carriers.forEach(function(c){h+='<tr><td style="font-weight:600">'+esc(c.name)+'</td><td style="font-size:11px">'+esc(c.fax)+'</td><td style="font-size:11px">'+esc(c.phone||'—')+'</td><td style="font-size:10px">'+esc(c.notes||'')+'</td></tr>';});
-  h+='</tbody></table></div></div>';
+  var searchEl=document.getElementById('carrierSearch');var searchVal=searchEl?searchEl.value:'';
+  var h='<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">NJ Carrier Contacts</div><div style="margin-left:auto"><button class="btn-primary" onclick="addNewCarrier()" style="font-size:11px;padding:7px 14px">+ Add Carrier</button></div></div>';
+  h+='<div class="page-subtitle">Pre-certification fax numbers and contact info</div>';
+  h+='<div class="table-card"><div class="table-header"><h3>Carrier Directory</h3><div class="table-controls">';
+  h+='<select class="search-input" style="width:auto" onchange="njmvaCarrierSort=this.value;renderNjmvaCarriers(document.getElementById(\'sec-njmva-carriers\'))"><option value="name"'+(njmvaCarrierSort==='name'?' selected':'')+'>Name A–Z</option><option value="name_desc"'+(njmvaCarrierSort==='name_desc'?' selected':'')+'>Name Z–A</option></select>';
+  h+='<input class="search-input" id="carrierSearch" value="'+esc(searchVal)+'" placeholder="Search carriers..." oninput="renderNjmvaCarriers(document.getElementById(\'sec-njmva-carriers\'))">';
+  h+='</div></div>';
+  h+='<div class="table-scroll"><table class="tbl"><thead><tr><th>Carrier</th><th>Fax</th><th>Phone</th><th>Notes</th><th style="width:40px"></th></tr></thead><tbody>';
+  var search=searchVal.toLowerCase();
+  var list=njmvaCarriers.slice();
+  if(search)list=list.filter(function(c){return c.name.toLowerCase().includes(search)||c.fax.toLowerCase().includes(search)||(c.notes||'').toLowerCase().includes(search)});
+  if(njmvaCarrierSort==='name')list.sort(function(a,b){return a.name.localeCompare(b.name)});
+  else list.sort(function(a,b){return b.name.localeCompare(a.name)});
+  list.forEach(function(c,i){
+    h+='<tr><td style="font-weight:600">'+esc(c.name)+'</td><td style="font-size:11px">'+esc(c.fax)+'</td><td style="font-size:11px">'+esc(c.phone||'—')+'</td><td style="font-size:10px;max-width:300px">'+esc(c.notes||'')+'</td><td><button onclick="editCarrier('+njmvaCarriers.indexOf(c)+')" style="background:none;border:none;cursor:pointer;font-size:12px" title="Edit">✏️</button></td></tr>';
+  });
+  h+='</tbody></table></div>';
+  h+='<div style="padding:8px 18px;font-size:10px;color:var(--gray-500);border-top:1px solid var(--gray-200)">'+list.length+' carriers</div></div>';
   el.innerHTML=h;
+}
+function addNewCarrier(){
+  var name=prompt('Carrier Name:');if(!name)return;
+  var fax=prompt('Fax Number:')||'';
+  var phone=prompt('Phone Number:')||'';
+  var notes=prompt('Notes (requirements, DPRP info, etc.):')||'';
+  njmvaCarriers.push({name:name,fax:fax,phone:phone,notes:notes});
+  renderNjmvaCarriers(document.getElementById('sec-njmva-carriers'));
+}
+function editCarrier(idx){
+  var c=njmvaCarriers[idx];if(!c)return;
+  var name=prompt('Carrier Name:',c.name);if(!name)return;
+  var fax=prompt('Fax Number:',c.fax)||'';
+  var phone=prompt('Phone Number:',c.phone)||'';
+  var notes=prompt('Notes:',c.notes)||'';
+  njmvaCarriers[idx]={name:name,fax:fax,phone:phone,notes:notes};
+  renderNjmvaCarriers(document.getElementById('sec-njmva-carriers'));
 }
 
 // Analytics
