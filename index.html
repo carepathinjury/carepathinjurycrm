@@ -297,8 +297,9 @@
   <div class="top-tabs" id="topTabs">
     <div class="top-tab active" data-module="crm" onclick="switchModule('crm')">Referral CRM</div>
     <div class="top-tab" data-module="cm" onclick="switchModule('cm')">Case Management</div>
-    <div class="top-tab" data-module="mkt" onclick="switchModule('mkt')">Marketing Pipeline</div>
+    <div class="top-tab" data-module="njmva" onclick="switchModule('njmva')">NJ MVA Tracking</div>
     <div class="top-tab" data-module="psr" onclick="switchModule('psr')">Call Center</div>
+    <div class="top-tab" data-module="mkt" onclick="switchModule('mkt')">Marketing Pipeline</div>
   </div>
   <div class="top-right">
     <span class="top-user" id="topUser"></span>
@@ -493,9 +494,105 @@
 </div>
 </div>
 
+<div class="module" id="module-njmva">
+<div class="app-layout">
+<nav class="sidebar" id="njmvaSidebar">
+  <div class="nav-section">
+    <div class="nav-section-label">NJ MVA Tracking</div>
+    <div class="nav-item active" data-page="njmva-dashboard" onclick="njmvaNav('njmva-dashboard')"><div class="nav-icon">📊</div> Dashboard <span class="nav-badge gold" id="njmvaAlertBadge" style="display:none">0</span></div>
+    <div class="nav-item" data-page="njmva-alerts" onclick="njmvaNav('njmva-alerts')"><div class="nav-icon">⚠️</div> Alerts</div>
+    <div class="nav-item" data-page="njmva-log" onclick="njmvaNav('njmva-log')"><div class="nav-icon">📋</div> Pre-Cert Log</div>
+    <div class="nav-item" data-page="njmva-carriers" onclick="njmvaNav('njmva-carriers')"><div class="nav-icon">📇</div> Carrier Contacts</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Pipeline</div>
+    <div class="nav-item" data-page="njmva-pending" onclick="njmvaNav('njmva-pending')"><div class="nav-icon">⏳</div> Pending Pre-Cert</div>
+    <div class="nav-item" data-page="njmva-appeals" onclick="njmvaNav('njmva-appeals')"><div class="nav-icon">📄</div> Appeals</div>
+    <div class="nav-item" data-page="njmva-arbitration" onclick="njmvaNav('njmva-arbitration')"><div class="nav-icon">⚖️</div> Arbitration</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Metrics</div>
+    <div class="nav-item" id="njmvaNavMgrDash" data-page="njmva-analytics" onclick="if(currentUser==='Manager'||userRole==='nj_mva'){njmvaNav('njmva-analytics')}else{promptPIN('njmva-analytics')}" style="display:none"><div class="nav-icon">📊</div> Analytics</div>
+  </div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential</p></div>
+</nav>
+<div class="main-content" id="njmvaMain">
+  <div class="section active" id="sec-njmva-dashboard"></div>
+  <div class="section" id="sec-njmva-alerts"></div>
+  <div class="section" id="sec-njmva-log"></div>
+  <div class="section" id="sec-njmva-carriers"></div>
+  <div class="section" id="sec-njmva-pending"></div>
+  <div class="section" id="sec-njmva-appeals"></div>
+  <div class="section" id="sec-njmva-arbitration"></div>
+  <div class="section" id="sec-njmva-analytics"></div>
+  <div class="section" id="sec-njmva-detail"></div>
+</div>
+</div>
+</div>
+
 </div><!-- end app-wrapper -->
 
 <!-- ══════════ MODALS ══════════ -->
+
+<!-- NJ MVA Pre-Cert Modal -->
+<div class="modal-overlay" id="precertModal">
+<div class="modal" style="width:720px;max-height:90vh;overflow-y:auto">
+  <div class="modal-header" style="background:linear-gradient(135deg,#1a2332,#2c3e50);color:white"><h3 id="precertModalTitle" style="color:white">New Pre-Certification</h3><span class="modal-close" onclick="closePrecertModal()" style="color:white">&times;</span></div>
+  <div class="modal-body" style="padding:0">
+    
+    <!-- Section 1: Patient & Carrier -->
+    <div style="padding:16px 20px;border-bottom:1px solid var(--gray-200)">
+      <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;margin-bottom:10px">📋 Patient & Carrier Information</div>
+      <div class="form-row"><label>Patient <span style="color:var(--red)">*</span> <span style="color:var(--gray-400);font-size:10px" id="precertPatientInfo"></span></label><select id="pcRefId" onchange="fillPrecertFromRef()" style="font-size:13px"><option value="">— Select NJ MVA Patient —</option></select></div>
+      <div class="form-row two-col"><div><label>Insurance Carrier <span style="color:var(--red)">*</span></label><input id="pcCarrier" placeholder="e.g. Geico, Progressive, USAA..."></div><div><label>Entity / Location</label><input id="pcLocation"></div></div>
+    </div>
+
+    <!-- Section 2: Appointment & Codes -->
+    <div style="padding:16px 20px;border-bottom:1px solid var(--gray-200)">
+      <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;margin-bottom:10px">📅 Appointment & Procedure Details</div>
+      <div class="form-row two-col"><div><label>Appointment Date</label><input type="date" id="pcApptDate"></div><div><label>Next Appointment Date</label><input type="date" id="pcNextApptDate"></div></div>
+      <div class="form-row two-col"><div><label>DOS Range Included</label><input id="pcDosRange" placeholder="e.g. 05/20/26 - 06/20/26"></div><div><label>CPT Codes for Pre-Cert</label><input id="pcCptCodes" placeholder="e.g. 99214, 20553, E0221"></div></div>
+    </div>
+
+    <!-- Section 3: Submission -->
+    <div style="padding:16px 20px;border-bottom:1px solid var(--gray-200)">
+      <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;margin-bottom:10px">📤 Pre-Certification Submission</div>
+      <div class="form-row two-col"><div><label>Submission Date <span style="color:var(--red)">*</span></label><input type="date" id="pcSubmitDate"></div><div><label>Resubmission Date</label><input type="date" id="pcResubDate"></div></div>
+      <div class="form-row two-col"><div><label>Outcome</label><select id="pcOutcome" style="font-size:13px"><option value="">⏳ Pending Response</option><option value="approved">✅ Approved / Pre-Certified</option><option value="denied_medical">❌ Denied — Medical Necessity</option><option value="denied_eligibility">❌ Denied — Eligibility</option><option value="denied_other">❌ Denied — Other</option><option value="no_response">⚠️ No Response</option><option value="not_required">ℹ️ Pre-Cert Not Required</option><option value="no_show">🚫 Patient No-Show</option><option value="cancelled">🚫 Patient Cancelled</option><option value="rescheduled">🔄 Rescheduled</option></select></div><div><label>Outcome Date</label><input type="date" id="pcOutcomeDate"></div></div>
+      <div class="form-row"><label>Outcome Notes / Next Steps</label><textarea id="pcOutcomeNotes" rows="2" placeholder="Details about the outcome, insurer response, etc."></textarea></div>
+    </div>
+
+    <!-- Section 4: Pre-Service Appeal -->
+    <div style="padding:16px 20px;border-bottom:1px solid var(--gray-200);background:rgba(200,151,58,0.03)">
+      <div style="font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;margin-bottom:10px">📄 Pre-Service Appeal</div>
+      <div class="form-row two-col"><div><label>Pre-Service Appeal</label><select id="pcAppealNeeded" style="font-size:13px"><option value="no">Not Needed</option><option value="yes">Needed — Not Yet Sent</option><option value="sent">Sent</option></select></div><div><label>Date Sent</label><input type="date" id="pcAppealDate"></div></div>
+      <div class="form-row"><label>Appeal Outcome</label><input id="pcAppealOutcome" placeholder="e.g. Approved, Denied, Pending response..."></div>
+    </div>
+
+    <!-- Section 5: Patient / Billing Status -->
+    <div style="padding:16px 20px;border-bottom:1px solid var(--gray-200)">
+      <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;margin-bottom:10px">💰 Patient Seen & Billing</div>
+      <div class="form-row two-col"><div><label>Was Patient Seen for DOS Listed?</label><select id="pcPatientSeen" style="font-size:13px"><option value="">— Select —</option><option value="yes">Yes</option><option value="no">No</option><option value="no_show">No — Patient No-Show</option><option value="cancelled">No — Cancelled</option><option value="rescheduled">No — Rescheduled</option></select></div><div><label>DOS Paid?</label><input id="pcDosPaid" placeholder="Yes, No, Partial, Deductible..."></div></div>
+    </div>
+
+    <!-- Section 6: Post-Service / Arbitration -->
+    <div style="padding:16px 20px;border-bottom:1px solid var(--gray-200);background:rgba(192,57,43,0.03)">
+      <div style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;margin-bottom:10px">⚖️ Post-Service Appeal / Arbitration</div>
+      <div class="form-row two-col"><div><label>Post-Service Action</label><select id="pcPostService" style="font-size:13px"><option value="no">None Needed</option><option value="post_appeal">Post-Service Appeal (Michelle)</option><option value="arbitration">Sent to Arbitration</option></select></div><div><label>Date</label><input type="date" id="pcPostDate"></div></div>
+      <div class="form-row"><label>Arbitration Outcome</label><input id="pcArbOutcome" placeholder="e.g. Won, Lost, Pending..."></div>
+    </div>
+
+    <!-- Section 7: Notes -->
+    <div style="padding:16px 20px">
+      <div style="font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin-bottom:10px">📝 Additional Notes</div>
+      <div class="form-row"><textarea id="pcNotes" rows="3" placeholder="Any other notes, follow-up info, DPRP details, etc."></textarea></div>
+    </div>
+
+  </div>
+  <div class="modal-footer"><button class="btn-delete" id="btnDeletePrecert" style="display:none" onclick="deletePrecert()">Delete</button><button class="btn-cancel" onclick="closePrecertModal()">Cancel</button><button class="btn-save" onclick="savePrecert()">Save Pre-Cert</button></div>
+</div>
+</div>
+
 <!-- Referral Modal -->
 <div class="modal-overlay" id="referralModal">
   <div class="modal" style="width:720px;max-height:90vh;overflow-y:auto">
@@ -1109,6 +1206,7 @@ async function _loadFromSupabase(){
     }
   }catch(e){console.warn('⚠️ Load failed:',e);}
   _supabaseReady=true;
+  loadPrecerts();
 }
 
 // ─── Save functions ────────────────────────────────────────────────
@@ -1733,6 +1831,7 @@ function loginAs(name, role) {
   if (role === 'marketing') switchModule('mkt');
   else if (role === 'case_mgr') switchModule('cm');
   else if (role === 'psr') switchModule('psr');
+  else if (role === 'nj_mva') switchModule('njmva');
   else switchModule('crm');
   // Delayed badge refresh to ensure DOM is ready
   setTimeout(function(){updateAllBadges();},500);
@@ -1818,6 +1917,11 @@ function setupUIForRole() {
   document.getElementById('cmNavMyMetrics').style.display = CM_STAFF.includes(currentUser) ? 'flex' : 'none';
   document.getElementById('psrNavMyMetrics').style.display = PSR_STAFF.includes(currentUser) ? 'flex' : 'none';
   document.getElementById('psrNavMgrDash').style.display = showMgr ? 'flex' : 'none';
+  // NJ MVA access
+  var njmvaTab=document.querySelector('.top-tab[data-module="njmva"]');
+  if(njmvaTab)njmvaTab.style.display=(userRole==='nj_mva'||currentUser==='Manager')?'':'none';
+  var njmvaMgr=document.getElementById('njmvaNavMgrDash');
+  if(njmvaMgr)njmvaMgr.style.display=(currentUser==='Manager'||userRole==='nj_mva')?'flex':'none';
 }
 
 function switchModule(mod) {
@@ -1849,6 +1953,7 @@ function renderActiveModule() {
   else if (activeModule === 'cm') renderCmPage(cmCurrentPage);
   else if (activeModule === 'mkt') renderMktPage(mktCurrentPage);
   else if (activeModule === 'psr') renderPsrPage(psrCurrentPage);
+  else if (activeModule === 'njmva') { var el=document.getElementById('sec-'+njmvaCurrentPage);if(el)renderNjmvaPage(njmvaCurrentPage,el); }
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -2010,6 +2115,7 @@ function cmAlerts() {
 function updateAllBadges() {
   try {
   const ca = crmAlerts(), cma = cmAlerts();
+  updateNjmvaBadges();
   const openTk = tickets.filter(t=>t.status!=='Resolved').length;
   const total = ca.length + cma.length + openTk;
   console.log('Badge update — CRM:',ca.length,'CM:',cma.length,'Tk:',openTk);
@@ -5349,13 +5455,409 @@ function ofFindOffices(){
 
 // PIN
 // ══════════════════════════════════════════════════════════════════════
-function promptPIN(targetPage){if(managerUnlocked){if(targetPage.startsWith('crm-'))crmNav(targetPage);else if(targetPage.startsWith('psr-'))psrNav(targetPage);else cmNav(targetPage);return;}pendingPINPage=targetPage;document.getElementById('pinModal').classList.add('show');document.getElementById('pinInput').value='';document.getElementById('pinError').style.display='none';setTimeout(()=>document.getElementById('pinInput').focus(),200)}
+function promptPIN(targetPage){if(managerUnlocked){if(targetPage.startsWith('crm-'))crmNav(targetPage);else if(targetPage.startsWith('psr-'))psrNav(targetPage);else if(targetPage.startsWith('njmva-'))njmvaNav(targetPage);else cmNav(targetPage);return;}pendingPINPage=targetPage;document.getElementById('pinModal').classList.add('show');document.getElementById('pinInput').value='';document.getElementById('pinError').style.display='none';setTimeout(()=>document.getElementById('pinInput').focus(),200)}
 function closePinModal(){document.getElementById('pinModal').classList.remove('show');if(currentUser==='Manager'&&!managerUnlocked)logout();}
-function verifyPIN(){var pin='0824';if(document.getElementById('pinInput').value===pin){managerUnlocked=true;document.getElementById('pinModal').classList.remove('show');setupUIForRole();if(pendingPINPage){if(pendingPINPage.startsWith('crm-'))crmNav(pendingPINPage);else if(pendingPINPage.startsWith('psr-'))psrNav(pendingPINPage);else cmNav(pendingPINPage);}}else{document.getElementById('pinError').style.display='block';document.getElementById('pinInput').value='';document.getElementById('pinInput').focus();}}
+function verifyPIN(){var pin='0824';if(document.getElementById('pinInput').value===pin){managerUnlocked=true;document.getElementById('pinModal').classList.remove('show');setupUIForRole();if(pendingPINPage){if(pendingPINPage.startsWith('crm-'))crmNav(pendingPINPage);else if(pendingPINPage.startsWith('psr-'))psrNav(pendingPINPage);else if(pendingPINPage.startsWith('njmva-'))njmvaNav(pendingPINPage);else cmNav(pendingPINPage);}}else{document.getElementById('pinError').style.display='block';document.getElementById('pinInput').value='';document.getElementById('pinInput').focus();}}
 
 // ══════════════════════════════════════════════════════════════════════
 // SEED DATA
 // ══════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════
+// NJ MVA PRE-CERTIFICATION TRACKING MODULE
+// ══════════════════════════════════════════════════════════════════════
+var njmvaPrecerts=[];
+var njmvaCurrentPage='njmva-dashboard';
+var editingPrecertId=null;
+
+// Load precerts from Supabase
+async function loadPrecerts(){
+  if(!_useNewTables)return;
+  try{
+    var resp=await fetch(SUPABASE_URL+'/rest/v1/nj_mva_precerts?select=*',{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+    if(resp.ok){njmvaPrecerts=await resp.json();console.log('✅ Loaded '+njmvaPrecerts.length+' NJ MVA pre-certs');}
+  }catch(e){console.warn('NJ MVA load error:',e);}
+}
+
+function njmvaNav(page){
+  njmvaCurrentPage=page;
+  document.querySelectorAll('#module-njmva .section').forEach(function(s){s.classList.remove('active')});
+  document.querySelectorAll('#njmvaSidebar .nav-item').forEach(function(n){n.classList.remove('active')});
+  var nav=document.querySelector('#njmvaSidebar .nav-item[data-page="'+page+'"]');if(nav)nav.classList.add('active');
+  var el=document.getElementById('sec-'+page);if(el){el.classList.add('active');renderNjmvaPage(page,el);}
+}
+
+function renderNjmvaPage(page,el){
+  if(page==='njmva-dashboard')renderNjmvaDashboard(el);
+  else if(page==='njmva-alerts')renderNjmvaAlerts(el);
+  else if(page==='njmva-log')renderNjmvaLog(el);
+  else if(page==='njmva-carriers')renderNjmvaCarriers(el);
+  else if(page==='njmva-pending')renderNjmvaByStage(el,'pending_precert','Pending Pre-Certification');
+  else if(page==='njmva-appeals')renderNjmvaByStage(el,'appeal','Appeals in Progress');
+  else if(page==='njmva-arbitration')renderNjmvaByStage(el,'arbitration','Arbitration Cases');
+  else if(page==='njmva-analytics')renderNjmvaAnalytics(el);
+}
+
+// NJ MVA Alerts based on appointment dates and submission cadence
+function njmvaAlerts(){
+  var alerts=[];
+  var now=today();
+  refs.filter(function(r){return r.caseType==='NJ MVA'&&r.apptDate}).forEach(function(r){
+    var hasPrecert=njmvaPrecerts.some(function(p){return p.ref_id===r.id});
+    var daysUntilAppt=daysBtw(now,r.apptDate);
+    
+    // Alert 1: New NJ MVA referral scheduled — file pre-cert
+    if(!hasPrecert&&daysUntilAppt>=-1){
+      alerts.push({id:r.id,type:'new_njmva',patientName:r.patientName,apptDate:r.apptDate,location:r.location,daysUntilAppt:daysUntilAppt,priority:daysUntilAppt<=2?'urgent':'normal'});
+    }
+    
+    // Alert 2: Appointment has passed — enter next appointment date
+    if(daysUntilAppt<=-1){
+      // Check if there's a precert with a next_appt_date set
+      var latestPrecert=njmvaPrecerts.filter(function(p){return p.ref_id===r.id}).sort(function(a,b){return(b.submission_date||'').localeCompare(a.submission_date||'');})[0];
+      if(latestPrecert&&!latestPrecert.next_appt_date){
+        alerts.push({id:r.id,precertId:latestPrecert.id,type:'appt_passed',patientName:r.patientName,apptDate:r.apptDate,daysPast:Math.abs(daysUntilAppt)});
+      }
+    }
+  });
+  
+  // Alert 3: No response after 3 business days — pre-service appeal needed
+  njmvaPrecerts.forEach(function(p){
+    if(p.submission_date&&!p.outcome&&p.stage==='pending_precert'){
+      var daysSince=daysBtw(p.submission_date,now);
+      if(daysSince>=3){
+        alerts.push({id:p.ref_id,precertId:p.id,type:'needs_appeal',patientName:p.patient_name,carrier:p.carrier,submittedDaysAgo:daysSince});
+      }
+    }
+  });
+  
+  // Alert 4: Pre-service appeal sent, waiting for response (7+ days)
+  njmvaPrecerts.forEach(function(p){
+    if(p.pre_service_appeal_date&&!p.pre_service_appeal_outcome&&p.stage==='appeal'){
+      var daysSince=daysBtw(p.pre_service_appeal_date,now);
+      if(daysSince>=7){
+        alerts.push({id:p.ref_id,precertId:p.id,type:'appeal_followup',patientName:p.patient_name,carrier:p.carrier,daysSinceAppeal:daysSince});
+      }
+    }
+  });
+  
+  return alerts;
+}
+
+// Dashboard
+function renderNjmvaDashboard(el){
+  var njRefs=refs.filter(function(r){return r.caseType==='NJ MVA'});
+  var alerts=njmvaAlerts();
+  var totalPrecerts=njmvaPrecerts.length;
+  var pending=njmvaPrecerts.filter(function(p){return!p.outcome||p.outcome===''}).length;
+  var approved=njmvaPrecerts.filter(function(p){return p.outcome==='approved'}).length;
+  var denied=njmvaPrecerts.filter(function(p){return p.outcome&&p.outcome.indexOf('denied')!==-1}).length;
+  var appeals=njmvaPrecerts.filter(function(p){return p.pre_service_appeal_needed||p.pre_service_appeal_date}).length;
+  var arbitration=njmvaPrecerts.filter(function(p){return p.arbitration_needed}).length;
+  var postService=njmvaPrecerts.filter(function(p){return p.post_service_needed}).length;
+
+  var h='<div class="page-title">NJ MVA Pre-Certification Dashboard</div>';
+  h+='<div class="page-subtitle">'+njRefs.length+' NJ MVA patients · '+totalPrecerts+' pre-cert submissions tracked</div>';
+  h+='<div style="margin-bottom:12px"><button class="btn-primary" onclick="openNewPrecertModal()" style="font-size:11px;padding:7px 14px">+ New Pre-Cert Submission</button></div>';
+
+  h+='<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('Total Submissions',totalPrecerts,'teal')+stat('Pending Response',pending,'gold')+stat('Approved',approved,'teal')+stat('Denied',denied,'red')+'</div>';
+  h+='<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('NJ MVA Patients',njRefs.length,'')+stat('Pre-Service Appeals',appeals,'gold')+stat('Post-Service/Arbitration',postService+arbitration,'red')+stat('Open Alerts',alerts.length,alerts.length>0?'red':'')+'</div>';
+
+  // Alerts
+  if(alerts.length>0){
+    h+='<div class="table-card" style="border-left:4px solid var(--gold)"><div class="table-header"><h3>⚠️ Action Needed</h3></div><div style="padding:10px 18px">';
+    alerts.forEach(function(a){
+      if(a.type==='new_njmva'){
+        var urgStyle=a.priority==='urgent'?'border-left:4px solid var(--red)':'border-left:4px solid var(--gold)';
+        h+='<div class="alert-card" style="'+urgStyle+'" onclick="openNewPrecertModal(\''+a.id+'\')"><div class="alert-type" style="background:'+(a.priority==='urgent'?'var(--red)':'var(--gold)')+'">NEW</div><div class="alert-body"><strong>'+esc(a.patientName)+'</strong> — NJ MVA scheduled for '+fmtDate(a.apptDate)+(a.daysUntilAppt<=0?' <span style="color:var(--red);font-weight:700">(TODAY/PAST DUE)</span>':' ('+a.daysUntilAppt+' days away)')+'. File pre-certification.<br><span style="font-size:10px;color:var(--gray-500)">Location: '+esc(a.location||'—')+'</span></div></div>';
+      } else if(a.type==='appt_passed'){
+        h+='<div class="alert-card" style="border-left:4px solid var(--gold)"><div class="alert-type" style="background:var(--gold)">NEXT APPT</div><div class="alert-body"><strong>'+esc(a.patientName)+'</strong> — Appointment on '+fmtDate(a.apptDate)+' has passed ('+a.daysPast+' day'+(a.daysPast!==1?'s':'')+' ago). Enter next appointment date and ensure pre-cert is filed.</div></div>';
+      } else if(a.type==='needs_appeal'){
+        h+='<div class="alert-card" style="border-left:4px solid var(--red)"><div class="alert-type" style="background:var(--red)">APPEAL</div><div class="alert-body"><strong>'+esc(a.patientName)+'</strong> — No response from '+esc(a.carrier||'carrier')+' after '+a.submittedDaysAgo+' days. <strong>Pre-service appeal needed.</strong></div></div>';
+      } else if(a.type==='appeal_followup'){
+        h+='<div class="alert-card" style="border-left:4px solid var(--gold)"><div class="alert-type" style="background:var(--gold)">FOLLOW UP</div><div class="alert-body"><strong>'+esc(a.patientName)+'</strong> — Pre-service appeal sent '+a.daysSinceAppeal+' days ago to '+esc(a.carrier||'carrier')+'. Follow up on response.</div></div>';
+      }
+    });
+    h+='</div></div>';
+  }
+
+  // Recent submissions
+  h+='<div class="table-card"><div class="table-header"><h3>Recent Submissions</h3></div><div class="table-scroll"><table class="tbl" style="min-width:900px"><thead><tr><th>Patient</th><th>Carrier</th><th>DOS Range</th><th>CPT</th><th>Submitted</th><th>Outcome</th><th>Appeal</th><th>Stage</th></tr></thead><tbody>';
+  njmvaPrecerts.slice().sort(function(a,b){return(b.submission_date||b.created_date||'').localeCompare(a.submission_date||a.created_date||'')}).slice(0,15).forEach(function(p){
+    var stageLabel={'pending_precert':'Pending','approved':'Approved','denied':'Denied','appeal':'Appeal','post_service':'Post-Service','arbitration':'Arbitration','closed':'Closed'}[p.stage]||p.stage;
+    var stageColor=p.stage==='approved'||p.stage==='closed'?'status-settled':p.stage==='denied'||p.stage==='arbitration'?'status-pending':'status-active';
+    h+='<tr onclick="editPrecert(\''+p.id+'\')" style="cursor:pointer"><td style="font-weight:600">'+esc(p.patient_name||'—')+'</td><td style="font-size:11px">'+esc(p.carrier||'—')+'</td><td style="font-size:10px">'+esc(p.dos_range||'—')+'</td><td style="font-size:10px">'+esc(p.cpt_codes||'—')+'</td><td style="font-size:11px">'+fmtDate(p.submission_date)+'</td><td style="font-size:11px">'+(p.outcome?esc(p.outcome):'<span style="color:var(--gold)">Pending</span>')+'</td><td style="font-size:10px">'+(p.pre_service_appeal_date?'Sent '+fmtDate(p.pre_service_appeal_date):(p.pre_service_appeal_needed?'<span style="color:var(--red)">Needed</span>':'—'))+'</td><td><span class="status-badge '+stageColor+'" style="font-size:10px">'+stageLabel+'</span></td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  el.innerHTML=h;
+}
+
+// Full log
+function renderNjmvaLog(el){
+  var h='<div class="page-title">Pre-Certification Log</div><div class="page-subtitle">All '+njmvaPrecerts.length+' submissions</div>';
+  h+='<div style="margin-bottom:12px"><button class="btn-primary" onclick="openNewPrecertModal()" style="font-size:11px;padding:7px 14px">+ New Submission</button></div>';
+  h+='<div class="table-card"><div class="table-header"><h3>All Submissions</h3><div class="table-controls"><input class="search-input" id="njmvaSearch" placeholder="Search..." oninput="renderNjmvaLog(document.getElementById(\'sec-njmva-log\'))"></div></div>';
+  h+='<div class="table-scroll"><table class="tbl" style="min-width:1100px"><thead><tr><th>Patient</th><th>Carrier</th><th>DOS Range</th><th>CPT</th><th>Submitted</th><th>Outcome</th><th>Appeal</th><th>Patient Seen?</th><th>DOS Paid?</th><th>Post-Svc</th></tr></thead><tbody>';
+  var search=(document.getElementById('njmvaSearch')||{}).value||'';search=search.toLowerCase();
+  var list=njmvaPrecerts.slice().sort(function(a,b){return(b.submission_date||b.created_date||'').localeCompare(a.submission_date||a.created_date||'')});
+  if(search)list=list.filter(function(p){return(p.patient_name||'').toLowerCase().includes(search)||(p.carrier||'').toLowerCase().includes(search)||(p.cpt_codes||'').toLowerCase().includes(search)});
+  list.forEach(function(p){
+    h+='<tr onclick="editPrecert(\''+p.id+'\')" style="cursor:pointer"><td style="font-weight:600;font-size:12px">'+esc(p.patient_name||'—')+'</td><td style="font-size:11px">'+esc(p.carrier||'—')+'</td><td style="font-size:10px">'+esc(p.dos_range||'—')+'</td><td style="font-size:10px">'+esc(p.cpt_codes||'—')+'</td><td style="font-size:11px">'+fmtDate(p.submission_date)+'</td><td style="font-size:11px">'+(p.outcome||'<span style="color:var(--gold)">Pending</span>')+'</td><td style="font-size:10px">'+(p.pre_service_appeal_date?'Sent '+fmtDate(p.pre_service_appeal_date):(p.pre_service_appeal_needed?'<span style="color:var(--red)">Needed</span>':'—'))+'</td><td style="font-size:10px">'+(p.patient_seen?'Yes':'—')+'</td><td style="font-size:10px">'+esc(p.dos_paid||'—')+'</td><td style="font-size:10px">'+(p.post_service_needed?'Post-Svc':(p.arbitration_needed?'<span style="color:var(--red)">Arb</span>':'—'))+'</td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  el.innerHTML=h;
+}
+
+// Alerts page
+function renderNjmvaAlerts(el){
+  var alerts=njmvaAlerts();
+  var h='<div class="page-title">NJ MVA Alerts</div><div class="page-subtitle">'+alerts.length+' items need attention</div>';
+  if(alerts.length===0)h+='<div class="table-card" style="padding:30px;text-align:center;color:var(--gray-400)">No alerts — all caught up! 🎉</div>';
+  alerts.forEach(function(a){
+    if(a.type==='new_njmva'){
+      h+='<div class="table-card" style="border-left:4px solid var(--gold);padding:14px 18px;margin-bottom:8px;cursor:pointer" onclick="openNewPrecertModal(\''+a.id+'\')"><div style="display:flex;justify-content:space-between;align-items:center"><div><strong>'+esc(a.patientName)+'</strong><br><span style="font-size:11px;color:var(--gray-500)">Appointment: '+fmtDate(a.apptDate)+' · '+esc(a.location||'')+'</span></div><div style="color:var(--gold);font-weight:700;font-size:12px">FILE PRE-CERT →</div></div></div>';
+    } else {
+      h+='<div class="table-card" style="border-left:4px solid var(--red);padding:14px 18px;margin-bottom:8px"><div><strong>'+esc(a.patientName)+'</strong> — '+esc(a.carrier||'')+'<br><span style="font-size:11px;color:var(--red)">No response after '+a.submittedDaysAgo+' days. Pre-service appeal needed.</span></div></div>';
+    }
+  });
+  el.innerHTML=h;
+}
+
+// Stage views
+function renderNjmvaByStage(el,stage,title){
+  var list=njmvaPrecerts.filter(function(p){return p.stage===stage||(stage==='appeal'&&(p.pre_service_appeal_needed||p.pre_service_appeal_date))});
+  var h='<div class="page-title">'+title+'</div><div class="page-subtitle">'+list.length+' submissions</div>';
+  h+='<div class="table-card"><div class="table-scroll"><table class="tbl"><thead><tr><th>Patient</th><th>Carrier</th><th>DOS Range</th><th>CPT</th><th>Submitted</th><th>Outcome</th><th>Notes</th></tr></thead><tbody>';
+  list.forEach(function(p){
+    h+='<tr onclick="editPrecert(\''+p.id+'\')" style="cursor:pointer"><td style="font-weight:600">'+esc(p.patient_name||'—')+'</td><td style="font-size:11px">'+esc(p.carrier||'—')+'</td><td style="font-size:10px">'+esc(p.dos_range||'—')+'</td><td style="font-size:10px">'+esc(p.cpt_codes||'—')+'</td><td style="font-size:11px">'+fmtDate(p.submission_date)+'</td><td style="font-size:11px">'+esc(p.outcome||'Pending')+'</td><td style="font-size:10px">'+esc(p.notes||p.outcome_notes||'—')+'</td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  el.innerHTML=h;
+}
+
+// Carrier contacts (from the NJ MVA Guide)
+function renderNjmvaCarriers(el){
+  var carriers=[
+    {name:'USAA',fax:'(877) 395-7127',phone:'877-647-0012',notes:'Insight Services Group (ISG), P.O. Box 5000, Daphne, AL 36526'},
+    {name:'Allstate NJ',fax:'856-910-2501',phone:'800-726-6033',notes:'Via MedLogix. Email: precert@medlogix.com'},
+    {name:'NJ Manufacturers',fax:'609-493-1565',phone:'609-883-1300',notes:'Appeal fax: 609-963-6075'},
+    {name:'Progressive',fax:'866-841-8312',phone:'',notes:'Pre-certs & pre-service appeals'},
+    {name:'Geico',fax:'866-257-2323',phone:'',notes:'Submit within 30 days of denial'},
+    {name:'State Farm',fax:'(856) 910-2501',phone:'',notes:'Via MedLogix'},
+    {name:'Plymouth Rock',fax:'732-978-7100',phone:'',notes:'Initial consults may not need pre-cert. Respond within 14 days.'},
+    {name:'Cure Auto',fax:'856-910-2501',phone:'800-229-9151',notes:'Via MedLogix'},
+    {name:'AAA Insurance',fax:'866-351-6026',phone:'888-980-9422',notes:''},
+    {name:'National General',fax:'866-327-9318',phone:'800-407-0704',notes:'Email: njdprplus@reviewstat.com'},
+    {name:'Liberty Mutual',fax:'888-325-8127',phone:'',notes:''},
+    {name:'Travelers',fax:'866-296-4180',phone:'800-238-6225',notes:'Office visits/x-rays don\'t need pre-cert'},
+    {name:'Farmers Insurance',fax:'856-910-2501',phone:'856-910-2500',notes:'Via MedLogix'},
+    {name:'Good2Go',fax:'610-832-1147',phone:'888-303-3430',notes:''},
+    {name:'Bristol West',fax:'(856) 910-2501',phone:'',notes:'Via MedLogix'},
+    {name:'The Hartford',fax:'866-771-6001',phone:'800-423-6789',notes:'Office visits/x-rays don\'t need pre-cert'},
+    {name:'National Specialty',fax:'866-513-3351',phone:'888-851-7473',notes:''},
+    {name:'Encompass',fax:'856-910-2501',phone:'800-293-9795',notes:'Via MedLogix'}
+  ];
+  var h='<div class="page-title">NJ Carrier Contacts</div><div class="page-subtitle">Pre-certification fax numbers and contact info</div>';
+  h+='<div class="table-card"><div class="table-scroll"><table class="tbl"><thead><tr><th>Carrier</th><th>Fax</th><th>Phone</th><th>Notes</th></tr></thead><tbody>';
+  carriers.forEach(function(c){h+='<tr><td style="font-weight:600">'+esc(c.name)+'</td><td style="font-size:11px">'+esc(c.fax)+'</td><td style="font-size:11px">'+esc(c.phone||'—')+'</td><td style="font-size:10px">'+esc(c.notes||'')+'</td></tr>';});
+  h+='</tbody></table></div></div>';
+  el.innerHTML=h;
+}
+
+// Analytics
+function renderNjmvaAnalytics(el){
+  if(!managerUnlocked&&userRole!=='nj_mva')return;
+  var total=njmvaPrecerts.length;
+  var approved=njmvaPrecerts.filter(function(p){return p.outcome==='approved'}).length;
+  var denied=njmvaPrecerts.filter(function(p){return p.outcome&&p.outcome.indexOf('denied')!==-1}).length;
+  var appeals=njmvaPrecerts.filter(function(p){return p.pre_service_appeal_date}).length;
+  var postSvc=njmvaPrecerts.filter(function(p){return p.post_service_needed}).length;
+  var arb=njmvaPrecerts.filter(function(p){return p.arbitration_needed}).length;
+  var noResponse=njmvaPrecerts.filter(function(p){return p.outcome==='no_response'}).length;
+  var notRequired=njmvaPrecerts.filter(function(p){return p.outcome==='not_required'}).length;
+  var patientSeen=njmvaPrecerts.filter(function(p){return p.patient_seen}).length;
+
+  var h='<div class="page-title">NJ MVA Analytics</div>';
+  h+='<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('Total Submissions',total,'teal')+stat('Approved',approved,'teal')+stat('Denied',denied,'red')+stat('No Response',noResponse,'gold')+'</div>';
+  h+='<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('Pre-Service Appeals',appeals,'gold')+stat('Post-Service Appeals',postSvc,'gold')+stat('Arbitration',arb,'red')+stat('Not Required',notRequired,'')+'</div>';
+  h+='<div class="stats-row" style="grid-template-columns:repeat(3,1fr)">'+stat('Approval Rate',total>0?Math.round(approved/total*100)+'%':'0%','teal')+stat('Denial Rate',total>0?Math.round(denied/total*100)+'%':'0%','red')+stat('Patient Seen Rate',total>0?Math.round(patientSeen/total*100)+'%':'0%','')+'</div>';
+
+  // By carrier
+  var byCar={};njmvaPrecerts.forEach(function(p){var c=p.carrier||'Unknown';if(!byCar[c])byCar[c]={t:0,a:0,d:0};byCar[c].t++;if(p.outcome==='approved')byCar[c].a++;if(p.outcome&&p.outcome.indexOf('denied')!==-1)byCar[c].d++;});
+  h+='<div class="table-card"><div class="table-header"><h3>Submissions by Carrier</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Carrier</th><th>Total</th><th>Approved</th><th>Denied</th><th>Approval %</th></tr></thead><tbody>';
+  Object.entries(byCar).sort(function(a,b){return b[1].t-a[1].t}).forEach(function(e){
+    var pct=e[1].t>0?Math.round(e[1].a/e[1].t*100):0;
+    h+='<tr><td style="font-weight:600">'+esc(e[0])+'</td><td>'+e[1].t+'</td><td style="color:var(--teal)">'+e[1].a+'</td><td style="color:var(--red)">'+e[1].d+'</td><td>'+pct+'%</td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+
+  // Stage pipeline
+  var stages={pending_precert:0,approved:0,denied:0,appeal:0,post_service:0,arbitration:0,closed:0};
+  njmvaPrecerts.forEach(function(p){stages[p.stage]=(stages[p.stage]||0)+1;});
+  h+='<div class="table-card"><div class="table-header"><h3>Pipeline Stages</h3></div><div style="padding:16px 18px">'+renderBarChart(Object.entries(stages).filter(function(e){return e[1]>0}).map(function(e,i){return{label:e[0].replace(/_/g,' '),value:e[1],color:CHART_COLORS[i%CHART_COLORS.length]}}))+'</div></div>';
+
+  // Jexter scorecard
+  h+='<div class="table-card" style="border-left:4px solid #3498db;margin-top:16px"><div style="padding:16px 20px">';
+  h+='<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">';
+  h+='<div style="width:44px;height:44px;border-radius:10px;background:#3498db;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px">JJ</div>';
+  h+='<div><div style="font-size:15px;font-weight:700;color:var(--navy)">Jexter</div><div style="font-size:11px;color:var(--gray-500)">NJ MVA SPECIALIST · '+total+' total submissions</div></div>';
+  var jScore=Math.min(100,Math.round((approved/Math.max(1,total))*40)+Math.max(0,30-njmvaAlerts().length*5)+Math.min(30,total));
+  var jColor=jScore>=80?'#1a7f7a':jScore>=60?'#2c3e50':jScore>=40?'#c8973a':'#c0392b';
+  h+='<div style="margin-left:auto;text-align:center"><div style="font-size:28px;font-weight:800;color:'+jColor+'">'+jScore+'</div><div style="font-size:10px;font-weight:600;color:'+jColor+'">SCORE</div></div></div>';
+  h+='<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">';
+  h+='<div style="text-align:center;min-width:70px;padding:8px 12px;background:rgba(26,127,122,0.06);border-radius:8px"><div style="font-size:20px;font-weight:700;color:var(--teal)">'+approved+'</div><div style="font-size:9px;color:var(--gray-500)">Approved</div></div>';
+  h+='<div style="text-align:center;min-width:70px;padding:8px 12px;background:rgba(192,57,43,0.06);border-radius:8px"><div style="font-size:20px;font-weight:700;color:var(--red)">'+denied+'</div><div style="font-size:9px;color:var(--gray-500)">Denied</div></div>';
+  h+='<div style="text-align:center;min-width:70px;padding:8px 12px;background:rgba(200,151,58,0.06);border-radius:8px"><div style="font-size:20px;font-weight:700;color:var(--gold)">'+appeals+'</div><div style="font-size:9px;color:var(--gray-500)">Appeals Sent</div></div>';
+  h+='<div style="text-align:center;min-width:70px;padding:8px 12px;background:rgba(192,57,43,0.06);border-radius:8px"><div style="font-size:20px;font-weight:700;color:var(--red)">'+arb+'</div><div style="font-size:9px;color:var(--gray-500)">Arbitration</div></div>';
+  h+='</div></div></div>';
+
+  el.innerHTML=h;
+}
+
+// Modal functions
+function openNewPrecertModal(refId){
+  editingPrecertId=null;
+  document.getElementById('precertModalTitle').textContent='New Pre-Certification';
+  document.getElementById('btnDeletePrecert').style.display='none';
+  // Populate ref dropdown with NJ MVA refs
+  var sel=document.getElementById('pcRefId');sel.innerHTML='<option value="">Select NJ MVA Patient...</option>';
+  refs.filter(function(r){return r.caseType==='NJ MVA'}).forEach(function(r){
+    sel.innerHTML+='<option value="'+r.id+'"'+(refId===r.id?' selected':'')+'>'+esc(r.patientName)+' (DOI: '+fmtDate(r.doi)+')</option>';
+  });
+  // Clear fields
+  ['pcCarrier','pcLocation','pcDosRange','pcCptCodes','pcSubmitDate','pcResubDate','pcOutcome','pcOutcomeDate','pcOutcomeNotes','pcAppealNeeded','pcAppealDate','pcAppealOutcome','pcPatientSeen','pcDosPaid','pcPostService','pcPostDate','pcArbOutcome','pcNotes','pcApptDate','pcNextApptDate'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value='';
+  });
+  if(refId)fillPrecertFromRef();
+  document.getElementById('precertModal').classList.add('show');
+}
+
+function fillPrecertFromRef(){
+  var refId=document.getElementById('pcRefId').value;
+  var r=refs.find(function(x){return x.id===refId});
+  if(!r)return;
+  document.getElementById('pcLocation').value=r.location||'';
+  document.getElementById('precertPatientInfo').textContent='DOB: '+fmtDate(r.dob)+' · DOI: '+fmtDate(r.doi);
+  if(r.apptDate){
+    document.getElementById('pcApptDate').value=r.apptDate;
+    var d=new Date(r.apptDate);var d2=new Date(d);d2.setDate(d2.getDate()+30);
+    document.getElementById('pcDosRange').value=r.apptDate+' - '+d2.toISOString().split('T')[0];
+  }
+  document.getElementById('pcSubmitDate').value=today();
+}
+
+function editPrecert(id){
+  var p=njmvaPrecerts.find(function(x){return x.id===id});if(!p)return;
+  editingPrecertId=id;
+  document.getElementById('precertModalTitle').textContent='Edit Pre-Certification';
+  document.getElementById('btnDeletePrecert').style.display='inline-block';
+  // Populate dropdown
+  var sel=document.getElementById('pcRefId');sel.innerHTML='<option value="">Select NJ MVA Patient...</option>';
+  refs.filter(function(r){return r.caseType==='NJ MVA'}).forEach(function(r){
+    sel.innerHTML+='<option value="'+r.id+'"'+(p.ref_id===r.id?' selected':'')+'>'+esc(r.patientName)+' (DOI: '+fmtDate(r.doi)+')</option>';
+  });
+  document.getElementById('pcCarrier').value=p.carrier||'';
+  document.getElementById('pcLocation').value=p.location||'';
+  document.getElementById('pcApptDate').value=p.appt_date||'';
+  document.getElementById('pcNextApptDate').value=p.next_appt_date||'';
+  document.getElementById('pcDosRange').value=p.dos_range||'';
+  document.getElementById('pcCptCodes').value=p.cpt_codes||'';
+  document.getElementById('pcSubmitDate').value=p.submission_date||'';
+  document.getElementById('pcResubDate').value=p.resubmission_date||'';
+  document.getElementById('pcOutcome').value=p.outcome||'';
+  document.getElementById('pcOutcomeDate').value=p.outcome_date||'';
+  document.getElementById('pcOutcomeNotes').value=p.outcome_notes||'';
+  document.getElementById('pcAppealNeeded').value=p.pre_service_appeal_needed?(p.pre_service_appeal_date?'sent':'yes'):'no';
+  document.getElementById('pcAppealDate').value=p.pre_service_appeal_date||'';
+  document.getElementById('pcAppealOutcome').value=p.pre_service_appeal_outcome||'';
+  document.getElementById('pcPatientSeen').value=p.patient_seen?'yes':(p.patient_seen===false?'no':'');
+  document.getElementById('pcDosPaid').value=p.dos_paid||'';
+  document.getElementById('pcPostService').value=p.arbitration_needed?'arbitration':(p.post_service_needed?'post_appeal':'no');
+  document.getElementById('pcPostDate').value=p.post_service_date||p.arbitration_date||'';
+  document.getElementById('pcArbOutcome').value=p.arbitration_outcome||'';
+  document.getElementById('pcNotes').value=p.notes||'';
+  document.getElementById('precertModal').classList.add('show');
+}
+
+function closePrecertModal(){document.getElementById('precertModal').classList.remove('show');editingPrecertId=null;}
+
+function savePrecert(){
+  var refId=document.getElementById('pcRefId').value;
+  var r=refId?refs.find(function(x){return x.id===refId}):null;
+  var appealVal=document.getElementById('pcAppealNeeded').value;
+  var postVal=document.getElementById('pcPostService').value;
+  var outcome=document.getElementById('pcOutcome').value;
+  
+  // Determine stage
+  var stage='pending_precert';
+  if(postVal==='arbitration')stage='arbitration';
+  else if(postVal==='post_appeal')stage='post_service';
+  else if(appealVal==='yes'||appealVal==='sent')stage='appeal';
+  else if(outcome==='approved')stage='approved';
+  else if(outcome&&outcome.indexOf('denied')!==-1)stage='denied';
+  else if(outcome==='not_required'||outcome==='no_show'||outcome==='cancelled')stage='closed';
+
+  var row={
+    id:editingPrecertId||genId(),
+    ref_id:refId||null,
+    patient_name:r?r.patientName:document.getElementById('pcCarrier').value,
+    dob:r?r.dob:null,
+    carrier:document.getElementById('pcCarrier').value,
+    location:document.getElementById('pcLocation').value,
+    appt_date:document.getElementById('pcApptDate').value||null,
+    next_appt_date:document.getElementById('pcNextApptDate').value||null,
+    dos_range:document.getElementById('pcDosRange').value,
+    cpt_codes:document.getElementById('pcCptCodes').value,
+    submission_date:document.getElementById('pcSubmitDate').value||null,
+    resubmission_date:document.getElementById('pcResubDate').value||null,
+    outcome:outcome||null,
+    outcome_date:document.getElementById('pcOutcomeDate').value||null,
+    outcome_notes:document.getElementById('pcOutcomeNotes').value,
+    pre_service_appeal_needed:(appealVal==='yes'||appealVal==='sent'),
+    pre_service_appeal_date:document.getElementById('pcAppealDate').value||null,
+    pre_service_appeal_outcome:document.getElementById('pcAppealOutcome').value,
+    patient_seen:document.getElementById('pcPatientSeen').value==='yes',
+    dos_paid:document.getElementById('pcDosPaid').value,
+    post_service_needed:postVal==='post_appeal',
+    post_service_date:postVal!=='no'?document.getElementById('pcPostDate').value||null:null,
+    arbitration_needed:postVal==='arbitration',
+    arbitration_date:postVal==='arbitration'?document.getElementById('pcPostDate').value||null:null,
+    arbitration_outcome:document.getElementById('pcArbOutcome').value||null,
+    stage:stage,
+    notes:document.getElementById('pcNotes').value,
+    created_by:'Jexter',
+    created_date:editingPrecertId?undefined:today(),
+    updated_at:new Date().toISOString()
+  };
+
+  if(editingPrecertId){
+    var idx=njmvaPrecerts.findIndex(function(p){return p.id===editingPrecertId});
+    if(idx!==-1)njmvaPrecerts[idx]=Object.assign(njmvaPrecerts[idx],row);
+    // PATCH only changed fields
+    var patchRow=Object.assign({},row);delete patchRow.id;delete patchRow.created_date;
+    _dbPatch('nj_mva_precerts',editingPrecertId,patchRow);
+  } else {
+    njmvaPrecerts.push(row);
+    _dbInsert('nj_mva_precerts',row);
+  }
+  closePrecertModal();
+  njmvaNav(njmvaCurrentPage);
+}
+
+function deletePrecert(){
+  if(!editingPrecertId||!confirm('Delete this pre-cert submission?'))return;
+  njmvaPrecerts=njmvaPrecerts.filter(function(p){return p.id!==editingPrecertId});
+  _dbDelete('nj_mva_precerts',editingPrecertId);
+  closePrecertModal();
+  njmvaNav(njmvaCurrentPage);
+}
+
+// Update badges
+function updateNjmvaBadges(){
+  var alerts=njmvaAlerts();
+  var badge=document.getElementById('njmvaAlertBadge');
+  if(badge){badge.textContent=alerts.length;badge.style.display=alerts.length>0?'inline':'none';}
+}
+
 function seed(){
   // Redistribution already completed — do nothing
 }
@@ -5381,7 +5883,7 @@ document.addEventListener('click', function(e) {
 });
 
 // Modal close on overlay — wrapped in try-catch so missing modals don't break init
-['referralModal','resolveModal','apptConfirmModal','updateLogModal','marketingModal','caseModal','callLogModal','ticketModal','recordsBillingModal','missingInfoModal','introEmailModal','cmAlertModal','mktActivityModal','mktContactModal','pinModal','changePwModal','addAlertModal','adjusterResolveModal','pipResolveModal'].forEach(function(id){
+['referralModal','resolveModal','apptConfirmModal','updateLogModal','marketingModal','caseModal','callLogModal','ticketModal','recordsBillingModal','missingInfoModal','introEmailModal','cmAlertModal','mktActivityModal','mktContactModal','pinModal','changePwModal','addAlertModal','adjusterResolveModal','pipResolveModal','precertModal'].forEach(function(id){
   try{
     var el=document.getElementById(id);
     if(el)el.addEventListener('click',function(e){if(e.target===this){this.classList.remove('show');if(id==='pinModal'&&currentUser==='Manager'&&!managerUnlocked)logout();}});
