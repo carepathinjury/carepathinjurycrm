@@ -1211,22 +1211,46 @@ function saveMktContacts(){if(_useNewTables){mktContacts.forEach(function(c){_db
 function saveCallLogData(){if(_useNewTables){callLog.forEach(function(c){_dbInsert('call_log',{id:c.id,ref_id:c.refId,case_id:c.caseId,patient_id:c.patientId,date:c.date||null,direction:c.direction,party:c.party,phone:c.phone,outcome:c.outcome,duration:c.duration,notes:c.notes,flag:c.flag,flag_note:c.flagNote,logged_by:c.loggedBy})})}else{_legacySave('cp11_calllog',callLog)}}
 function saveTickets(){if(_useNewTables){tickets.forEach(function(t){_dbInsert('tickets',{id:t.id,subject:t.subject,priority:t.priority,assigned_to:t.assignedTo,category:t.category,department:t.department,status:t.status,ref_id:t.refId,case_id:t.caseId,notes:t.notes,created_by:t.createdBy,created_date:t.createdDate||null,updated_at:new Date().toISOString()})})}else{_legacySave('cp11_tickets',tickets)}}
 function saveFaxLog(){if(_useNewTables){faxLog.forEach(function(f){_dbInsert('fax_log',{id:f.id,date:f.date||null,sent_by:f.sentBy,recipient:f.recipient,recipient_type:f.recipientType,content_type:f.contentType,order_num:f.orderNum,notes:f.notes})})}else{_legacySave('cp11_faxlog',faxLog)}}
-function saveCrmMet(){if(_useNewTables){for(var k in crmMetrics){var m=crmMetrics[k];if(m.staff&&m.date)_dbMetricSave(m.staff,m.date,'crm',m.phoneCalls||0,m.emailsSent||0,0)}}else{_legacySave('cp11_crmmet',crmMetrics)}}
-function saveCmMet(){if(_useNewTables){for(var k in cmMetrics){var m=cmMetrics[k];if(m.staff&&m.date)_dbMetricSave(m.staff,m.date,'cm',m.phoneCalls||0,m.emailsSent||0,m.faxesSent||0)}}else{_legacySave('cp11_cmmet',cmMetrics)}}
-function savePsrMet(){if(_useNewTables){for(var k in psrMetrics){var m=psrMetrics[k];if(m.staff&&m.date){
-  var psrData={};PSR_MANUAL_FIELDS.forEach(function(f){psrData[f.key]=m[f.key]||0});
-  _dbMetricSavePsr(m.staff,m.date,psrData);
-}}}else{_legacySave('cp11_psrmet',psrMetrics)}}
+function saveCrmMet(){}
+function saveCmMet(){}
+function savePsrMet(){}
 
-function _dbMetricSavePsr(staff,date,psrData){
+function _dbMetricSave(staff,date,module,calls,emails,faxes){
   _lastLocalSave=Date.now();
-  var row={staff:staff,date:date,module:'psr',data:psrData,phone_calls:0,emails_sent:0,faxes_sent:0,updated_at:new Date().toISOString()};
-  // First check if row exists
-  fetch(SUPABASE_URL+'/rest/v1/daily_metrics?staff=eq.'+encodeURIComponent(staff)+'&date=eq.'+encodeURIComponent(date)+'&module=eq.psr&select=id,staff',{
+  // Check if row exists first
+  fetch(SUPABASE_URL+'/rest/v1/daily_metrics?staff=eq.'+encodeURIComponent(staff)+'&date=eq.'+encodeURIComponent(date)+'&module=eq.'+encodeURIComponent(module)+'&select=id',{
     headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
   }).then(function(r){return r.json()}).then(function(rows){
     if(rows.length>0){
-      // UPDATE existing
+      // UPDATE
+      fetch(SUPABASE_URL+'/rest/v1/daily_metrics?staff=eq.'+encodeURIComponent(staff)+'&date=eq.'+encodeURIComponent(date)+'&module=eq.'+encodeURIComponent(module),{
+        method:'PATCH',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body:JSON.stringify({phone_calls:calls,emails_sent:emails,faxes_sent:faxes,updated_at:new Date().toISOString()})
+      }).then(function(resp){
+        if(resp.ok||resp.status===204){showSaveSuccess();console.log('✅ '+module.toUpperCase()+' metrics UPDATED for '+staff+' '+date);}
+        else{resp.text().then(function(t){console.error(module+' PATCH error:',resp.status,t)});showSaveError();}
+      });
+    } else {
+      // INSERT
+      fetch(SUPABASE_URL+'/rest/v1/daily_metrics',{
+        method:'POST',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body:JSON.stringify({staff:staff,date:date,module:module,phone_calls:calls,emails_sent:emails,faxes_sent:faxes,updated_at:new Date().toISOString()})
+      }).then(function(resp){
+        if(resp.ok||resp.status===201){showSaveSuccess();console.log('✅ '+module.toUpperCase()+' metrics INSERTED for '+staff+' '+date);}
+        else{resp.text().then(function(t){console.error(module+' INSERT error:',resp.status,t)});showSaveError();}
+      });
+    }
+  }).catch(function(e){console.error('Metrics save error:',e);showSaveError()});
+}
+
+function _dbMetricSavePsr(staff,date,psrData){
+  _lastLocalSave=Date.now();
+  fetch(SUPABASE_URL+'/rest/v1/daily_metrics?staff=eq.'+encodeURIComponent(staff)+'&date=eq.'+encodeURIComponent(date)+'&module=eq.psr&select=id',{
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+  }).then(function(r){return r.json()}).then(function(rows){
+    if(rows.length>0){
       fetch(SUPABASE_URL+'/rest/v1/daily_metrics?staff=eq.'+encodeURIComponent(staff)+'&date=eq.'+encodeURIComponent(date)+'&module=eq.psr',{
         method:'PATCH',
         headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
@@ -1236,51 +1260,16 @@ function _dbMetricSavePsr(staff,date,psrData){
         else{resp.text().then(function(t){console.error('PSR PATCH error:',resp.status,t)});showSaveError();}
       });
     } else {
-      // INSERT new
       fetch(SUPABASE_URL+'/rest/v1/daily_metrics',{
         method:'POST',
         headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-        body:JSON.stringify(row)
+        body:JSON.stringify({staff:staff,date:date,module:'psr',data:psrData,phone_calls:0,emails_sent:0,faxes_sent:0,updated_at:new Date().toISOString()})
       }).then(function(resp){
         if(resp.ok||resp.status===201){showSaveSuccess();console.log('✅ PSR metrics INSERTED for '+staff+' '+date);}
         else{resp.text().then(function(t){console.error('PSR INSERT error:',resp.status,t)});showSaveError();}
       });
     }
-  }).catch(function(e){console.error('PSR metrics save error:',e);showSaveError()});
-}
-
-function _dbMetricSave(staff,date,module,calls,emails,faxes){
-  _lastLocalSave=Date.now();
-  var row={staff:staff,date:date,module:module,phone_calls:calls,emails_sent:emails,faxes_sent:faxes,updated_at:new Date().toISOString()};
-  // Try PATCH first (update existing metric for this staff/date/module)
-  fetch(SUPABASE_URL+'/rest/v1/daily_metrics?staff=eq.'+encodeURIComponent(staff)+'&date=eq.'+encodeURIComponent(date)+'&module=eq.'+encodeURIComponent(module), {
-    method:'PATCH',
-    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-    body:JSON.stringify(row)
-  }).then(function(resp){
-    if(resp.ok||resp.status===204){
-      // Check if row existed
-      fetch(SUPABASE_URL+'/rest/v1/daily_metrics?staff=eq.'+encodeURIComponent(staff)+'&date=eq.'+encodeURIComponent(date)+'&module=eq.'+encodeURIComponent(module)+'&select=staff',{
-        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
-      }).then(function(r){return r.json()}).then(function(rows){
-        if(rows.length===0){
-          // No id field — let the database generate it
-          fetch(SUPABASE_URL+'/rest/v1/daily_metrics',{
-            method:'POST',
-            headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
-            body:JSON.stringify(row)
-          }).then(function(r2){
-            if(r2.ok||r2.status===201) showSaveSuccess();
-            else showSaveError();
-          });
-        } else {
-          showSaveSuccess();
-        }
-      });
-    } else {
-      showSaveError();
-    }
-  }).catch(function(e){showSaveError()});
+  }).catch(function(e){console.error('PSR save error:',e);showSaveError()});
 }
 
 function saveSingleCallLog(entry){
@@ -2423,7 +2412,11 @@ const CRM_MANUAL_FIELDS = [
 ];
 function crmMetKey(s,d){return s+'_'+d}
 function getCrmMet(s,d){return crmMetrics[crmMetKey(s,d)]||{}}
-function setCrmMet(s,d,data){crmMetrics[crmMetKey(s,d)]={...data,staff:s,date:d};saveCrmMet()}
+function setCrmMet(s,d,data){
+  crmMetrics[crmMetKey(s,d)]={...data,staff:s,date:d};
+  if(_useNewTables) _dbMetricSave(s,d,'crm',data.phoneCalls||0,data.emailsSent||0,0);
+  else _legacySave('cp11_crmmet',crmMetrics);
+}
 function getWeekDates(off){const now=new Date();const dow=now.getDay();const mo=-(dow===0?6:dow-1)+(off*7);const dates=[];for(let i=0;i<5;i++){const d=new Date();d.setDate(d.getDate()+mo+i);dates.push(d.toISOString().split('T')[0])}return dates}
 function dayName(d){return new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short'})}
 
@@ -3902,7 +3895,11 @@ function deleteContact(){if(!editingContactId||!confirm('Delete contact?'))retur
 const CM_MANUAL_FIELDS=[{key:'phoneCalls',label:'Phone Calls'},{key:'emailsSent',label:'Outbound Emails'},{key:'faxesSent',label:'Faxes Sent'}];
 function cmMetKey(s,d){return s+'_'+d}
 function getCmMet(s,d){return cmMetrics[cmMetKey(s,d)]||{}}
-function setCmMet(s,d,data){cmMetrics[cmMetKey(s,d)]={...data,staff:s,date:d};saveCmMet()}
+function setCmMet(s,d,data){
+  cmMetrics[cmMetKey(s,d)]={...data,staff:s,date:d};
+  if(_useNewTables) _dbMetricSave(s,d,'cm',data.phoneCalls||0,data.emailsSent||0,data.faxesSent||0);
+  else _legacySave('cp11_cmmet',cmMetrics);
+}
 
 function cmAutoMetrics(staff, date) {
   const staffCases = cases.filter(c => c.assigned === staff);
