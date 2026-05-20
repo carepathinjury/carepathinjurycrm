@@ -5057,7 +5057,7 @@ function renderPsrStaffPage(el,staff){
 
 // ── PSR METRICS ──
 const PSR_MANUAL_FIELDS=[{key:'confirmationsCompleted',label:'Confirmations Completed'},{key:'serviceCallsResolved',label:'Service Calls Resolved'},{key:'inboundHandled',label:'Inbound Calls Handled'},{key:'outboundMade',label:'Outbound Calls Made'}];
-function psrMetKey(s,d){return'psr_'+s+'_'+d}
+function psrMetKey(s,d){return s+'_'+d}
 function getPsrMet(s,d){return psrMetrics[psrMetKey(s,d)]||{}}
 function setPsrMet(s,d,data){
   psrMetrics[psrMetKey(s,d)]={...data,staff:s,date:d};
