@@ -2659,16 +2659,20 @@ function renderCrmMgrDash(el) {
   var noShowPct=scheduledCount>0?Math.round(noShowCount/scheduledCount*100):0;
   var pendingApptPct=scheduledCount>0?Math.round(pendingApptCount/scheduledCount*100):0;
   h += '<div class="stats-row" style="grid-template-columns:repeat(5,1fr)">'+stat('Total Referrals',total,'teal')+stat('Pending Scheduling',pending,'gold')+stat('Active Alerts',alerts,'red')+stat('Patients Lost',lostCount+(leakageRate>0?' ('+leakageRate+'%)':''),'red')+stat('Case Mix',ctSummary||'—','')+'</div>';
-  h += '<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('Scheduled',scheduledCount,'teal')+stat('Appt Completed',completedCount+' ('+completedPct+'%)','teal')+stat('Pending Outcome',pendingApptCount+' ('+pendingApptPct+'%)','gold')+'<div class="stat-card" style="cursor:pointer;border:2px solid transparent" onclick="toggleNoShowDrilldown()" onmouseover="this.style.borderColor=\'var(--red)\'" onmouseout="this.style.borderColor=\'transparent\'"><div class="stat-label">No-Shows</div><div class="stat-value red">'+noShowCount+' ('+noShowPct+'%)</div><div class="stat-sub" style="color:var(--teal)">click to view list</div></div></div>';
+  var noShowRefs=filteredRefs.filter(function(r){return r.apptOutcome==='no_show'});
+  var recoveredCount=noShowRefs.filter(function(r){return r.status!=='Patient Lost'&&(r.apptDate&&daysBtw(r.apptDate,today())>0)}).length;
+  var recoveredPct=noShowCount>0?Math.round(recoveredCount/noShowCount*100):0;
+  h += '<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('Scheduled',scheduledCount,'teal')+stat('Appt Completed',completedCount+' ('+completedPct+'%)','teal')+stat('Pending Outcome',pendingApptCount+' ('+pendingApptPct+'%)','gold')+'<div class="stat-card" style="cursor:pointer;border:2px solid transparent" onclick="toggleNoShowDrilldown()" onmouseover="this.style.borderColor=\'var(--red)\'" onmouseout="this.style.borderColor=\'transparent\'"><div class="stat-label">No-Shows</div><div class="stat-value red">'+noShowCount+' ('+noShowPct+'%)</div><div class="stat-sub" style="color:var(--teal)">'+recoveredCount+' recovered ('+recoveredPct+'%) · click to view</div></div></div>';
   
   // No-show drilldown (hidden by default)
-  h+='<div id="noShowDrilldown" style="display:none"><div class="table-card" style="border-left:4px solid var(--red);margin-bottom:16px"><div class="table-header"><h3>No-Show Patients</h3><button class="btn-resolve" onclick="document.getElementById(\'noShowDrilldown\').style.display=\'none\'" style="font-size:10px">Close ✕</button></div>';
+  h+='<div id="noShowDrilldown" style="display:none"><div class="table-card" style="border-left:4px solid var(--red);margin-bottom:16px"><div class="table-header"><h3>No-Show Patients — '+noShowCount+' total, '+recoveredCount+' rescheduled/recovered</h3><button class="btn-resolve" onclick="document.getElementById(\'noShowDrilldown\').style.display=\'none\'" style="font-size:10px">Close ✕</button></div>';
   var noShows=filteredRefs.filter(function(r){return r.apptOutcome==='no_show'});
   if(noShows.length===0)h+='<div style="padding:16px;text-align:center;color:var(--gray-400)">No no-shows in this date range</div>';
   else{
-    h+='<div class="table-scroll"><table class="tbl"><thead><tr><th>Patient</th><th>Case Type</th><th>Location</th><th>Appt Date</th><th>Attorney/Firm</th><th>Scheduler</th><th>Status</th></tr></thead><tbody>';
+    h+='<div class="table-scroll"><table class="tbl"><thead><tr><th>Patient</th><th>Case Type</th><th>Location</th><th>Appt Date</th><th>Attorney/Firm</th><th>Scheduler</th><th>Status</th><th>Recovered?</th></tr></thead><tbody>';
     noShows.sort(function(a,b){return(b.apptDate||'').localeCompare(a.apptDate||'')}).forEach(function(r){
-      h+='<tr onclick="switchModule(\'crm\');crmNav(\'crm-detail\');showCrmDetail(\''+r.id+'\')" style="cursor:pointer"><td style="font-weight:600">'+esc(r.patientName)+'</td><td style="font-size:11px">'+esc(r.caseType||'')+'</td><td style="font-size:11px">'+esc(r.location||'')+'</td><td style="font-size:11px">'+fmtDate(r.apptDate)+'</td><td style="font-size:11px">'+esc(r.attorney||'')+' / '+esc(r.lawFirm||'')+'</td><td style="font-size:11px">'+esc(r.alertAssignedTo||r.registeredBy||'')+'</td><td><span class="status-badge '+(r.status==='Patient Lost'?'status-pending':'status-active')+'">'+esc(r.status||'')+'</span></td></tr>';
+      var isRecovered=r.status!=='Patient Lost'&&(r.apptDate&&daysBtw(r.apptDate,today())>0);
+      h+='<tr onclick="switchModule(\'crm\');crmNav(\'crm-detail\');showCrmDetail(\''+r.id+'\')" style="cursor:pointer"><td style="font-weight:600">'+esc(r.patientName)+'</td><td style="font-size:11px">'+esc(r.caseType||'')+'</td><td style="font-size:11px">'+esc(r.location||'')+'</td><td style="font-size:11px">'+fmtDate(r.apptDate)+'</td><td style="font-size:11px">'+esc(r.attorney||'')+' / '+esc(r.lawFirm||'')+'</td><td style="font-size:11px">'+esc(r.alertAssignedTo||r.registeredBy||'')+'</td><td><span class="status-badge '+(r.status==='Patient Lost'?'status-pending':'status-active')+'">'+esc(r.status||'')+'</span></td><td style="font-size:11px;font-weight:700;color:'+(isRecovered?'var(--teal)':'var(--red)')+'">'+(isRecovered?'✓ Yes':'✗ No')+'</td></tr>';
     });
     h+='</tbody></table></div>';
   }
@@ -3297,7 +3301,7 @@ function renderCmDashboard(el) {
   introNotSent.forEach(function(c){
     h+='<tr onclick="switchModule(\'cm\');cmNav(\'cm-detail\');showCmDetail(\''+c.id+'\')" style="cursor:pointer"><td style="font-weight:600">'+esc(c.patientName)+'</td><td style="font-size:11px">'+esc(c.caseType||'')+'</td><td style="font-size:11px">'+esc(c.assigned||'')+'</td><td style="font-size:11px">'+fmtDate(c.createdDate)+'</td><td style="font-size:11px">'+daysBtw(c.createdDate||today(),today())+'</td></tr>';
   });
-  h+='</tbody></table></div></div>';
+  h+='</tbody></table></div></div></div>';
 
   // Visual charts
   var statusData={'Active':active.length,'In Litigation':inLit.length,'Settled/Closed':settled.length,'Dropped':dropped.length};
