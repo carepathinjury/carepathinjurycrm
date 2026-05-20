@@ -2628,6 +2628,8 @@ function getFilteredRefs(){
   if(crmMgrDateTo)data=data.filter(function(r){return(r.createdDate||'')<=crmMgrDateTo});
   return data;
 }
+function toggleNoShowDrilldown(){var el=document.getElementById('noShowDrilldown');if(el)el.style.display=el.style.display==='none'?'block':'none';}
+
 function renderCrmMgrDash(el) {
   if (!managerUnlocked) return;
   let filteredRefs=refs;
@@ -2657,7 +2659,20 @@ function renderCrmMgrDash(el) {
   var noShowPct=scheduledCount>0?Math.round(noShowCount/scheduledCount*100):0;
   var pendingApptPct=scheduledCount>0?Math.round(pendingApptCount/scheduledCount*100):0;
   h += '<div class="stats-row" style="grid-template-columns:repeat(5,1fr)">'+stat('Total Referrals',total,'teal')+stat('Pending Scheduling',pending,'gold')+stat('Active Alerts',alerts,'red')+stat('Patients Lost',lostCount+(leakageRate>0?' ('+leakageRate+'%)':''),'red')+stat('Case Mix',ctSummary||'—','')+'</div>';
-  h += '<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('Scheduled',scheduledCount,'teal')+stat('Appt Completed',completedCount+' ('+completedPct+'%)','teal')+stat('Pending Outcome',pendingApptCount+' ('+pendingApptPct+'%)','gold')+stat('No-Shows',noShowCount+' ('+noShowPct+'%)','red')+'</div>';
+  h += '<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('Scheduled',scheduledCount,'teal')+stat('Appt Completed',completedCount+' ('+completedPct+'%)','teal')+stat('Pending Outcome',pendingApptCount+' ('+pendingApptPct+'%)','gold')+'<div class="stat-card" style="cursor:pointer;border:2px solid transparent" onclick="toggleNoShowDrilldown()" onmouseover="this.style.borderColor=\'var(--red)\'" onmouseout="this.style.borderColor=\'transparent\'"><div class="stat-label">No-Shows</div><div class="stat-value red">'+noShowCount+' ('+noShowPct+'%)</div><div class="stat-sub" style="color:var(--teal)">click to view list</div></div></div>';
+  
+  // No-show drilldown (hidden by default)
+  h+='<div id="noShowDrilldown" style="display:none"><div class="table-card" style="border-left:4px solid var(--red);margin-bottom:16px"><div class="table-header"><h3>No-Show Patients</h3><button class="btn-resolve" onclick="document.getElementById(\'noShowDrilldown\').style.display=\'none\'" style="font-size:10px">Close ✕</button></div>';
+  var noShows=filteredRefs.filter(function(r){return r.apptOutcome==='no_show'});
+  if(noShows.length===0)h+='<div style="padding:16px;text-align:center;color:var(--gray-400)">No no-shows in this date range</div>';
+  else{
+    h+='<div class="table-scroll"><table class="tbl"><thead><tr><th>Patient</th><th>Case Type</th><th>Location</th><th>Appt Date</th><th>Attorney/Firm</th><th>Scheduler</th><th>Status</th></tr></thead><tbody>';
+    noShows.sort(function(a,b){return(b.apptDate||'').localeCompare(a.apptDate||'')}).forEach(function(r){
+      h+='<tr onclick="switchModule(\'crm\');crmNav(\'crm-detail\');showCrmDetail(\''+r.id+'\')" style="cursor:pointer"><td style="font-weight:600">'+esc(r.patientName)+'</td><td style="font-size:11px">'+esc(r.caseType||'')+'</td><td style="font-size:11px">'+esc(r.location||'')+'</td><td style="font-size:11px">'+fmtDate(r.apptDate)+'</td><td style="font-size:11px">'+esc(r.attorney||'')+' / '+esc(r.lawFirm||'')+'</td><td style="font-size:11px">'+esc(r.alertAssignedTo||r.registeredBy||'')+'</td><td><span class="status-badge '+(r.status==='Patient Lost'?'status-pending':'status-active')+'">'+esc(r.status||'')+'</span></td></tr>';
+    });
+    h+='</tbody></table></div>';
+  }
+  h+='</div></div>';
 
   // Visual overview — case type donut + status breakdown
   h+='<div class="table-card"><div class="table-header"><h3>Visual Overview</h3></div><div style="padding:16px 18px;display:flex;gap:32px;flex-wrap:wrap">';
@@ -3235,6 +3250,8 @@ var cmMgrDateFrom='',cmMgrDateTo='';
 function applyCmDateFilter(){cmMgrDateFrom=document.getElementById('cmMgrFrom').value||'';cmMgrDateTo=document.getElementById('cmMgrTo').value||'';renderCmDashboard(document.getElementById('sec-cm-mgr-dash'));}
 function clearCmDateFilter(){cmMgrDateFrom='';cmMgrDateTo='';renderCmDashboard(document.getElementById('sec-cm-mgr-dash'));}
 
+function toggleCmDrilldown(id){var el=document.getElementById('cmDrill-'+id);if(el)el.style.display=el.style.display==='none'?'block':'none';}
+
 function renderCmDashboard(el) {
   var fc=cases;
   if(cmMgrDateFrom)fc=fc.filter(function(c){return(c.createdDate||'')>=cmMgrDateFrom});
@@ -3261,7 +3278,26 @@ function renderCmDashboard(el) {
 
   h+='<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('Total Cases',fc.length,'teal')+stat('Active',active.length,'teal')+stat('In Litigation',inLit.length,'gold')+stat('Open Alerts',alerts.length,'red')+'</div>';
   h+='<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('Settled/Closed',settled.length,'')+stat('Dropped',dropped.length,'red')+stat('Avg Case Length',avgDays+' days','')+stat('Avg Active Age',activeDays+' days','')+'</div>';
-  h+='<div class="stats-row" style="grid-template-columns:repeat(3,1fr)">'+stat('Missing Claim Info',missingClaim.length,'gold')+stat('Intro Email Pending',introNotSent.length,'gold')+stat('Settlement Rate',fc.length>0?Math.round(settled.length/fc.length*100)+'%':'0%','teal')+'</div>';
+  h+='<div class="stats-row" style="grid-template-columns:repeat(3,1fr)">';
+  h+='<div class="stat-card" style="cursor:pointer" onclick="toggleCmDrilldown(\'missingClaim\')" onmouseover="this.style.border=\'2px solid var(--gold)\'" onmouseout="this.style.border=\'2px solid transparent\'"><div class="stat-label">Missing Claim Info</div><div class="stat-value gold">'+missingClaim.length+'</div><div class="stat-sub" style="color:var(--teal)">click to view</div></div>';
+  h+='<div class="stat-card" style="cursor:pointer" onclick="toggleCmDrilldown(\'introNotSent\')" onmouseover="this.style.border=\'2px solid var(--gold)\'" onmouseout="this.style.border=\'2px solid transparent\'"><div class="stat-label">Intro Email Pending</div><div class="stat-value gold">'+introNotSent.length+'</div><div class="stat-sub" style="color:var(--teal)">click to view</div></div>';
+  h+=stat('Settlement Rate',fc.length>0?Math.round(settled.length/fc.length*100)+'%':'0%','teal')+'</div>';
+
+  // Missing Claim drilldown
+  h+='<div id="cmDrill-missingClaim" style="display:none"><div class="table-card" style="border-left:4px solid var(--gold);margin-bottom:12px"><div class="table-header"><h3>Missing Claim Info</h3><button class="btn-resolve" onclick="document.getElementById(\'cmDrill-missingClaim\').style.display=\'none\'" style="font-size:10px">Close ✕</button></div>';
+  h+='<div class="table-scroll"><table class="tbl"><thead><tr><th>Patient</th><th>Case Type</th><th>Assigned</th><th>Missing Info</th><th>Days Active</th></tr></thead><tbody>';
+  missingClaim.forEach(function(c){
+    h+='<tr onclick="switchModule(\'cm\');cmNav(\'cm-detail\');showCmDetail(\''+c.id+'\')" style="cursor:pointer"><td style="font-weight:600">'+esc(c.patientName)+'</td><td style="font-size:11px">'+esc(c.caseType||'')+'</td><td style="font-size:11px">'+esc(c.assigned||'')+'</td><td style="font-size:11px;color:var(--gold)">'+esc(c.missingInfo||'')+'</td><td style="font-size:11px">'+daysBtw(c.createdDate||today(),today())+'</td></tr>';
+  });
+  h+='</tbody></table></div></div></div>';
+
+  // Intro Not Sent drilldown
+  h+='<div id="cmDrill-introNotSent" style="display:none"><div class="table-card" style="border-left:4px solid var(--gold);margin-bottom:12px"><div class="table-header"><h3>Intro Email Not Sent</h3><button class="btn-resolve" onclick="document.getElementById(\'cmDrill-introNotSent\').style.display=\'none\'" style="font-size:10px">Close ✕</button></div>';
+  h+='<div class="table-scroll"><table class="tbl"><thead><tr><th>Patient</th><th>Case Type</th><th>Assigned</th><th>Created</th><th>Days Active</th></tr></thead><tbody>';
+  introNotSent.forEach(function(c){
+    h+='<tr onclick="switchModule(\'cm\');cmNav(\'cm-detail\');showCmDetail(\''+c.id+'\')" style="cursor:pointer"><td style="font-weight:600">'+esc(c.patientName)+'</td><td style="font-size:11px">'+esc(c.caseType||'')+'</td><td style="font-size:11px">'+esc(c.assigned||'')+'</td><td style="font-size:11px">'+fmtDate(c.createdDate)+'</td><td style="font-size:11px">'+daysBtw(c.createdDate||today(),today())+'</td></tr>';
+  });
+  h+='</tbody></table></div></div>';
 
   // Visual charts
   var statusData={'Active':active.length,'In Litigation':inLit.length,'Settled/Closed':settled.length,'Dropped':dropped.length};
