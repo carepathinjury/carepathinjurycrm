@@ -3251,8 +3251,21 @@ function renderCmPage(page) {
 }
 
 var cmMgrDateFrom='',cmMgrDateTo='';
-function applyCmDateFilter(){cmMgrDateFrom=document.getElementById('cmMgrFrom').value||'';cmMgrDateTo=document.getElementById('cmMgrTo').value||'';renderCmDashboard(document.getElementById('sec-cm-mgr-dash'));}
-function clearCmDateFilter(){cmMgrDateFrom='';cmMgrDateTo='';renderCmDashboard(document.getElementById('sec-cm-mgr-dash'));}
+function applyCmDateFilter(){
+  cmMgrDateFrom=document.getElementById('cmMgrFrom').value||'';
+  cmMgrDateTo=document.getElementById('cmMgrTo').value||'';
+  console.log('📅 CM Date Filter Applied:',cmMgrDateFrom,'to',cmMgrDateTo);
+  var el=document.getElementById('sec-cm-mgr-dash');
+  if(!el){el=document.getElementById('sec-cm-dashboard');console.log('📅 Fallback to sec-cm-dashboard');}
+  if(el)renderCmDashboard(el);
+}
+function clearCmDateFilter(){
+  cmMgrDateFrom='';cmMgrDateTo='';
+  console.log('📅 CM Date Filter Cleared');
+  var el=document.getElementById('sec-cm-mgr-dash');
+  if(!el)el=document.getElementById('sec-cm-dashboard');
+  if(el)renderCmDashboard(el);
+}
 
 function toggleCmDrilldown(id){var el=document.getElementById('cmDrill-'+id);if(el)el.style.display=el.style.display==='none'?'block':'none';}
 
@@ -3283,12 +3296,12 @@ function renderCmDashboard(el) {
   h+='<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('Total Cases',fc.length,'teal')+stat('Active',active.length,'teal')+stat('In Litigation',inLit.length,'gold')+stat('Open Alerts',alerts.length,'red')+'</div>';
   h+='<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('Settled/Closed',settled.length,'')+stat('Dropped',dropped.length,'red')+stat('Avg Case Length',avgDays+' days','')+stat('Avg Active Age',activeDays+' days','')+'</div>';
   h+='<div class="stats-row" style="grid-template-columns:repeat(3,1fr)">';
-  h+='<div class="stat-card" style="cursor:pointer" onclick="toggleCmDrilldown(\'missingClaim\')" onmouseover="this.style.border=\'2px solid var(--gold)\'" onmouseout="this.style.border=\'2px solid transparent\'"><div class="stat-label">Missing Claim Info</div><div class="stat-value gold">'+missingClaim.length+'</div><div class="stat-sub" style="color:var(--teal)">click to view</div></div>';
-  h+='<div class="stat-card" style="cursor:pointer" onclick="toggleCmDrilldown(\'introNotSent\')" onmouseover="this.style.border=\'2px solid var(--gold)\'" onmouseout="this.style.border=\'2px solid transparent\'"><div class="stat-label">Intro Email Pending</div><div class="stat-value gold">'+introNotSent.length+'</div><div class="stat-sub" style="color:var(--teal)">click to view</div></div>';
+  h+='<div class="stat-card" style="cursor:pointer;border:2px solid transparent" id="cmStatMissing" onclick="toggleCmDrilldown(\'missingClaim\')"><div class="stat-label">Missing Claim Info</div><div class="stat-value gold">'+missingClaim.length+'</div><div class="stat-sub" style="color:var(--teal)">click to view</div></div>';
+  h+='<div class="stat-card" style="cursor:pointer;border:2px solid transparent" id="cmStatIntro" onclick="toggleCmDrilldown(\'introNotSent\')"><div class="stat-label">Intro Email Pending</div><div class="stat-value gold">'+introNotSent.length+'</div><div class="stat-sub" style="color:var(--teal)">click to view</div></div>';
   h+=stat('Settlement Rate',fc.length>0?Math.round(settled.length/fc.length*100)+'%':'0%','teal')+'</div>';
 
   // Missing Claim drilldown
-  h+='<div id="cmDrill-missingClaim" style="display:none"><div class="table-card" style="border-left:4px solid var(--gold);margin-bottom:12px"><div class="table-header"><h3>Missing Claim Info</h3><button class="btn-resolve" onclick="document.getElementById(\'cmDrill-missingClaim\').style.display=\'none\'" style="font-size:10px">Close ✕</button></div>';
+  h+='<div id="cmDrill-missingClaim" style="display:none"><div class="table-card" style="border-left:4px solid var(--gold);margin-bottom:12px"><div class="table-header"><h3>Missing Claim Info</h3><button class="btn-resolve" onclick="toggleCmDrilldown(\'missingClaim\')" style="font-size:10px">Close ✕</button></div>';
   h+='<div class="table-scroll"><table class="tbl"><thead><tr><th>Patient</th><th>Case Type</th><th>Assigned</th><th>Missing Info</th><th>Days Active</th></tr></thead><tbody>';
   missingClaim.forEach(function(c){
     h+='<tr onclick="switchModule(\'cm\');cmNav(\'cm-detail\');showCmDetail(\''+c.id+'\')" style="cursor:pointer"><td style="font-weight:600">'+esc(c.patientName)+'</td><td style="font-size:11px">'+esc(c.caseType||'')+'</td><td style="font-size:11px">'+esc(c.assigned||'')+'</td><td style="font-size:11px;color:var(--gold)">'+esc(c.missingInfo||'')+'</td><td style="font-size:11px">'+daysBtw(c.createdDate||today(),today())+'</td></tr>';
@@ -3296,7 +3309,7 @@ function renderCmDashboard(el) {
   h+='</tbody></table></div></div></div>';
 
   // Intro Not Sent drilldown
-  h+='<div id="cmDrill-introNotSent" style="display:none"><div class="table-card" style="border-left:4px solid var(--gold);margin-bottom:12px"><div class="table-header"><h3>Intro Email Not Sent</h3><button class="btn-resolve" onclick="document.getElementById(\'cmDrill-introNotSent\').style.display=\'none\'" style="font-size:10px">Close ✕</button></div>';
+  h+='<div id="cmDrill-introNotSent" style="display:none"><div class="table-card" style="border-left:4px solid var(--gold);margin-bottom:12px"><div class="table-header"><h3>Intro Email Not Sent</h3><button class="btn-resolve" onclick="toggleCmDrilldown(\'introNotSent\')" style="font-size:10px">Close ✕</button></div>';
   h+='<div class="table-scroll"><table class="tbl"><thead><tr><th>Patient</th><th>Case Type</th><th>Assigned</th><th>Created</th><th>Days Active</th></tr></thead><tbody>';
   introNotSent.forEach(function(c){
     h+='<tr onclick="switchModule(\'cm\');cmNav(\'cm-detail\');showCmDetail(\''+c.id+'\')" style="cursor:pointer"><td style="font-weight:600">'+esc(c.patientName)+'</td><td style="font-size:11px">'+esc(c.caseType||'')+'</td><td style="font-size:11px">'+esc(c.assigned||'')+'</td><td style="font-size:11px">'+fmtDate(c.createdDate)+'</td><td style="font-size:11px">'+daysBtw(c.createdDate||today(),today())+'</td></tr>';
