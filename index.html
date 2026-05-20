@@ -3053,6 +3053,13 @@ function saveReferral() {
     const prev=refs[idx];
     var updatedRegDate=document.getElementById('fRegDate').value||prev.createdDate;
     if(data.apptDate&&!prev.apptDate){data.dateScheduledOn=today();data.daysToSchedule=daysBtw(prev.createdDate,today());data.alertAssignedTo=null;if(data.status==='Pending Scheduling')data.status='Scheduled';}
+    // If appt date changed AND previous outcome was no_show or cancelled, reset outcome for fresh tracking
+    if(data.apptDate&&prev.apptDate&&data.apptDate!==prev.apptDate&&(prev.apptOutcome==='no_show'||prev.apptOutcome==='cancelled')){
+      data.apptOutcome=null;data.apptOutcomeReason='';data.apptConfirmAssignedTo=null;data.lastApptFollowUp=null;
+      if(data.status!=='Patient Lost')data.status='Scheduled';
+      if(!data.updateLog)data.updateLog=prev.updateLog||[];
+      data.updateLog=[...(prev.updateLog||[]),{date:today(),method:'System',summary:'Rescheduled from '+fmtDate(prev.apptDate)+' (was '+prev.apptOutcome+') to '+fmtDate(data.apptDate)}];
+    }
     refs[idx]={...prev,...data,createdDate:updatedRegDate};
     // Auto-create case if just got scheduled and no linked case exists
     if(data.apptDate&&!prev.apptDate&&!cases.find(c=>c.sourceRefId===editingRefId)) createCaseFromRef(refs[idx]);
@@ -3254,16 +3261,13 @@ var cmMgrDateFrom='',cmMgrDateTo='';
 function applyCmDateFilter(){
   cmMgrDateFrom=document.getElementById('cmMgrFrom').value||'';
   cmMgrDateTo=document.getElementById('cmMgrTo').value||'';
-  console.log('📅 CM Date Filter Applied:',cmMgrDateFrom,'to',cmMgrDateTo);
-  var el=document.getElementById('sec-cm-mgr-dash');
-  if(!el){el=document.getElementById('sec-cm-dashboard');console.log('📅 Fallback to sec-cm-dashboard');}
+  // Find the currently active CM section
+  var el=document.querySelector('#module-cm .section.active');
   if(el)renderCmDashboard(el);
 }
 function clearCmDateFilter(){
   cmMgrDateFrom='';cmMgrDateTo='';
-  console.log('📅 CM Date Filter Cleared');
-  var el=document.getElementById('sec-cm-mgr-dash');
-  if(!el)el=document.getElementById('sec-cm-dashboard');
+  var el=document.querySelector('#module-cm .section.active');
   if(el)renderCmDashboard(el);
 }
 
