@@ -1528,6 +1528,11 @@ function exportAllMetrics(){
   rRows.push(['TIMING METRICS']);
   rRows.push(['Avg Days: Referral → Scheduled',avgDaysToSched]);
   rRows.push(['Avg Days: Referral → Completed 1st Appt',avgDaysToCompleted]);
+  rRows.push([]);
+  rRows.push(['COMPLETION RATE BY LOCATION']);
+  rRows.push(['Location','Referrals','Scheduled','Completed','Completion %','No-Shows','No-Show %','Lost']);
+  var csvLocDetails={};data.forEach(function(r){var l=r.location||'Unknown';if(!csvLocDetails[l])csvLocDetails[l]={total:0,sched:0,comp:0,noshow:0,lost:0};csvLocDetails[l].total++;if(r.apptDate)csvLocDetails[l].sched++;if(r.apptOutcome==='completed')csvLocDetails[l].comp++;if(r.apptOutcome==='no_show')csvLocDetails[l].noshow++;if(r.status==='Patient Lost')csvLocDetails[l].lost++;});
+  Object.entries(csvLocDetails).sort(function(a,b){return b[1].total-a[1].total}).forEach(function(e){var d=e[1];rRows.push([e[0],d.total,d.sched,d.comp,d.sched>0?Math.round(d.comp/d.sched*100)+'%':'0%',d.noshow,d.sched>0?Math.round(d.noshow/d.sched*100)+'%':'0%',d.lost]);});
   var label=crmMgrDateFrom||crmMgrDateTo?'-'+crmMgrDateFrom+'-to-'+crmMgrDateTo:'';
   downloadCSV('carepath-referrals'+label+'-'+today()+'.csv',rHeaders,rRows);
 }
@@ -1712,10 +1717,15 @@ function downloadVisualReport(){
   html+='</table>';
 
   // By location
-  html+='<h2>Referrals by Location</h2><table><tr><th>Location</th><th>Count</th><th>%</th><th>Chart</th></tr>';
-  Object.entries(locCounts).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
-    var pct=total>0?Math.round(e[1]/total*100):0;
-    html+='<tr><td><strong>'+e[0]+'</strong></td><td>'+e[1]+'</td><td>'+pct+'%</td><td><div class="bar-wrap"><div class="bar" style="width:'+pct+'%;background:#c8973a"></div></div></td></tr>';
+  html+='<h2>Appointment Completion Rate by Location</h2><table><tr><th>Location</th><th>Referrals</th><th>Scheduled</th><th>Completed</th><th>Completion %</th><th>No-Shows</th><th>No-Show %</th><th>Lost</th></tr>';
+  var vrLocDetails={};data.forEach(function(r){
+    var l=r.location||'Unknown';
+    if(!vrLocDetails[l])vrLocDetails[l]={total:0,sched:0,comp:0,noshow:0,lost:0};
+    vrLocDetails[l].total++;if(r.apptDate)vrLocDetails[l].sched++;if(r.apptOutcome==='completed')vrLocDetails[l].comp++;if(r.apptOutcome==='no_show')vrLocDetails[l].noshow++;if(r.status==='Patient Lost')vrLocDetails[l].lost++;
+  });
+  Object.entries(vrLocDetails).sort(function(a,b){return b[1].total-a[1].total}).forEach(function(e){
+    var d=e[1];var compPct=d.sched>0?Math.round(d.comp/d.sched*100):0;var nsPct=d.sched>0?Math.round(d.noshow/d.sched*100):0;
+    html+='<tr><td><strong>'+e[0]+'</strong></td><td>'+d.total+'</td><td>'+d.sched+'</td><td style="color:#1a7f7a;font-weight:700">'+d.comp+'</td><td style="font-weight:700;color:'+(compPct>=75?'#1a7f7a':compPct>=50?'#c8973a':'#c0392b')+'">'+compPct+'%</td><td style="color:'+(d.noshow>0?'#c0392b':'')+'">'+d.noshow+'</td><td>'+nsPct+'%</td><td>'+d.lost+'</td></tr>';
   });
   html+='</table>';
 
@@ -2808,10 +2818,29 @@ function renderCrmMgrDash(el) {
   h+='</div></div>';
 
   // Location bar chart
-  h+='<div class="table-card"><div class="table-header"><h3>Referrals by Location</h3></div><div style="padding:8px 18px">';
-  var locData=Object.entries(locCounts).sort(function(a,b){return b[1]-a[1]}).map(function(e,i){return{label:e[0],value:e[1],color:CHART_COLORS[i%CHART_COLORS.length]}});
-  h+=renderBarChart(locData);
-  h+='</div></div>';
+  // Location completion rate table
+  h+='<div class="table-card"><div class="table-header"><h3>Appointment Completion Rate by Location</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Location</th><th>Referrals</th><th>Scheduled</th><th>Completed</th><th>Completion %</th><th>No-Shows</th><th>No-Show %</th><th>Pending</th><th>Lost</th></tr></thead><tbody>';
+  var locDetails={};filteredRefs.forEach(function(r){
+    var l=r.location||'Unknown';
+    if(!locDetails[l])locDetails[l]={total:0,sched:0,comp:0,noshow:0,pending:0,lost:0};
+    locDetails[l].total++;
+    if(r.apptDate)locDetails[l].sched++;
+    if(r.apptOutcome==='completed')locDetails[l].comp++;
+    if(r.apptOutcome==='no_show')locDetails[l].noshow++;
+    if(r.apptDate&&!r.apptOutcome)locDetails[l].pending++;
+    if(r.status==='Patient Lost')locDetails[l].lost++;
+  });
+  Object.entries(locDetails).sort(function(a,b){return b[1].total-a[1].total}).forEach(function(e){
+    var loc=e[0],d=e[1];
+    var compPct=d.sched>0?Math.round(d.comp/d.sched*100):0;
+    var nsPct=d.sched>0?Math.round(d.noshow/d.sched*100):0;
+    var compColor=compPct>=75?'var(--teal)':compPct>=50?'var(--gold)':'var(--red)';
+    h+='<tr><td style="font-weight:600">'+esc(loc)+'</td><td>'+d.total+'</td><td>'+d.sched+'</td><td style="color:var(--teal);font-weight:600">'+d.comp+'</td>';
+    h+='<td><div style="display:flex;align-items:center;gap:6px"><div style="flex:1;background:#eee;height:8px;border-radius:4px;overflow:hidden"><div style="width:'+compPct+'%;height:100%;background:'+compColor+';border-radius:4px"></div></div><span style="font-weight:700;font-size:11px;color:'+compColor+'">'+compPct+'%</span></div></td>';
+    h+='<td style="color:'+(d.noshow>0?'var(--red)':'')+'">'+d.noshow+'</td><td style="color:'+(nsPct>10?'var(--red)':'')+'">'+nsPct+'%</td>';
+    h+='<td>'+d.pending+'</td><td style="color:'+(d.lost>0?'var(--red)':'')+'">'+d.lost+'</td></tr>';
+  });
+  h+='</tbody></table></div></div>';
 
   // Patients by Law Firm
   var firmCounts={};filteredRefs.forEach(function(r){var f=r.lawFirm||'No Firm';firmCounts[f]=(firmCounts[f]||0)+1;});
