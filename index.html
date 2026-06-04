@@ -2060,7 +2060,11 @@ function crmAlerts() {
     if (r.apptDate && r.apptOutcome !== 'completed' && r.status !== 'Completed') {
       const past = daysBtw(r.apptDate, now);
       if (past >= -1 && past <= 0 && r.paperworkCompleted !== 'yes') {
-        alerts.push({ id:r.id, type:'paperwork', patientName:r.patientName, assignedTo:r.alertAssignedTo, apptDate:r.apptDate, location:r.location, caseType:r.caseType, phone:r.phone, email:r.email });
+        var lastResent=null;if(r.updateLog){r.updateLog.forEach(function(u){if(u.method==='Paperwork'&&u.summary&&u.summary.indexOf('Resent')!==-1)lastResent=u.date;});}
+        // If resent, suppress alert for 1 day
+        if(!lastResent || daysBtw(lastResent, now) >= 1){
+          alerts.push({ id:r.id, type:'paperwork', patientName:r.patientName, assignedTo:r.alertAssignedTo, apptDate:r.apptDate, location:r.location, caseType:r.caseType, phone:r.phone, email:r.email, lastResent:lastResent });
+        }
       }
       if (past >= -3 && past <= 0 && r.recordsNeeded && r.recordsNeeded.length > 0) {
         var pendingRecs = r.recordsNeeded.filter(function(rc){return rc.status!=='received';});
@@ -2304,6 +2308,7 @@ function renderCrmAlertCard(a, i) {
   } else if(a.type==='paperwork'){
     title='New Patient Paperwork Not Completed!';
     desc='<strong>'+esc(a.patientName)+'</strong> has appt on '+fmtDate(a.apptDate)+'. Paperwork still pending — contact patient to complete and upload.'+contact;
+    if(a.lastResent)desc+='<br><span style="font-size:10px;color:var(--teal);font-weight:600">📄 Paperwork last resent on '+fmtDate(a.lastResent)+' — follow up to confirm completion</span>';
     btn='<button class="btn-resolve" style="background:rgba(200,151,58,0.12);color:var(--gold);border-color:rgba(200,151,58,0.3)" onclick="openPaperworkModal(\''+a.id+'\')">Update</button>';
   } else if(a.type==='records_needed'){
     var recList=a.pendingRecords.map(function(rc){return esc(rc.facility)+' ('+esc(rc.status)+')'}).join(', ');
