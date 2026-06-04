@@ -357,6 +357,7 @@
     <div class="nav-item" data-page="crm-alerts" onclick="crmNav('crm-alerts')"><div class="nav-icon">⚠️</div> Alerts <span class="nav-badge" id="crmAlertBadge">0</span></div>
     <div class="nav-item" data-page="crm-contacts" onclick="crmNav('crm-contacts')"><div class="nav-icon">📇</div> Contacts</div>
     <div class="nav-item" data-page="crm-lost" onclick="crmNav('crm-lost')"><div class="nav-icon">🚫</div> Lost Patients</div>
+    <div class="nav-item" data-page="crm-callbacks" onclick="crmNav('crm-callbacks')"><div class="nav-icon">📞</div> Callback List <span class="nav-badge gold" id="callbackBadge" style="display:none">0</span></div>
   </div>
   <div class="nav-section" id="crmSchedulerSection">
     <div class="nav-section-label">Schedulers</div>
@@ -379,6 +380,7 @@
   <div class="section" id="sec-crm-alerts"></div>
   <div class="section" id="sec-crm-contacts"></div>
   <div class="section" id="sec-crm-lost"></div>
+  <div class="section" id="sec-crm-callbacks"></div>
   <div class="section" id="sec-crm-staff-Paola"></div>
   <div class="section" id="sec-crm-staff-Abigail"></div>
   <div class="section" id="sec-crm-staff-Maria"></div>
@@ -461,10 +463,12 @@
   <div class="nav-section">
     <div class="nav-section-label">Call Center</div>
     <div class="nav-item active" data-page="psr-dashboard" onclick="psrNav('psr-dashboard')"><div class="nav-icon">📊</div> Dashboard <span class="nav-badge gold" id="psrNotifBadge" style="display:none">0</span></div>
+    <div class="nav-item" data-page="psr-alerts" onclick="psrNav('psr-alerts')"><div class="nav-icon">⚠️</div> Alerts <span class="nav-badge gold" id="psrAlertBadge" style="display:none">0</span></div>
     <div class="nav-item" data-page="psr-search" onclick="psrNav('psr-search')"><div class="nav-icon">🔍</div> Patient Lookup</div>
     <div class="nav-item" data-page="psr-log" onclick="psrNav('psr-log')"><div class="nav-icon">📞</div> Call Log</div>
     <div class="nav-item" data-page="psr-tickets" onclick="psrNav('psr-tickets')"><div class="nav-icon">🎫</div> Tickets <span class="nav-badge" id="psrTicketBadge" style="display:none">0</span></div>
     <div class="nav-item" data-page="psr-contacts" onclick="psrNav('psr-contacts')"><div class="nav-icon">📇</div> Contacts</div>
+    <div class="nav-item" data-page="psr-callbacks" onclick="psrNav('psr-callbacks')"><div class="nav-icon">📋</div> Callback List <span class="nav-badge gold" id="callbackBadgePsr" style="display:none">0</span></div>
   </div>
   <div class="nav-section">
     <div class="nav-section-label">Team</div>
@@ -480,11 +484,13 @@
 </nav>
 <div class="main-content" id="psrMain">
   <div class="section active" id="sec-psr-dashboard"></div>
+  <div class="section" id="sec-psr-alerts"></div>
   <div class="section" id="sec-psr-search"></div>
   <div class="section" id="sec-psr-log"></div>
   <div class="section" id="sec-psr-tickets"></div>
   <div class="section" id="sec-psr-ticket-detail"></div>
   <div class="section" id="sec-psr-contacts"></div>
+  <div class="section" id="sec-psr-callbacks"></div>
   <div class="section" id="sec-psr-staff-Miguel"></div>
   <div class="section" id="sec-psr-staff-Samuel"></div>
   <div class="section" id="sec-psr-my-metrics"></div>
@@ -574,6 +580,54 @@
     <div class="form-group" style="grid-column:1/-1"><textarea id="pcNotes" rows="2" placeholder="DPRP info, follow-up details, communication notes..."></textarea></div>
   </div></div>
   <div class="modal-footer"><button class="btn-delete" id="btnDeletePrecert" style="display:none" onclick="deletePrecert()">Delete</button><button class="btn-cancel" onclick="closePrecertModal()">Cancel</button><button class="btn-save" onclick="savePrecert()">Save Pre-Cert</button></div>
+</div>
+</div>
+
+<!-- Callback Request Modal -->
+<div class="modal-overlay" id="callbackModal">
+<div class="modal" style="width:600px">
+  <div class="modal-header"><h2 id="callbackModalTitle">New Callback Request</h2><button class="modal-close" onclick="closeCallbackModal()">&times;</button></div>
+  <div class="modal-body"><div class="form-grid">
+    <div class="form-group" style="grid-column:1/-1"><label>Link to Existing Patient <span style="font-size:10px;color:var(--gray-400)">(optional — auto-fills fields below)</span></label><select id="cbRefId" onchange="fillCallbackFromRef()"><option value="">— Type manually below or select patient —</option></select></div>
+    <div class="form-group"><label>Patient Name <span style="color:var(--red)">*</span></label><input id="cbPatientName" placeholder="First Last"></div>
+    <div class="form-group"><label>Phone Number <span style="color:var(--red)">*</span></label><input id="cbPhone" placeholder="(xxx) xxx-xxxx" oninput="formatPhone(this)"></div>
+    <div class="form-group"><label>Patient DOB</label><input type="date" id="cbDob"></div>
+    <div class="form-group"><label>Case DOI</label><input type="date" id="cbDoi"></div>
+    <div class="form-group" style="grid-column:1/-1"><label>What is Needed? <span style="color:var(--red)">*</span></label><select id="cbCategory"><option value="">— Select Category —</option><option value="follow_up_appt">Follow-up Appt. Needed</option><option value="injection_appt">Injection Appt. Needed</option><option value="unresponsive">Unresponsive Patient</option><option value="other">Other</option></select></div>
+    <div class="form-group" style="grid-column:1/-1"><label>Notes / Reason</label><textarea id="cbNotes" rows="3" placeholder="Why does this patient need a callback? Any details..."></textarea></div>
+  </div></div>
+  <div class="modal-footer"><button class="btn-cancel" onclick="closeCallbackModal()">Cancel</button><button class="btn-save" onclick="saveCallback()">Save Request</button></div>
+</div>
+</div>
+
+<!-- Callback Update Modal -->
+<div class="modal-overlay" id="callbackUpdateModal">
+<div class="modal" style="width:550px">
+  <div class="modal-header"><h2>Update Callback</h2><button class="modal-close" onclick="closeCallbackUpdateModal()">&times;</button></div>
+  <div class="modal-body">
+    <div id="cbUpdateInfo" style="margin-bottom:12px"></div>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1"><label>Outcome <span style="color:var(--red)">*</span></label><select id="cbUpdateOutcome"><option value="attempted">Contacted — Unavailable, try again</option><option value="completed">Success — Task Completed</option><option value="no_longer_needed">No Longer Needed</option></select></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Notes</label><textarea id="cbUpdateNotes" rows="2" placeholder="Update details..."></textarea></div>
+    </div>
+  </div>
+  <div class="modal-footer"><button class="btn-cancel" onclick="closeCallbackUpdateModal()">Cancel</button><button class="btn-save" onclick="submitCallbackUpdate()">Update</button></div>
+</div>
+</div>
+
+<!-- Paperwork Resolve Modal -->
+<div class="modal-overlay" id="paperworkModal">
+<div class="modal" style="width:460px">
+  <div class="modal-header"><h2>NP Paperwork Status</h2><button class="modal-close" onclick="document.getElementById('paperworkModal').classList.remove('show')">&times;</button></div>
+  <div class="modal-body">
+    <p id="paperworkPatientName" style="font-weight:600;font-size:14px;color:var(--navy);margin-bottom:14px"></p>
+    <div class="form-grid" style="grid-template-columns:1fr">
+      <div class="form-group"><label>Outcome</label><select id="paperworkOutcome" onchange="togglePaperworkFields()"><option value="resent">Resent Paperwork</option><option value="completed">Paperwork Completed</option></select></div>
+      <div class="form-group" id="paperworkDateGroup"><label>Date Resent</label><input type="date" id="paperworkDate"></div>
+      <div class="form-group"><label>Notes</label><textarea id="paperworkNotes" rows="2"></textarea></div>
+    </div>
+  </div>
+  <div class="modal-footer"><button class="btn-cancel" onclick="document.getElementById('paperworkModal').classList.remove('show')">Cancel</button><button class="btn-save" onclick="submitPaperworkResolve()">Submit</button></div>
 </div>
 </div>
 
@@ -1191,6 +1245,7 @@ async function _loadFromSupabase(){
   }catch(e){console.warn('⚠️ Load failed:',e);}
   _supabaseReady=true;
   loadPrecerts();
+  loadCallbacks();
 }
 
 // ─── Save functions ────────────────────────────────────────────────
@@ -1451,9 +1506,16 @@ function exportAllMetrics(){
   var noShows=data.filter(function(r){return r.apptOutcome==='no_show'}).length;
   var pendingOutcome=data.filter(function(r){return r.apptDate&&!r.apptOutcome}).length;
   var lost=data.filter(function(r){return r.status==='Patient Lost'}).length;
-  var rHeaders=['Patient','DOB','Case Type','Location','Law Firm','Attorney','Source','Status','Registered','Appt Date','Outcome','Lost Reason'];
-  var rRows=data.map(function(r){return[r.patientName,r.dob,r.caseType,r.location,r.lawFirm,r.attorney,r.referralSource,r.status,r.createdDate,r.apptDate,r.apptOutcome||'',r.lostReason||'']});
-  // Add summary row
+  // Timing metrics
+  var refsWithSchedDays=data.filter(function(r){return r.daysToSchedule!=null&&r.daysToSchedule>=0});
+  var avgDaysToSched=refsWithSchedDays.length>0?(refsWithSchedDays.reduce(function(s,r){return s+r.daysToSchedule},0)/refsWithSchedDays.length).toFixed(1):0;
+  var completedWithDates=data.filter(function(r){return r.apptOutcome==='completed'&&r.createdDate&&r.apptDate});
+  var avgDaysToCompleted=completedWithDates.length>0?(completedWithDates.reduce(function(s,r){return s+daysBtw(r.createdDate,r.apptDate)},0)/completedWithDates.length).toFixed(1):0;
+  var rHeaders=['Patient','DOB','Case Type','Location','Law Firm','Attorney','Source','Status','Registered','Appt Date','Outcome','Days to Schedule','Days to Completed Appt','Lost Reason'];
+  var rRows=data.map(function(r){
+    var daysToComp=(r.apptOutcome==='completed'&&r.createdDate&&r.apptDate)?daysBtw(r.createdDate,r.apptDate):'';
+    return[r.patientName,r.dob,r.caseType,r.location,r.lawFirm,r.attorney,r.referralSource,r.status,r.createdDate,r.apptDate,r.apptOutcome||'',r.daysToSchedule!=null?r.daysToSchedule:'',daysToComp,r.lostReason||'']
+  });
   rRows.push([]);
   rRows.push(['SUMMARY']);
   rRows.push(['Total Referrals',data.length]);
@@ -1462,6 +1524,10 @@ function exportAllMetrics(){
   rRows.push(['No-Shows',noShows,scheduled>0?Math.round(noShows/scheduled*100)+'%':'']);
   rRows.push(['Pending Outcome',pendingOutcome]);
   rRows.push(['Patient Lost',lost]);
+  rRows.push([]);
+  rRows.push(['TIMING METRICS']);
+  rRows.push(['Avg Days: Referral → Scheduled',avgDaysToSched]);
+  rRows.push(['Avg Days: Referral → Completed 1st Appt',avgDaysToCompleted]);
   var label=crmMgrDateFrom||crmMgrDateTo?'-'+crmMgrDateFrom+'-to-'+crmMgrDateTo:'';
   downloadCSV('carepath-referrals'+label+'-'+today()+'.csv',rHeaders,rRows);
 }
@@ -1618,6 +1684,19 @@ function downloadVisualReport(){
   html+='<div class="stat"><div class="stat-val">'+apptCompleted+(apptScheduled>0?' ('+Math.round(apptCompleted/apptScheduled*100)+'%)':'')+'</div><div class="stat-lbl">Appt Completed</div></div>';
   html+='<div class="stat"><div class="stat-val">'+apptPending+'</div><div class="stat-lbl">Pending Outcome</div></div>';
   html+='<div class="stat"><div class="stat-val" style="color:#c0392b">'+apptNoShow+(apptScheduled>0?' ('+Math.round(apptNoShow/apptScheduled*100)+'%)':'')+'</div><div class="stat-lbl">No-Shows</div></div>';
+  html+='</div>';
+
+  // Timing metrics
+  var vrRefsWithSchedDays=data.filter(function(r){return r.daysToSchedule!=null&&r.daysToSchedule>=0});
+  var vrAvgDaysToSched=vrRefsWithSchedDays.length>0?(vrRefsWithSchedDays.reduce(function(s,r){return s+r.daysToSchedule},0)/vrRefsWithSchedDays.length).toFixed(1):'0';
+  var vrCompletedWithDates=data.filter(function(r){return r.apptOutcome==='completed'&&r.createdDate&&r.apptDate});
+  var vrAvgDaysToCompleted=vrCompletedWithDates.length>0?(vrCompletedWithDates.reduce(function(s,r){return s+daysBtw(r.createdDate,r.apptDate)},0)/vrCompletedWithDates.length).toFixed(1):'0';
+  var vrMedian=0;if(vrRefsWithSchedDays.length>0){var vrSorted=vrRefsWithSchedDays.map(function(r){return r.daysToSchedule}).sort(function(a,b){return a-b});vrMedian=vrSorted[Math.floor(vrSorted.length/2)];}
+  html+='<h2>Scheduling Speed</h2>';
+  html+='<div style="text-align:center;margin:8px 0 16px">';
+  html+='<div class="stat"><div class="stat-val">'+vrAvgDaysToSched+'</div><div class="stat-lbl">Avg Days: Referral → Scheduled</div></div>';
+  html+='<div class="stat"><div class="stat-val">'+vrMedian+'</div><div class="stat-lbl">Median Days to Schedule</div></div>';
+  html+='<div class="stat"><div class="stat-val">'+vrAvgDaysToCompleted+'</div><div class="stat-lbl">Avg Days: Referral → Completed 1st Appt</div></div>';
   html+='</div>';
 
   // Charts
@@ -2101,6 +2180,7 @@ function updateAllBadges() {
   try {
   const ca = crmAlerts(), cma = cmAlerts();
   updateNjmvaBadges();
+  updateCallbackBadges();
   const openTk = tickets.filter(t=>t.status!=='Resolved').length;
   const total = ca.length + cma.length + openTk;
   console.log('Badge update — CRM:',ca.length,'CM:',cma.length,'Tk:',openTk);
@@ -2142,6 +2222,7 @@ function renderCrmPage(page) {
   else if (page === 'crm-alerts') renderCrmAlerts(el);
   else if (page === 'crm-contacts') renderCmContacts(el);
   else if (page === 'crm-lost') renderCrmLostPatients(el);
+  else if (page === 'crm-callbacks') renderCallbackList(el);
   else if (page.startsWith('crm-staff-')) renderCrmStaff(el, page.replace('crm-staff-',''));
   else if (page === 'crm-my-metrics') renderCrmMyMetrics(el);
   else if (page === 'crm-mgr-dash') renderCrmMgrDash(el);
@@ -2213,7 +2294,7 @@ function renderCrmAlertCard(a, i) {
   } else if(a.type==='paperwork'){
     title='New Patient Paperwork Not Completed!';
     desc='<strong>'+esc(a.patientName)+'</strong> has appt on '+fmtDate(a.apptDate)+'. Paperwork still pending — contact patient to complete and upload.'+contact;
-    btn='<button class="btn-resolve" style="background:rgba(200,151,58,0.12);color:var(--gold);border-color:rgba(200,151,58,0.3)" onclick="openEditRefModal(\''+a.id+'\')">Update</button>';
+    btn='<button class="btn-resolve" style="background:rgba(200,151,58,0.12);color:var(--gold);border-color:rgba(200,151,58,0.3)" onclick="openPaperworkModal(\''+a.id+'\')">Update</button>';
   } else if(a.type==='records_needed'){
     var recList=a.pendingRecords.map(function(rc){return esc(rc.facility)+' ('+esc(rc.status)+')'}).join(', ');
     title='Records Still Needed Before Appointment!';
@@ -2295,9 +2376,30 @@ function renderCrmReferrals(el) {
 
 function renderCrmAlerts(el) {
   const alerts = crmAlerts();
-  let h = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">Scheduling Alerts</div><div style="margin-left:auto"><button class="btn-primary" onclick="openNewRefModal()" style="font-size:11px;padding:7px 14px">+ New Referral</button></div></div><div class="page-subtitle">'+alerts.length+' active alerts.</div>';
-  if (alerts.length === 0) h += '<div style="padding:40px;text-align:center;color:var(--gray-400)">No active alerts.</div>';
-  else {
+  // Get callback reminders for this user
+  var now=today();
+  var myCallbacks=callbackRequests.filter(function(cb){return cb.status==='active'&&(!cb.next_follow_up||cb.next_follow_up<=now)&&(cb.assigned_to===currentUser||currentUser==='Manager')});
+  var totalAlerts=alerts.length+myCallbacks.length;
+  let h = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">Scheduling Alerts</div><div style="margin-left:auto"><button class="btn-primary" onclick="openNewRefModal()" style="font-size:11px;padding:7px 14px">+ New Referral</button></div></div><div class="page-subtitle">'+totalAlerts+' active alerts.</div>';
+  
+  // Callback reminders first
+  if(myCallbacks.length>0){
+    h+='<h3 style="font-family:DM Serif Display,serif;font-size:16px;color:var(--gold);margin-bottom:10px">📞 Callback Reminders ('+myCallbacks.length+')</h3>';
+    myCallbacks.forEach(function(cb){
+      var catLabel=CB_CATEGORIES[cb.category]||cb.category;
+      var attempts=(cb.contact_log||[]).length;
+      h+='<div class="table-card" style="border-left:4px solid var(--gold);margin-bottom:8px;padding:12px 18px"><div style="display:flex;align-items:center;gap:12px">';
+      h+='<div style="flex:1"><div style="font-weight:700;color:var(--navy)">'+esc(cb.patient_name)+'</div>';
+      h+='<div style="font-size:11px;color:var(--gray-500)">'+catLabel+' · Phone: '+esc(cb.phone||'—')+' · '+attempts+' attempt'+(attempts!==1?'s':'')+'</div>';
+      if(cb.notes)h+='<div style="font-size:10px;color:var(--gray-400);margin-top:2px">'+esc(cb.notes)+'</div>';
+      h+='</div>';
+      h+='<button class="btn-primary" onclick="openCallbackUpdate(\''+cb.id+'\')" style="font-size:10px;padding:5px 12px;white-space:nowrap">Update</button>';
+      h+='</div></div>';
+    });
+  }
+
+  if (alerts.length === 0 && myCallbacks.length === 0) h += '<div style="padding:40px;text-align:center;color:var(--gray-400)">No active alerts.</div>';
+  else if(alerts.length>0) {
     const my = CRM_STAFF.includes(currentUser) ? alerts.filter(a=>a.assignedTo===currentUser) : [];
     const other = CRM_STAFF.includes(currentUser) ? alerts.filter(a=>a.assignedTo!==currentUser) : alerts;
     if (my.length > 0) { h += '<h3 style="font-family:DM Serif Display,serif;font-size:16px;color:var(--navy);margin-bottom:10px">Your Alerts ('+my.length+')</h3>'; my.forEach((a,i)=>{h+=renderCrmAlertCard(a,i);}); }
@@ -2659,6 +2761,17 @@ function renderCrmMgrDash(el) {
   var noShowPct=scheduledCount>0?Math.round(noShowCount/scheduledCount*100):0;
   var pendingApptPct=scheduledCount>0?Math.round(pendingApptCount/scheduledCount*100):0;
   h += '<div class="stats-row" style="grid-template-columns:repeat(5,1fr)">'+stat('Total Referrals',total,'teal')+stat('Pending Scheduling',pending,'gold')+stat('Active Alerts',alerts,'red')+stat('Patients Lost',lostCount+(leakageRate>0?' ('+leakageRate+'%)':''),'red')+stat('Case Mix',ctSummary||'—','')+'</div>';
+
+  // Avg time to schedule and avg time to completed first appt
+  var refsWithSchedDays=filteredRefs.filter(function(r){return r.daysToSchedule!=null&&r.daysToSchedule>=0});
+  var avgDaysToSched=refsWithSchedDays.length>0?Math.round(refsWithSchedDays.reduce(function(s,r){return s+r.daysToSchedule},0)/refsWithSchedDays.length*10)/10:0;
+  var completedWithDates=filteredRefs.filter(function(r){return r.apptOutcome==='completed'&&r.createdDate&&r.apptDate});
+  var avgDaysToCompleted=completedWithDates.length>0?Math.round(completedWithDates.reduce(function(s,r){return s+daysBtw(r.createdDate,r.apptDate)},0)/completedWithDates.length*10)/10:0;
+  var medianDaysToSched=0;
+  if(refsWithSchedDays.length>0){var sorted=refsWithSchedDays.map(function(r){return r.daysToSchedule}).sort(function(a,b){return a-b});medianDaysToSched=sorted[Math.floor(sorted.length/2)];}
+  
+  h += '<div class="stats-row" style="grid-template-columns:repeat(3,1fr)">'+stat('Avg Days to Schedule',avgDaysToSched+' days','teal')+stat('Median Days to Schedule',medianDaysToSched+' days','')+stat('Avg Referral → Completed 1st Appt',avgDaysToCompleted+' days','teal')+'</div>';
+
   var noShowRefs=filteredRefs.filter(function(r){return r.apptOutcome==='no_show'});
   var recoveredCount=noShowRefs.filter(function(r){return r.status!=='Patient Lost'&&(r.apptDate&&daysBtw(r.apptDate,today())>0)}).length;
   var recoveredPct=noShowCount>0?Math.round(recoveredCount/noShowCount*100):0;
@@ -2926,7 +3039,7 @@ function populateRefSourceDropdown() {
 
 function toggleLostReasonReg(){document.getElementById('fLostReasonGroup').style.display=document.getElementById('fStatus').value==='Patient Lost'?'flex':'none'}
 
-var BLOCKED_FIRMS=['Win Big Law','HGSK','Haggerty, Goldberg, Schleifer & Kupersmith, P.C.','Haggerty Goldberg Schleifer & Kupersmith'];
+var BLOCKED_FIRMS=['HGSK','Haggerty, Goldberg, Schleifer & Kupersmith, P.C.','Haggerty Goldberg Schleifer & Kupersmith'];
 function isBlockedFirm(firm){if(!firm)return false;var f=firm.toLowerCase().replace(/[^a-z0-9]/g,'');return BLOCKED_FIRMS.some(function(b){return f===b.toLowerCase().replace(/[^a-z0-9]/g,'')||f.indexOf(b.toLowerCase().replace(/[^a-z0-9]/g,''))!==-1});}
 function checkBlockedFirm(){var w=document.getElementById('fLawFirmWarning');var v=document.getElementById('fLawFirm').value.trim();w.style.display=isBlockedFirm(v)?'block':'none';}
 
@@ -3175,6 +3288,46 @@ let resolveRefId=null, apptConfirmRefId=null, updateLogRefId=null;
 
 function openResolveModal(id){resolveRefId=id;const r=refs.find(x=>x.id===id);document.getElementById('resolvePatientName').textContent=r?r.patientName:'';document.getElementById('resolveOutcome').value='scheduled';document.getElementById('resolveApptDate').value='';document.getElementById('resolveContactDate').value=today();document.getElementById('resolveNotes').value='';toggleResolveFields();document.getElementById('resolveModal').classList.add('show')}
 function closeResolveModal(){document.getElementById('resolveModal').classList.remove('show');resolveRefId=null}
+
+var paperworkRefId=null;
+function openPaperworkModal(id){
+  paperworkRefId=id;
+  var r=refs.find(function(x){return x.id===id});
+  document.getElementById('paperworkPatientName').textContent=r?r.patientName:'';
+  document.getElementById('paperworkOutcome').value='resent';
+  document.getElementById('paperworkDate').value=today();
+  document.getElementById('paperworkNotes').value='';
+  togglePaperworkFields();
+  document.getElementById('paperworkModal').classList.add('show');
+}
+function togglePaperworkFields(){
+  var val=document.getElementById('paperworkOutcome').value;
+  document.getElementById('paperworkDateGroup').style.display=val==='resent'?'block':'none';
+}
+function submitPaperworkResolve(){
+  var r=refs.find(function(x){return x.id===paperworkRefId});if(!r)return;
+  var outcome=document.getElementById('paperworkOutcome').value;
+  var notes=document.getElementById('paperworkNotes').value.trim();
+  var dateResent=document.getElementById('paperworkDate').value;
+  if(outcome==='resent'){
+    // Log resend but keep alert active
+    if(!r.updateLog)r.updateLog=[];
+    r.updateLog.push({date:today(),method:'Paperwork',summary:'Resent NP paperwork on '+fmtDate(dateResent)+(notes?' — '+notes:'')});
+    _markModified(r.id);
+    if(_useNewTables)_dbPatch('referrals',r.id,{update_log:r.updateLog});
+    else _legacySave('cp11_refs',refs);
+  } else if(outcome==='completed'){
+    r.paperworkCompleted='yes';
+    if(!r.updateLog)r.updateLog=[];
+    r.updateLog.push({date:today(),method:'Paperwork',summary:'NP paperwork completed'+(notes?' — '+notes:'')});
+    _markModified(r.id);
+    if(_useNewTables)_dbPatch('referrals',r.id,{paperwork_completed:'yes',update_log:r.updateLog});
+    else _legacySave('cp11_refs',refs);
+  }
+  document.getElementById('paperworkModal').classList.remove('show');
+  paperworkRefId=null;
+  renderActiveModule();
+}
 function toggleResolveFields(){const v=document.getElementById('resolveOutcome').value;document.getElementById('resolveApptGroup').style.display=v==='scheduled'?'flex':'none';document.getElementById('resolveContactGroup').style.display=v==='unable'?'flex':'none';document.getElementById('resolveLostReasonGroup').style.display=v==='lost'?'flex':'none'}
 
 function submitResolve(){
@@ -3259,11 +3412,15 @@ function renderCmPage(page) {
 
 var cmMgrDateFrom='',cmMgrDateTo='';
 function applyCmDateFilter(){
+  try{
   cmMgrDateFrom=document.getElementById('cmMgrFrom').value||'';
   cmMgrDateTo=document.getElementById('cmMgrTo').value||'';
-  // Find the currently active CM section
+  console.log('📅 CM filter:',cmMgrDateFrom,'to',cmMgrDateTo);
   var el=document.querySelector('#module-cm .section.active');
+  console.log('📅 Active section:',el?el.id:'NONE FOUND');
   if(el)renderCmDashboard(el);
+  else console.error('❌ No active CM section found');
+  }catch(e){console.error('❌ applyCmDateFilter error:',e);}
 }
 function clearCmDateFilter(){
   cmMgrDateFrom='';cmMgrDateTo='';
@@ -3274,6 +3431,7 @@ function clearCmDateFilter(){
 function toggleCmDrilldown(id){var el=document.getElementById('cmDrill-'+id);if(el)el.style.display=el.style.display==='none'?'block':'none';}
 
 function renderCmDashboard(el) {
+  try {
   var fc=cases;
   if(cmMgrDateFrom)fc=fc.filter(function(c){return(c.createdDate||'')>=cmMgrDateFrom});
   if(cmMgrDateTo)fc=fc.filter(function(c){return(c.createdDate||'')<=cmMgrDateTo});
@@ -3423,6 +3581,7 @@ function renderCmDashboard(el) {
   });
   h+='</tbody></table></div></div>';
   el.innerHTML=h;
+  } catch(err) { console.error('❌ CM Dashboard render error:',err.message,'at line',err.stack);el.innerHTML='<div class="page-title" style="color:var(--red)">Error rendering CM Dashboard</div><pre style="font-size:11px;color:var(--red);white-space:pre-wrap">'+err.message+'\n'+err.stack+'</pre>'; }
 }
 
 function renderCmAlertCard(a,i) {
@@ -4825,6 +4984,8 @@ function renderPsrPage(page){
   else if(page==='psr-detail'&&psrDetailRefId)showPsrDetail(psrDetailRefId);
   else if(page.startsWith('psr-staff-'))renderPsrStaffPage(el,page.replace('psr-staff-',''));
   else if(page==='psr-my-metrics')renderPsrMyMetrics(el);
+  else if(page==='psr-callbacks')renderCallbackList(el);
+  else if(page==='psr-alerts')renderPsrAlerts(el);
   else if(page==='psr-mgr-dash')renderPsrMgrDash(el);
 }
 
@@ -5095,8 +5256,27 @@ function renderPsrStaffPage(el,staff){
   const staffTickets=tickets.filter(t=>t.assignedTo===staff);
   const openTk=staffTickets.filter(t=>t.status!=='Resolved').length;
   const todayCalls=staffCalls.filter(c=>c.date===today()).length;
+  // Callback alerts for this staff member
+  var now=today();
+  var staffCallbacks=callbackRequests.filter(function(cb){return cb.status==='active'&&cb.assigned_to===staff&&(!cb.next_follow_up||cb.next_follow_up<=now)});
   let h='<div class="page-title">'+esc(staff)+'</div><div class="page-subtitle">Call and ticket activity.</div>';
-  h+='<div class="stats-row">'+stat('Total Calls',staffCalls.length,'teal')+stat('Calls Today',todayCalls,'gold')+stat('Open Tickets',openTk,openTk>0?'red':'')+stat('Resolved Tickets',staffTickets.filter(t=>t.status==='Resolved').length,'')+'</div>';
+  h+='<div class="stats-row">'+stat('Total Calls',staffCalls.length,'teal')+stat('Calls Today',todayCalls,'gold')+stat('Open Tickets',openTk,openTk>0?'red':'')+stat('Callback Due',staffCallbacks.length,staffCallbacks.length>0?'gold':'')+'</div>';
+
+  // Callback alerts
+  if(staffCallbacks.length>0){
+    h+='<div class="table-card" style="border-left:4px solid var(--gold);margin-bottom:12px"><div class="table-header"><h3>📞 Callback Reminders Due</h3></div><div style="padding:8px 18px">';
+    staffCallbacks.forEach(function(cb){
+      var catLabel=CB_CATEGORIES[cb.category]||cb.category;
+      var attempts=(cb.contact_log||[]).length;
+      h+='<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--gray-200)">';
+      h+='<div style="flex:1"><div style="font-weight:700;font-size:12px;color:var(--navy)">'+esc(cb.patient_name)+'</div>';
+      h+='<div style="font-size:10px;color:var(--gray-500)">'+catLabel+' · '+esc(cb.phone||'—')+' · '+attempts+' attempt'+(attempts!==1?'s':'')+'</div></div>';
+      h+='<button class="btn-primary" onclick="openCallbackUpdate(\''+cb.id+'\')" style="font-size:10px;padding:4px 10px">Update</button>';
+      h+='</div>';
+    });
+    h+='</div></div>';
+  }
+
   // Open tickets
   const openList=staffTickets.filter(t=>t.status!=='Resolved').sort((a,b)=>{const p={Urgent:0,High:1,Normal:2};return(p[a.priority]||2)-(p[b.priority]||2)});
   if(openList.length>0){
@@ -5109,6 +5289,46 @@ function renderPsrStaffPage(el,staff){
   staffCalls.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,20).forEach(c=>{const r=refs.find(x=>x.id===c.refId);const oc=c.outcome==='Connected'?'var(--teal)':'var(--gray-400)';h+='<tr><td style="font-size:11px">'+fmtDate(c.date)+'</td><td style="font-weight:600">'+esc(r?r.patientName:'Unknown')+'</td><td style="font-size:11px">'+esc(c.direction)+'</td><td style="color:'+oc+';font-weight:600;font-size:11px">'+esc(c.outcome)+'</td><td style="font-size:10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.notes||'—')+'</td></tr>'});
   if(staffCalls.length===0)h+='<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--gray-400)">No calls logged.</td></tr>';
   h+='</tbody></table></div></div>';
+  el.innerHTML=h;
+}
+
+function renderPsrAlerts(el){
+  var now=today();
+  var myCallbacks=callbackRequests.filter(function(cb){return cb.status==='active'&&(!cb.next_follow_up||cb.next_follow_up<=now)&&(cb.assigned_to===currentUser||currentUser==='Manager')});
+  var openTickets=tickets.filter(function(t){return t.status!=='Resolved'&&(t.assignedTo===currentUser||currentUser==='Manager')});
+  var urgentTickets=openTickets.filter(function(t){return t.priority==='Urgent'});
+  var totalAlerts=myCallbacks.length+urgentTickets.length;
+
+  var h='<div class="page-title">Call Center Alerts</div><div class="page-subtitle">'+totalAlerts+' items need attention</div>';
+
+  if(myCallbacks.length>0){
+    h+='<h3 style="font-family:DM Serif Display,serif;font-size:16px;color:var(--gold);margin-bottom:10px">📞 Callback Reminders ('+myCallbacks.length+')</h3>';
+    myCallbacks.forEach(function(cb){
+      var catLabel=CB_CATEGORIES[cb.category]||cb.category;
+      var attempts=(cb.contact_log||[]).length;
+      h+='<div class="table-card" style="border-left:4px solid var(--gold);margin-bottom:8px;padding:12px 18px"><div style="display:flex;align-items:center;gap:12px">';
+      h+='<div style="flex:1"><div style="font-weight:700;color:var(--navy)">'+esc(cb.patient_name)+'</div>';
+      h+='<div style="font-size:11px;color:var(--gray-500)">'+catLabel+' · Phone: '+esc(cb.phone||'—')+' · '+attempts+' attempt'+(attempts!==1?'s':'')+'</div>';
+      if(cb.notes)h+='<div style="font-size:10px;color:var(--gray-400);margin-top:2px">'+esc(cb.notes)+'</div>';
+      h+='</div>';
+      h+='<button class="btn-primary" onclick="openCallbackUpdate(\''+cb.id+'\')" style="font-size:10px;padding:5px 12px;white-space:nowrap">Update</button>';
+      h+='</div></div>';
+    });
+  }
+
+  if(urgentTickets.length>0){
+    h+='<h3 style="font-family:DM Serif Display,serif;font-size:16px;color:var(--red);margin:16px 0 10px">🎫 Urgent Tickets ('+urgentTickets.length+')</h3>';
+    urgentTickets.forEach(function(t){
+      var r=t.refId?refs.find(function(x){return x.id===t.refId}):null;
+      h+='<div class="table-card" style="border-left:4px solid var(--red);margin-bottom:8px;padding:12px 18px"><div style="display:flex;align-items:center;gap:12px">';
+      h+='<div style="flex:1"><div style="font-weight:700;color:var(--navy)">'+esc(t.subject)+'</div>';
+      h+='<div style="font-size:11px;color:var(--gray-500)">Patient: '+esc(r?r.patientName:'—')+' · Assigned: '+esc(t.assignedTo||'—')+' · Created: '+fmtDate(t.createdDate)+'</div></div>';
+      h+='<button class="btn-resolve" onclick="showPsrTicketDetail(\''+t.id+'\')" style="font-size:10px;padding:5px 12px">View</button>';
+      h+='</div></div>';
+    });
+  }
+
+  if(totalAlerts===0)h+='<div style="padding:40px;text-align:center;color:var(--gray-400)">No active alerts — all caught up! 🎉</div>';
   el.innerHTML=h;
 }
 
@@ -5271,6 +5491,13 @@ function updatePsrBadges(){
   const myNew=tickets.filter(t=>t.assignedTo===currentUser&&t.status==='Open').length;
   const nb=document.getElementById('psrNotifBadge');
   if(nb){nb.textContent=myNew;nb.style.display=myNew>0?'inline':'none';}
+  // Alert badge — urgent tickets + callback reminders due
+  var now=today();
+  var urgentTk=tickets.filter(function(t){return t.status!=='Resolved'&&t.priority==='Urgent'&&(t.assignedTo===currentUser||currentUser==='Manager')}).length;
+  var cbDue=callbackRequests.filter(function(cb){return cb.status==='active'&&(!cb.next_follow_up||cb.next_follow_up<=now)&&(cb.assigned_to===currentUser||currentUser==='Manager')}).length;
+  var alertCount=urgentTk+cbDue;
+  var ab=document.getElementById('psrAlertBadge');
+  if(ab){ab.textContent=alertCount;ab.style.display=alertCount>0?'inline':'none';}
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -6053,6 +6280,260 @@ function updateNjmvaBadges(){
   if(badge){badge.textContent=alerts.length;badge.style.display=alerts.length>0?'inline':'none';}
 }
 
+// ══════════════════════════════════════════════════════════════════════
+// PATIENT CALLBACK LIST
+// ══════════════════════════════════════════════════════════════════════
+var callbackRequests=[];
+var cbFilterCat='',cbFilterStatus='active',cbSearch='',cbSort='newest';
+var editingCallbackId=null;
+
+async function loadCallbacks(){
+  if(!_useNewTables)return;
+  try{
+    var resp=await fetch(SUPABASE_URL+'/rest/v1/callback_requests?select=*&order=created_date.desc',{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+    if(resp.ok){callbackRequests=await resp.json();console.log('✅ Loaded '+callbackRequests.length+' callbacks');}
+  }catch(e){console.warn('Callback load error:',e);}
+}
+
+var CB_CATEGORIES={follow_up_appt:'Follow-up Appt. Needed',injection_appt:'Injection Appt. Needed',unresponsive:'Unresponsive Patient',other:'Other'};
+var CB_CAT_COLORS={follow_up_appt:'var(--teal)',injection_appt:'#3498db',unresponsive:'var(--gold)',other:'var(--gray-500)'};
+
+function callbackAlerts(){
+  var now=today();
+  return callbackRequests.filter(function(cb){
+    if(cb.status!=='active')return false;
+    if(!cb.next_follow_up)return true;
+    return cb.next_follow_up<=now;
+  });
+}
+
+function updateCallbackBadges(){
+  var due=callbackAlerts().length;
+  var b1=document.getElementById('callbackBadge');
+  var b2=document.getElementById('callbackBadgePsr');
+  if(b1){b1.textContent=due;b1.style.display=due>0?'inline':'none';}
+  if(b2){b2.textContent=due;b2.style.display=due>0?'inline':'none';}
+}
+
+var cbPage=1;var CB_PER_PAGE=20;
+
+function renderCallbackList(el){
+  var searchEl=document.getElementById('cbSearchInput');if(searchEl)cbSearch=searchEl.value;
+  var activeCount=callbackRequests.filter(function(cb){return cb.status==='active'}).length;
+  var completedCount=callbackRequests.filter(function(cb){return cb.status!=='active'}).length;
+  var dueCount=callbackAlerts().length;
+
+  var h='<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">Patient Callback List</div><div style="margin-left:auto"><button class="btn-primary" onclick="openCallbackModal()" style="font-size:11px;padding:7px 14px">+ New Callback Request</button></div></div>';
+  h+='<div class="page-subtitle">'+activeCount+' active requests · '+dueCount+' due for follow-up · '+completedCount+' completed</div>';
+
+  // Filters
+  h+='<div class="table-card"><div class="table-header"><h3>'+(cbFilterStatus==='active'?'Active Requests':cbFilterStatus==='completed'?'Completed / Archived':'All Requests')+'</h3><div class="table-controls">';
+  h+='<select class="search-input" style="width:auto" onchange="cbFilterStatus=this.value;cbPage=1;renderCallbackList(this.closest(\'.section\'))"><option value="active"'+(cbFilterStatus==='active'?' selected':'')+'>Active</option><option value="completed"'+(cbFilterStatus==='completed'?' selected':'')+'>Completed</option><option value="all"'+(cbFilterStatus==='all'?' selected':'')+'>All</option></select>';
+  h+='<select class="search-input" style="width:auto" onchange="cbFilterCat=this.value;cbPage=1;renderCallbackList(this.closest(\'.section\'))"><option value="">All Categories</option>';
+  Object.keys(CB_CATEGORIES).forEach(function(k){h+='<option value="'+k+'"'+(cbFilterCat===k?' selected':'')+'>'+CB_CATEGORIES[k]+'</option>';});
+  h+='</select>';
+  h+='<select class="search-input" style="width:auto" onchange="cbSort=this.value;cbPage=1;renderCallbackList(this.closest(\'.section\'))"><option value="newest"'+(cbSort==='newest'?' selected':'')+'>Newest First</option><option value="oldest"'+(cbSort==='oldest'?' selected':'')+'>Oldest First</option><option value="due"'+(cbSort==='due'?' selected':'')+'>Due Soonest</option><option value="name"'+(cbSort==='name'?' selected':'')+'>Name A–Z</option></select>';
+  h+='<input class="search-input" id="cbSearchInput" value="'+esc(cbSearch)+'" placeholder="Search..." oninput="cbPage=1;renderCallbackList(this.closest(\'.section\'))">';
+  h+='</div></div>';
+
+  // Filter & sort
+  var list=callbackRequests.slice();
+  if(cbFilterStatus==='active')list=list.filter(function(cb){return cb.status==='active'});
+  else if(cbFilterStatus==='completed')list=list.filter(function(cb){return cb.status!=='active'});
+  if(cbFilterCat)list=list.filter(function(cb){return cb.category===cbFilterCat});
+  var search=cbSearch.toLowerCase();
+  if(search)list=list.filter(function(cb){return(cb.patient_name||'').toLowerCase().includes(search)||(cb.phone||'').toLowerCase().includes(search)||(cb.notes||'').toLowerCase().includes(search)||(cb.assigned_to||'').toLowerCase().includes(search)});
+  if(cbSort==='newest')list.sort(function(a,b){return(b.created_date||'').localeCompare(a.created_date||'')});
+  else if(cbSort==='oldest')list.sort(function(a,b){return(a.created_date||'').localeCompare(b.created_date||'')});
+  else if(cbSort==='due')list.sort(function(a,b){return(a.next_follow_up||'9999').localeCompare(b.next_follow_up||'9999')});
+  else if(cbSort==='name')list.sort(function(a,b){return(a.patient_name||'').localeCompare(b.patient_name||'')});
+
+  // Pagination
+  var totalPages=Math.max(1,Math.ceil(list.length/CB_PER_PAGE));
+  if(cbPage>totalPages)cbPage=totalPages;
+  var startIdx=(cbPage-1)*CB_PER_PAGE;
+  var pageItems=list.slice(startIdx,startIdx+CB_PER_PAGE);
+
+  // Table
+  h+='<div class="table-scroll"><table class="tbl" style="min-width:950px"><thead><tr><th>Patient</th><th>Phone</th><th>DOI</th><th>Category</th><th>Assigned</th><th>Created</th><th>Next Follow-Up</th><th>Attempts</th><th>Notes</th><th style="width:90px"></th></tr></thead><tbody>';
+
+  if(pageItems.length===0)h+='<tr><td colspan="10" style="text-align:center;color:var(--gray-400);padding:20px">No callback requests match filters</td></tr>';
+
+  var now=today();
+  pageItems.forEach(function(cb){
+    var catLabel=CB_CATEGORIES[cb.category]||cb.category;
+    var catColor=CB_CAT_COLORS[cb.category]||'var(--gray-500)';
+    var isDue=cb.status==='active'&&(!cb.next_follow_up||cb.next_follow_up<=now);
+    var attempts=(cb.contact_log||[]).length;
+    var rowStyle=isDue?'background:rgba(200,151,58,0.06)':'';
+    var statusBadge=cb.status==='active'?(isDue?'<span style="color:var(--red);font-weight:700;font-size:10px">DUE NOW</span>':'<span style="color:var(--teal);font-size:10px">'+fmtDate(cb.next_follow_up)+'</span>'):'<span style="font-size:10px;color:var(--gray-400)">—</span>';
+    var doiVal=cb.doi?fmtDate(cb.doi):'—';
+    if(!cb.doi&&cb.ref_id){var lr=refs.find(function(r){return r.id===cb.ref_id});if(lr&&lr.doi)doiVal=fmtDate(lr.doi);}
+
+    h+='<tr style="'+rowStyle+'">';
+    h+='<td style="font-weight:600">'+esc(cb.patient_name||'—')+'<br><span style="font-size:10px;color:var(--gray-400)">'+fmtDate(cb.patient_dob)+'</span></td>';
+    h+='<td style="font-size:11px">'+esc(cb.phone||'—')+'</td>';
+    h+='<td style="font-size:11px">'+doiVal+'</td>';
+    h+='<td><span style="font-size:10px;font-weight:600;color:white;background:'+catColor+';padding:2px 8px;border-radius:4px">'+catLabel+'</span></td>';
+    h+='<td style="font-size:11px">'+esc(cb.assigned_to||'—')+'</td>';
+    h+='<td style="font-size:11px">'+fmtDate(cb.created_date)+'</td>';
+    h+='<td style="font-size:11px">'+statusBadge+'</td>';
+    h+='<td style="font-size:11px;text-align:center">'+attempts+'</td>';
+    h+='<td style="font-size:10px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(cb.notes||'')+'">'+esc(cb.notes||'—')+'</td>';
+    h+='<td>';
+    if(cb.status==='active')h+='<button class="btn-primary" onclick="openCallbackUpdate(\''+cb.id+'\')" style="font-size:10px;padding:4px 10px">Update</button>';
+    else h+='<span class="status-badge status-settled" style="font-size:10px">'+esc(cb.outcome==='completed'?'Done':'Closed')+'</span>';
+    h+='</td></tr>';
+  });
+
+  h+='</tbody></table></div>';
+
+  // Pagination controls
+  h+='<div style="padding:10px 18px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--gray-200)">';
+  h+='<span style="font-size:10px;color:var(--gray-500)">Showing '+(startIdx+1)+'–'+Math.min(startIdx+CB_PER_PAGE,list.length)+' of '+list.length+' requests</span>';
+  if(totalPages>1){
+    h+='<div style="display:flex;gap:4px;align-items:center">';
+    if(cbPage>1)h+='<button class="btn-resolve" onclick="cbPage=1;renderCallbackList(this.closest(\'.section\'))" style="font-size:10px;padding:4px 8px">« First</button><button class="btn-resolve" onclick="cbPage--;renderCallbackList(this.closest(\'.section\'))" style="font-size:10px;padding:4px 8px">‹ Prev</button>';
+    h+='<span style="font-size:11px;font-weight:600;color:var(--navy);padding:0 8px">Page '+cbPage+' of '+totalPages+'</span>';
+    if(cbPage<totalPages)h+='<button class="btn-resolve" onclick="cbPage++;renderCallbackList(this.closest(\'.section\'))" style="font-size:10px;padding:4px 8px">Next ›</button><button class="btn-resolve" onclick="cbPage='+totalPages+';renderCallbackList(this.closest(\'.section\'))" style="font-size:10px;padding:4px 8px">Last »</button>';
+    h+='</div>';
+  }
+  h+='</div></div>';
+  el.innerHTML=h;
+}
+
+// Modal functions
+function openCallbackModal(){
+  editingCallbackId=null;
+  document.getElementById('callbackModalTitle').textContent='New Callback Request';
+  var sel=document.getElementById('cbRefId');sel.innerHTML='<option value="">— Type manually below or select patient —</option>';
+  refs.forEach(function(r){sel.innerHTML+='<option value="'+r.id+'">'+esc(r.patientName)+' ('+esc(r.caseType||'')+' · DOI: '+fmtDate(r.doi)+')</option>';});
+  document.getElementById('cbPatientName').value='';
+  document.getElementById('cbDob').value='';
+  document.getElementById('cbDoi').value='';
+  document.getElementById('cbPhone').value='';
+  document.getElementById('cbCategory').value='';
+  document.getElementById('cbNotes').value='';
+  document.getElementById('callbackModal').classList.add('show');
+}
+
+function fillCallbackFromRef(){
+  var refId=document.getElementById('cbRefId').value;
+  var r=refs.find(function(x){return x.id===refId});
+  if(!r)return;
+  document.getElementById('cbPatientName').value=r.patientName||'';
+  document.getElementById('cbDob').value=r.dob||'';
+  document.getElementById('cbDoi').value=r.doi||'';
+  document.getElementById('cbPhone').value=r.phone||'';
+}
+
+function closeCallbackModal(){document.getElementById('callbackModal').classList.remove('show');}
+
+function saveCallback(){
+  var name=document.getElementById('cbPatientName').value.trim();
+  var phone=document.getElementById('cbPhone').value.trim();
+  var cat=document.getElementById('cbCategory').value;
+  if(!name){alert('Please enter patient name.');return;}
+  if(!phone){alert('Please enter phone number.');return;}
+  if(!cat){alert('Please select a category.');return;}
+
+  var refId=document.getElementById('cbRefId').value||null;
+  var caseId=null;
+  if(refId){var c=cases.find(function(x){return x.sourceRefId===refId});if(c)caseId=c.id;}
+
+  var now=today();
+  var followUp=new Date();followUp.setDate(followUp.getDate()+3);
+  var row={
+    id:genId(),
+    patient_name:name,
+    patient_dob:document.getElementById('cbDob').value||null,
+    doi:document.getElementById('cbDoi').value||null,
+    phone:phone,
+    category:cat,
+    ref_id:refId,
+    case_id:caseId,
+    notes:document.getElementById('cbNotes').value,
+    assigned_to:currentUser,
+    status:'active',
+    next_follow_up:followUp.toISOString().split('T')[0],
+    contact_log:[],
+    created_by:currentUser,
+    created_date:now,
+    updated_at:new Date().toISOString()
+  };
+
+  callbackRequests.push(row);
+  _dbInsert('callback_requests',row);
+  closeCallbackModal();
+  updateCallbackBadges();
+  // Re-render whichever callback list is active
+  var el=document.getElementById('sec-crm-callbacks');
+  if(el&&el.classList.contains('active'))renderCallbackList(el);
+  var el2=document.getElementById('sec-psr-callbacks');
+  if(el2&&el2.classList.contains('active'))renderCallbackList(el2);
+}
+
+// Update callback
+function openCallbackUpdate(id){
+  editingCallbackId=id;
+  var cb=callbackRequests.find(function(x){return x.id===id});if(!cb)return;
+  var info='<div style="font-weight:700;font-size:14px;color:var(--navy)">'+esc(cb.patient_name)+'</div>';
+  info+='<div style="font-size:11px;color:var(--gray-500)">'+esc(CB_CATEGORIES[cb.category]||cb.category)+' · Phone: '+esc(cb.phone||'—')+' · Assigned: '+esc(cb.assigned_to||'—')+'</div>';
+  if(cb.contact_log&&cb.contact_log.length>0){
+    info+='<div style="margin-top:8px;font-size:10px;font-weight:600;color:var(--gray-500)">CONTACT HISTORY ('+cb.contact_log.length+' attempts):</div>';
+    cb.contact_log.slice(-5).forEach(function(entry){
+      info+='<div style="font-size:10px;color:var(--gray-500);padding:2px 0">'+fmtDate(entry.date)+' — '+esc(entry.notes||entry.outcome||'')+'</div>';
+    });
+  }
+  document.getElementById('cbUpdateInfo').innerHTML=info;
+  document.getElementById('cbUpdateOutcome').value='attempted';
+  document.getElementById('cbUpdateNotes').value='';
+  document.getElementById('callbackUpdateModal').classList.add('show');
+}
+
+function closeCallbackUpdateModal(){document.getElementById('callbackUpdateModal').classList.remove('show');editingCallbackId=null;}
+
+function submitCallbackUpdate(){
+  var cb=callbackRequests.find(function(x){return x.id===editingCallbackId});if(!cb)return;
+  var outcome=document.getElementById('cbUpdateOutcome').value;
+  var notes=document.getElementById('cbUpdateNotes').value.trim();
+  var now=today();
+
+  // Add to contact log
+  if(!cb.contact_log)cb.contact_log=[];
+  cb.contact_log.push({date:now,outcome:outcome,notes:notes,by:currentUser});
+  cb.last_contact_date=now;
+
+  if(outcome==='attempted'){
+    // Reschedule follow-up in 3 days
+    var next=new Date();next.setDate(next.getDate()+3);
+    cb.next_follow_up=next.toISOString().split('T')[0];
+    cb.outcome_notes=notes||('Contacted '+fmtDate(now)+', unavailable, try again');
+  } else if(outcome==='completed'){
+    cb.status='completed';
+    cb.outcome='completed';
+    cb.outcome_date=now;
+    cb.outcome_notes=notes||'Task completed';
+  } else if(outcome==='no_longer_needed'){
+    cb.status='closed';
+    cb.outcome='no_longer_needed';
+    cb.outcome_date=now;
+    cb.outcome_notes=notes||'No longer needed';
+  }
+  cb.updated_at=new Date().toISOString();
+
+  // Save to DB
+  var patch={contact_log:cb.contact_log,last_contact_date:cb.last_contact_date,next_follow_up:cb.next_follow_up||null,status:cb.status,outcome:cb.outcome||null,outcome_date:cb.outcome_date||null,outcome_notes:cb.outcome_notes||null,updated_at:cb.updated_at};
+  _dbPatch('callback_requests',cb.id,patch);
+
+  closeCallbackUpdateModal();
+  updateCallbackBadges();
+  var el=document.getElementById('sec-crm-callbacks');
+  if(el&&el.classList.contains('active'))renderCallbackList(el);
+  var el2=document.getElementById('sec-psr-callbacks');
+  if(el2&&el2.classList.contains('active'))renderCallbackList(el2);
+}
+
 function seed(){
   // Redistribution already completed — do nothing
 }
@@ -6078,7 +6559,7 @@ document.addEventListener('click', function(e) {
 });
 
 // Modal close on overlay — wrapped in try-catch so missing modals don't break init
-['referralModal','resolveModal','apptConfirmModal','updateLogModal','marketingModal','caseModal','callLogModal','ticketModal','recordsBillingModal','missingInfoModal','introEmailModal','cmAlertModal','mktActivityModal','mktContactModal','pinModal','changePwModal','addAlertModal','adjusterResolveModal','pipResolveModal','precertModal'].forEach(function(id){
+['referralModal','resolveModal','apptConfirmModal','updateLogModal','marketingModal','caseModal','callLogModal','ticketModal','recordsBillingModal','missingInfoModal','introEmailModal','cmAlertModal','mktActivityModal','mktContactModal','pinModal','changePwModal','addAlertModal','adjusterResolveModal','pipResolveModal','precertModal','callbackModal','callbackUpdateModal','paperworkModal'].forEach(function(id){
   try{
     var el=document.getElementById(id);
     if(el)el.addEventListener('click',function(e){if(e.target===this){this.classList.remove('show');if(id==='pinModal'&&currentUser==='Manager'&&!managerUnlocked)logout();}});
