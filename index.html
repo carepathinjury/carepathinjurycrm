@@ -1398,6 +1398,24 @@ async function _pollSupabase(){
       var modal=document.querySelector('.modal-overlay.show');
       if(!modal){try{renderActiveModule()}catch(e){}}
     }
+    // Poll callbacks separately (no field mapping needed)
+    try{
+      var cbSince=_pollTs['callbacks']||new Date(Date.now()-60000).toISOString();
+      var cbResp=await fetch(SUPABASE_URL+'/rest/v1/callback_requests?updated_at=gt.'+encodeURIComponent(cbSince)+'&select=*',{headers:_sbRead});
+      if(cbResp.ok){
+        var cbRows=await cbResp.json();
+        if(cbRows.length>0){
+          cbRows.forEach(function(row){
+            if(typeof row.contact_log==='string'){try{row.contact_log=JSON.parse(row.contact_log)}catch(e){row.contact_log=[]}}
+            var idx=callbackRequests.findIndex(function(x){return x.id===row.id});
+            if(idx===-1)callbackRequests.push(row);
+            else callbackRequests[idx]=row;
+          });
+          try{updateCallbackBadges()}catch(e){}
+        }
+      }
+      _pollTs['callbacks']=new Date().toISOString();
+    }catch(e){}
   }catch(e){console.warn('Poll error:',e);}
 }
 setInterval(_pollSupabase,10000);
@@ -6325,7 +6343,14 @@ async function loadCallbacks(){
   if(!_useNewTables)return;
   try{
     var resp=await fetch(SUPABASE_URL+'/rest/v1/callback_requests?select=*&order=created_date.desc',{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
-    if(resp.ok){callbackRequests=await resp.json();console.log('✅ Loaded '+callbackRequests.length+' callbacks');}
+    if(resp.ok){
+      callbackRequests=await resp.json();
+      callbackRequests.forEach(function(cb){
+        if(typeof cb.contact_log==='string'){try{cb.contact_log=JSON.parse(cb.contact_log)}catch(e){cb.contact_log=[]}}
+        if(!Array.isArray(cb.contact_log))cb.contact_log=[];
+      });
+      console.log('✅ Loaded '+callbackRequests.length+' callbacks');
+    }
   }catch(e){console.warn('Callback load error:',e);}
 }
 
@@ -6481,26 +6506,36 @@ function saveCallback(){
     id:genId(),
     patient_name:name,
     patient_dob:document.getElementById('cbDob').value||null,
-    doi:document.getElementById('cbDoi').value||null,
     phone:phone,
     category:cat,
     ref_id:refId,
     case_id:caseId,
-    notes:document.getElementById('cbNotes').value,
+    notes:document.getElementById('cbNotes').value||'',
     assigned_to:currentUser,
     status:'active',
     next_follow_up:followUp.toISOString().split('T')[0],
-    contact_log:[],
+    contact_log:'[]',
     created_by:currentUser,
     created_date:now,
     updated_at:new Date().toISOString()
   };
+  // Add DOI only if column exists
+  var doiVal=document.getElementById('cbDoi').value||null;
+  if(doiVal)row.doi=doiVal;
 
   callbackRequests.push(row);
-  _dbInsert('callback_requests',row);
+  row.contact_log='[]'; // Send as JSON string for Supabase JSONB
+  fetch(SUPABASE_URL+'/rest/v1/callback_requests',{
+    method:'POST',
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify(row)
+  }).then(function(resp){
+    if(resp.ok||resp.status===201){showSaveSuccess();console.log('✅ Callback saved: '+name);}
+    else{resp.text().then(function(t){console.error('❌ Callback save error:',resp.status,t);alert('Save failed: '+t);});showSaveError();}
+  }).catch(function(e){console.error('❌ Callback save error:',e);showSaveError()});
+
   closeCallbackModal();
   updateCallbackBadges();
-  // Re-render whichever callback list is active
   var el=document.getElementById('sec-crm-callbacks');
   if(el&&el.classList.contains('active'))renderCallbackList(el);
   var el2=document.getElementById('sec-psr-callbacks');
@@ -6533,13 +6568,13 @@ function submitCallbackUpdate(){
   var notes=document.getElementById('cbUpdateNotes').value.trim();
   var now=today();
 
-  // Add to contact log
-  if(!cb.contact_log)cb.contact_log=[];
+  // Parse contact_log if it's a string
+  if(typeof cb.contact_log==='string'){try{cb.contact_log=JSON.parse(cb.contact_log)}catch(e){cb.contact_log=[]}}
+  if(!Array.isArray(cb.contact_log))cb.contact_log=[];
   cb.contact_log.push({date:now,outcome:outcome,notes:notes,by:currentUser});
   cb.last_contact_date=now;
 
   if(outcome==='attempted'){
-    // Reschedule follow-up in 3 days
     var next=new Date();next.setDate(next.getDate()+3);
     cb.next_follow_up=next.toISOString().split('T')[0];
     cb.outcome_notes=notes||('Contacted '+fmtDate(now)+', unavailable, try again');
@@ -6556,9 +6591,16 @@ function submitCallbackUpdate(){
   }
   cb.updated_at=new Date().toISOString();
 
-  // Save to DB
   var patch={contact_log:cb.contact_log,last_contact_date:cb.last_contact_date,next_follow_up:cb.next_follow_up||null,status:cb.status,outcome:cb.outcome||null,outcome_date:cb.outcome_date||null,outcome_notes:cb.outcome_notes||null,updated_at:cb.updated_at};
-  _dbPatch('callback_requests',cb.id,patch);
+  
+  fetch(SUPABASE_URL+'/rest/v1/callback_requests?id=eq.'+encodeURIComponent(cb.id),{
+    method:'PATCH',
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify(patch)
+  }).then(function(resp){
+    if(resp.ok||resp.status===204){showSaveSuccess();console.log('✅ Callback updated: '+cb.patient_name);}
+    else{resp.text().then(function(t){console.error('❌ Callback update error:',resp.status,t)});showSaveError();}
+  }).catch(function(e){console.error('❌ Callback update error:',e);showSaveError()});
 
   closeCallbackUpdateModal();
   updateCallbackBadges();
