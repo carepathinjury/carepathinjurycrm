@@ -2969,6 +2969,19 @@ function renderCrmMgrDash(el) {
   });
   h += '</tbody></table></div></div>';
 
+  // Case Type by Referral Source Matrix
+  var srcTypes={};filteredRefs.forEach(function(r){var s=r.referralSource||'Unknown';if(!srcTypes[s])srcTypes[s]={total:0};var t=r.caseType||'Unknown';srcTypes[s][t]=(srcTypes[s][t]||0)+1;srcTypes[s].total++;});
+  h += '<div class="table-card"><div class="table-header"><h3>Case Type by Referral Source</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Referral Source</th>';
+  allTypes.forEach(function(t){h+='<th style="text-align:center">'+esc(t)+'</th>';});
+  h+='<th style="text-align:center;font-weight:700">Total</th></tr></thead><tbody>';
+  Object.entries(srcTypes).sort(function(a,b){return b[1].total-a[1].total}).forEach(function(e){
+    var src=e[0],d=e[1];
+    h+='<tr><td style="font-weight:600">'+esc(src)+'</td>';
+    allTypes.forEach(function(t){var n=d[t]||0;h+='<td style="text-align:center;'+(n>0?'font-weight:600;color:var(--navy)':'color:var(--gray-300)')+'">'+n+'</td>';});
+    h+='<td style="text-align:center;font-weight:700">'+d.total+'</td></tr>';
+  });
+  h += '</tbody></table></div></div>';
+
   // Attorney Referral Source Conversion
   var srcConv={};filteredRefs.forEach(function(r){
     var s=r.referralSource||'Unknown';
