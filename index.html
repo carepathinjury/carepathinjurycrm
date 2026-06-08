@@ -1882,15 +1882,21 @@ async function handleLogin() {
   if(!email || !pw){ errEl.textContent='Please enter email and password.'; errEl.style.display='block'; return; }
   btn.textContent = 'Signing in...'; btn.disabled = true;
   try {
-    var resp = await fetch(SUPABASE_URL+'/rest/v1/users?email=eq.'+encodeURIComponent(email)+'&password=eq.'+encodeURIComponent(pw)+'&select=name,role,avatar_color,avatar_initials', {
+    var resp = await fetch(SUPABASE_URL+'/rest/v1/users?email=eq.'+encodeURIComponent(email.trim().toLowerCase())+'&select=name,role,password,avatar_color,avatar_initials', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer '+SUPABASE_KEY }
     });
+    if(!resp.ok){errEl.textContent='Server error ('+resp.status+'). Please try again.';errEl.style.display='block';btn.textContent='Sign In';btn.disabled=false;return;}
     var rows = await resp.json();
-    if(!rows || rows.length === 0){
+    if(!Array.isArray(rows)||rows.length===0){
       errEl.textContent='Invalid email or password.'; errEl.style.display='block';
       btn.textContent='Sign In'; btn.disabled=false; return;
     }
     var user = rows[0];
+    // Compare password (trim both sides to handle hidden spaces)
+    if(user.password.trim() !== pw.trim()){
+      errEl.textContent='Invalid email or password.'; errEl.style.display='block';
+      btn.textContent='Sign In'; btn.disabled=false; return;
+    }
     if(user.role === 'manager') {
       loginAsManager(user.name);
     } else {
