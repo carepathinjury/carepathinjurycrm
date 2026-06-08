@@ -1551,6 +1551,24 @@ function exportAllMetrics(){
   rRows.push(['Location','Referrals','Scheduled','Completed','Completion %','No-Shows','No-Show %','Lost']);
   var csvLocDetails={};data.forEach(function(r){var l=r.location||'Unknown';if(!csvLocDetails[l])csvLocDetails[l]={total:0,sched:0,comp:0,noshow:0,lost:0};csvLocDetails[l].total++;if(r.apptDate)csvLocDetails[l].sched++;if(r.apptOutcome==='completed')csvLocDetails[l].comp++;if(r.apptOutcome==='no_show')csvLocDetails[l].noshow++;if(r.status==='Patient Lost')csvLocDetails[l].lost++;});
   Object.entries(csvLocDetails).sort(function(a,b){return b[1].total-a[1].total}).forEach(function(e){var d=e[1];rRows.push([e[0],d.total,d.sched,d.comp,d.sched>0?Math.round(d.comp/d.sched*100)+'%':'0%',d.noshow,d.sched>0?Math.round(d.noshow/d.sched*100)+'%':'0%',d.lost]);});
+  // Case Type by Location
+  var csvAllTypes=[];data.forEach(function(r){var t=r.caseType||'Unknown';if(csvAllTypes.indexOf(t)===-1)csvAllTypes.push(t);});csvAllTypes.sort();
+  rRows.push([]);
+  rRows.push(['CASE TYPE BY LOCATION']);
+  rRows.push(['Location'].concat(csvAllTypes).concat(['Total']));
+  var csvLocTypes={};data.forEach(function(r){var l=r.location||'Unknown';if(!csvLocTypes[l])csvLocTypes[l]={};var t=r.caseType||'Unknown';csvLocTypes[l][t]=(csvLocTypes[l][t]||0)+1;});
+  var csvLocTotals={};data.forEach(function(r){var l=r.location||'Unknown';csvLocTotals[l]=(csvLocTotals[l]||0)+1;});
+  Object.entries(csvLocTotals).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
+    var row=[e[0]];csvAllTypes.forEach(function(t){row.push((csvLocTypes[e[0]]&&csvLocTypes[e[0]][t])||0);});row.push(e[1]);rRows.push(row);
+  });
+  // Case Type by Referrer
+  rRows.push([]);
+  rRows.push(['CASE TYPE BY REFERRER (LAW FIRM)']);
+  rRows.push(['Law Firm'].concat(csvAllTypes).concat(['Total']));
+  var csvFirmTypes={};data.forEach(function(r){var f=r.lawFirm||'No Firm';if(!csvFirmTypes[f])csvFirmTypes[f]={total:0};var t=r.caseType||'Unknown';csvFirmTypes[f][t]=(csvFirmTypes[f][t]||0)+1;csvFirmTypes[f].total++;});
+  Object.entries(csvFirmTypes).sort(function(a,b){return b[1].total-a[1].total}).forEach(function(e){
+    var row=[e[0]];csvAllTypes.forEach(function(t){row.push(e[1][t]||0);});row.push(e[1].total);rRows.push(row);
+  });
   var label=crmMgrDateFrom||crmMgrDateTo?'-'+crmMgrDateFrom+'-to-'+crmMgrDateTo:'';
   downloadCSV('carepath-referrals'+label+'-'+today()+'.csv',rHeaders,rRows);
 }
@@ -1751,6 +1769,31 @@ function downloadVisualReport(){
   html+='<h2>Patients by Law Firm</h2><table><tr><th>Law Firm</th><th>Patients</th><th>%</th></tr>';
   Object.entries(firmCounts).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
     html+='<tr><td><strong>'+e[0]+'</strong></td><td>'+e[1]+'</td><td>'+(total>0?Math.round(e[1]/total*100):0)+'%</td></tr>';
+  });
+  html+='</table>';
+
+  // Case Type by Location matrix
+  var vrLocTypes={};data.forEach(function(r){var l=r.location||'Unknown';if(!vrLocTypes[l])vrLocTypes[l]={};var t=r.caseType||'Unknown';vrLocTypes[l][t]=(vrLocTypes[l][t]||0)+1;});
+  var vrAllTypes=Object.keys(caseTypes).sort();
+  html+='<h2>Case Type by Location</h2><table><tr><th>Location</th>';
+  vrAllTypes.forEach(function(t){html+='<th style="text-align:center">'+t+'</th>';});
+  html+='<th style="text-align:center"><strong>Total</strong></th></tr>';
+  Object.entries(locCounts).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
+    html+='<tr><td><strong>'+e[0]+'</strong></td>';
+    vrAllTypes.forEach(function(t){var n=(vrLocTypes[e[0]]&&vrLocTypes[e[0]][t])||0;html+='<td style="text-align:center;'+(n>0?'font-weight:700':'color:#ccc')+'">'+n+'</td>';});
+    html+='<td style="text-align:center;font-weight:700">'+e[1]+'</td></tr>';
+  });
+  html+='</table>';
+
+  // Case Type by Referrer matrix
+  var vrFirmTypes={};data.forEach(function(r){var f=r.lawFirm||'No Firm';if(!vrFirmTypes[f])vrFirmTypes[f]={total:0};var t=r.caseType||'Unknown';vrFirmTypes[f][t]=(vrFirmTypes[f][t]||0)+1;vrFirmTypes[f].total++;});
+  html+='<h2>Case Type by Referrer (Law Firm)</h2><table><tr><th>Law Firm</th>';
+  vrAllTypes.forEach(function(t){html+='<th style="text-align:center">'+t+'</th>';});
+  html+='<th style="text-align:center"><strong>Total</strong></th></tr>';
+  Object.entries(vrFirmTypes).sort(function(a,b){return b[1].total-a[1].total}).forEach(function(e){
+    html+='<tr><td><strong>'+e[0]+'</strong></td>';
+    vrAllTypes.forEach(function(t){var n=e[1][t]||0;html+='<td style="text-align:center;'+(n>0?'font-weight:700':'color:#ccc')+'">'+n+'</td>';});
+    html+='<td style="text-align:center;font-weight:700">'+e[1].total+'</td></tr>';
   });
   html+='</table>';
 
@@ -2895,17 +2938,34 @@ function renderCrmMgrDash(el) {
   });
   h += '</tbody></table></div></div>';
 
-  // Case Type by Location
+  // Case Type by Location Matrix
   var locTypes={};filteredRefs.forEach(function(r){var l=r.location||'Unknown';if(!locTypes[l])locTypes[l]={};var t=r.caseType||'Unknown';locTypes[l][t]=(locTypes[l][t]||0)+1;});
   var allTypes=Object.keys(caseTypes).sort();
   h += '<div class="table-card"><div class="table-header"><h3>Case Type by Location</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Location</th>';
-  allTypes.forEach(function(t){h+='<th>'+esc(t)+'</th>';});
-  h+='<th>Total</th></tr></thead><tbody>';
+  allTypes.forEach(function(t){h+='<th style="text-align:center">'+esc(t)+'</th>';});
+  h+='<th style="text-align:center;font-weight:700">Total</th></tr></thead><tbody>';
   Object.entries(locCounts).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
     var loc=e[0],locTotal=e[1];
     h+='<tr><td style="font-weight:600">'+esc(loc)+'</td>';
-    allTypes.forEach(function(t){var n=(locTypes[loc]&&locTypes[loc][t])||0;h+='<td>'+n+'</td>';});
-    h+='<td style="font-weight:700">'+locTotal+'</td></tr>';
+    allTypes.forEach(function(t){var n=(locTypes[loc]&&locTypes[loc][t])||0;h+='<td style="text-align:center;'+(n>0?'font-weight:600;color:var(--navy)':'color:var(--gray-300)')+'">'+n+'</td>';});
+    h+='<td style="text-align:center;font-weight:700">'+locTotal+'</td></tr>';
+  });
+  // Totals row
+  h+='<tr style="background:var(--gray-100);font-weight:700"><td>Total</td>';
+  allTypes.forEach(function(t){h+='<td style="text-align:center">'+(caseTypes[t]||0)+'</td>';});
+  h+='<td style="text-align:center">'+total+'</td></tr>';
+  h += '</tbody></table></div></div>';
+
+  // Case Type by Referrer (Law Firm) Matrix
+  var firmTypes={};filteredRefs.forEach(function(r){var f=r.lawFirm||'No Firm';if(!firmTypes[f])firmTypes[f]={total:0};var t=r.caseType||'Unknown';firmTypes[f][t]=(firmTypes[f][t]||0)+1;firmTypes[f].total++;});
+  h += '<div class="table-card"><div class="table-header"><h3>Case Type by Referrer (Law Firm)</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Law Firm / Referrer</th>';
+  allTypes.forEach(function(t){h+='<th style="text-align:center">'+esc(t)+'</th>';});
+  h+='<th style="text-align:center;font-weight:700">Total</th></tr></thead><tbody>';
+  Object.entries(firmTypes).sort(function(a,b){return b[1].total-a[1].total}).forEach(function(e){
+    var firm=e[0],d=e[1];
+    h+='<tr><td style="font-weight:600">'+esc(firm)+'</td>';
+    allTypes.forEach(function(t){var n=d[t]||0;h+='<td style="text-align:center;'+(n>0?'font-weight:600;color:var(--navy)':'color:var(--gray-300)')+'">'+n+'</td>';});
+    h+='<td style="text-align:center;font-weight:700">'+d.total+'</td></tr>';
   });
   h += '</tbody></table></div></div>';
 
