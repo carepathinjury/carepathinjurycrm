@@ -448,6 +448,7 @@
     <div class="nav-item" data-page="mkt-followup" onclick="mktNav('mkt-followup')"><div class="nav-icon">📅</div> Needs Follow-Up <span class="nav-badge gold" id="mktFollowUpBadge" style="display:none">0</span></div>
     <div class="nav-item" data-page="mkt-correlation" onclick="mktNav('mkt-correlation')"><div class="nav-icon">🔗</div> Referral Impact</div>
     <div class="nav-item" data-page="mkt-contacts" onclick="mktNav('mkt-contacts')"><div class="nav-icon">📇</div> Contacts</div>
+    <div class="nav-item" data-page="mkt-nurture" onclick="mktNav('mkt-nurture')"><div class="nav-icon">🌱</div> Nurture <span class="nav-badge gold" id="mktNurtureBadge" style="display:none">0</span></div>
     <div class="nav-item" data-page="mkt-analytics" onclick="mktNav('mkt-analytics')"><div class="nav-icon">📊</div> Analytics</div>
   </div>
   <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential</p></div>
@@ -458,6 +459,7 @@
   <div class="section" id="sec-mkt-followup"></div>
   <div class="section" id="sec-mkt-correlation"></div>
   <div class="section" id="sec-mkt-contacts"></div>
+  <div class="section" id="sec-mkt-nurture"></div>
   <div class="section" id="sec-mkt-analytics"></div>
 </div>
 </div>
@@ -745,6 +747,7 @@
       <div class="form-group"><label>Email</label><input type="email" id="mktContactEmail" placeholder="email@example.com"></div>
       <div class="form-group"><label>Phone</label><input type="tel" id="mktContactPhone" placeholder="(555) 123-4567"></div>
       <div class="form-group"><label>Type</label><select id="mktType"><option>Law Firm</option><option>Insurance</option><option>Community Event</option><option>Digital Marketing</option><option>Physician Referral</option><option>Other</option></select></div>
+      <div class="form-group"><label>Anticipated Cases</label><select id="mktAnticipatedCases"><option value="">— Select —</option><option value="WC">WC</option><option value="PI">PI</option><option value="Both">Both</option></select></div>
       <div class="form-group"><label>Stage</label><select id="mktStage"><option value="Prospect">Prospect</option><option value="Contacted">Contacted</option><option value="Meeting Scheduled">Meeting Scheduled</option><option value="Active Relationship">Active Relationship</option><option value="Inactive">Inactive</option></select></div>
       <div class="form-group"><label>Date Initiated</label><input type="date" id="mktDate"></div>
       <div class="form-group"><label>Next Follow-Up Date</label><input type="date" id="mktFollowUp"></div>
@@ -831,6 +834,19 @@
 </div>
 
 <!-- Marketing Activity Modal -->
+<div class="modal-overlay" id="nurtureModal">
+  <div class="modal" style="width:460px">
+    <div class="modal-header"><h2>Log Check-In</h2><button class="modal-close" onclick="closeNurtureModal()">&times;</button></div>
+    <div class="modal-body">
+      <div id="nurtureWho" style="font-size:12px;font-weight:600;color:var(--navy);margin-bottom:12px"></div>
+      <div class="form-grid">
+      <div class="form-group"><label>Method</label><select id="nurtureMethod"><option>Email</option><option>Call</option></select></div>
+      <div class="form-group"><label>Date Sent</label><input type="date" id="nurtureDate"></div>
+      <div class="form-group full"><label>Notes</label><textarea id="nurtureNote" rows="3" placeholder="What was covered in the check-in..."></textarea></div>
+    </div></div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="closeNurtureModal()">Cancel</button><button class="btn-save" onclick="saveNurture()">Log Check-In</button></div>
+  </div>
+</div>
 <div class="modal-overlay" id="mktActivityModal">
   <div class="modal" style="width:500px">
     <div class="modal-header"><h2>Log Activity</h2><button class="modal-close" onclick="closeMktActivityModal()">&times;</button></div>
@@ -1254,8 +1270,8 @@ async function _loadFromSupabase(){
       if(r[3])callLog=r[3].map(function(x){return{id:x.id,refId:x.ref_id,caseId:x.case_id,patientId:x.patient_id,date:x.date||'',direction:x.direction,party:x.party,phone:x.phone,outcome:x.outcome,duration:x.duration,notes:x.notes,flag:x.flag,flagNote:x.flag_note,loggedBy:x.logged_by}});
       if(r[4])tickets=r[4].map(function(x){return{id:x.id,subject:x.subject,priority:x.priority,assignedTo:x.assigned_to,category:x.category,department:x.department,status:x.status,refId:x.ref_id,caseId:x.case_id,notes:x.notes,createdBy:x.created_by,createdDate:x.created_date||''}});
       if(r[5])faxLog=r[5].map(function(x){return{id:x.id,date:x.date||'',sentBy:x.sent_by||'',patientName:x.patient_name||'',patientDob:x.patient_dob||'',patientDoi:x.patient_doi||'',recipient:x.recipient||'',recipientContact:x.recipient_contact||'',recipientType:x.recipient_type||'',contentType:x.content_type||'',orderNum:x.order_num||'',notes:x.notes||''}});
-      if(r[6])mktList=r[6].map(function(x){return{id:x.id,name:x.name,contact:x.contact,type:x.type,stage:x.stage,dateInitiated:x.date_initiated||'',nextFollowUp:x.next_follow_up||'',volume:x.volume,effort:x.effort,notes:x.notes,createdDate:x.created_date||'',targetLocations:x.target_locations||[],activityLog:x.activity_log||[],lastActivityDate:x.last_activity_date||'',addresses:x.addresses||'',primaryContactId:x.primary_contact_id||''}});
-      if(r[7])mktContacts=r[7].map(function(x){return{id:x.id,name:x.name,title:x.title,org:x.org,type:x.type,phone:x.phone,email:x.email,address:x.address,notes:x.notes,initiativeId:x.initiative_id,createdDate:x.created_date||''}});
+      if(r[6])mktList=r[6].map(function(x){return{id:x.id,name:x.name,contact:x.contact,type:x.type,stage:x.stage,dateInitiated:x.date_initiated||'',nextFollowUp:x.next_follow_up||'',volume:x.volume,effort:x.effort,notes:x.notes,createdDate:x.created_date||'',targetLocations:x.target_locations||[],activityLog:x.activity_log||[],lastActivityDate:x.last_activity_date||'',addresses:x.addresses||'',primaryContactId:x.primary_contact_id||'',anticipatedCases:x.anticipated_cases||''}});
+      if(r[7])mktContacts=r[7].map(function(x){return{id:x.id,name:x.name,title:x.title,org:x.org,type:x.type,phone:x.phone,email:x.email,address:x.address,city:x.city||'',state:x.state||'',zip:x.zip||'',notes:x.notes,initiativeId:x.initiative_id,lastContactDate:x.last_contact_date||'',nurtureLog:x.nurture_log||[],createdDate:x.created_date||''}});
       if(r[8])r[8].forEach(function(x){
         if(x.key==='robin_idx')robinIdx=parseInt(x.value)||0;
         else if(x.key==='custom_law_firms')try{customLawFirms=Array.isArray(x.value)?x.value:JSON.parse(x.value)}catch(e){customLawFirms=[];}
@@ -1306,9 +1322,9 @@ function saveSingleRef(r, isNew){
 }
 function saveCases(){if(_useNewTables){cases.forEach(function(c){_markModified(c.id);_dbUpsert('cases',_toDb(c,_caseMap))})}else{_legacySave('cp11_cases',cases)}}
 function saveSingleCase(c, isNew){if(!c)return;_markModified(c.id);if(_useNewTables){if(isNew)_dbInsert('cases',_toDb(c,_caseMap));else _dbUpdate('cases',_toDb(c,_caseMap));}else{_legacySave('cp11_cases',cases)}}
-function saveMktData(){if(_useNewTables){mktList.forEach(function(m){_dbUpsert('marketing_initiatives',{id:m.id,name:m.name,contact:m.contact,type:m.type,stage:m.stage,date_initiated:m.dateInitiated||null,next_follow_up:m.nextFollowUp||null,volume:m.volume,effort:m.effort,notes:m.notes,created_date:m.createdDate||null,target_locations:m.targetLocations||[],activity_log:m.activityLog||[],last_activity_date:m.lastActivityDate||null,addresses:m.addresses||null,primary_contact_id:m.primaryContactId||null,updated_at:new Date().toISOString()})})}else{_legacySave('cp11_mkt',mktList)}}
+function saveMktData(){if(_useNewTables){mktList.forEach(function(m){_dbUpsert('marketing_initiatives',{id:m.id,name:m.name,contact:m.contact,type:m.type,stage:m.stage,date_initiated:m.dateInitiated||null,next_follow_up:m.nextFollowUp||null,volume:m.volume,effort:m.effort,notes:m.notes,created_date:m.createdDate||null,target_locations:m.targetLocations||[],activity_log:m.activityLog||[],last_activity_date:m.lastActivityDate||null,addresses:m.addresses||null,primary_contact_id:m.primaryContactId||null,anticipated_cases:m.anticipatedCases||null,updated_at:new Date().toISOString()})})}else{_legacySave('cp11_mkt',mktList)}}
 function saveContacts(){if(_useNewTables){contacts.forEach(function(c){_dbUpsert('contacts',{id:c.id,name:c.name,company:c.name,type:c.type,phone:c.phone,fax:c.fax,email:c.email,address:c.address,notes:c.notes,created_date:c.createdDate||null,updated_at:new Date().toISOString()})})}else{_legacySave('cp11_contacts',contacts)}}
-function saveMktContacts(){if(_useNewTables){mktContacts.forEach(function(c){_dbUpsert('marketing_contacts',{id:c.id,name:c.name,title:c.title,org:c.org,type:c.type,phone:c.phone,email:c.email,address:c.address,notes:c.notes,initiative_id:c.initiativeId,created_date:c.createdDate||null,updated_at:new Date().toISOString()})})}else{_legacySave('cp11_mktcontacts',mktContacts)}}
+function saveMktContacts(){if(_useNewTables){mktContacts.forEach(function(c){_dbUpsert('marketing_contacts',{id:c.id,name:c.name,title:c.title,org:c.org,type:c.type,phone:c.phone,email:c.email,address:c.address,city:c.city||null,state:c.state||null,zip:c.zip||null,notes:c.notes,initiative_id:c.initiativeId,last_contact_date:c.lastContactDate||null,nurture_log:c.nurtureLog||[],created_date:c.createdDate||null,updated_at:new Date().toISOString()})})}else{_legacySave('cp11_mktcontacts',mktContacts)}}
 function saveCallLogData(){if(_useNewTables){callLog.forEach(function(c){_dbInsert('call_log',{id:c.id,ref_id:c.refId,case_id:c.caseId,patient_id:c.patientId,date:c.date||null,direction:c.direction,party:c.party,phone:c.phone,outcome:c.outcome,duration:c.duration,notes:c.notes,flag:c.flag,flag_note:c.flagNote,logged_by:c.loggedBy})})}else{_legacySave('cp11_calllog',callLog)}}
 function saveTickets(){if(_useNewTables){tickets.forEach(function(t){_dbInsert('tickets',{id:t.id,subject:t.subject,priority:t.priority,assigned_to:t.assignedTo,category:t.category,department:t.department,status:t.status,ref_id:t.refId,case_id:t.caseId,notes:t.notes,created_by:t.createdBy,created_date:t.createdDate||null,updated_at:new Date().toISOString()})})}else{_legacySave('cp11_tickets',tickets)}}
 function saveFaxLog(){if(_useNewTables){faxLog.forEach(function(f){_dbInsert('fax_log',{id:f.id,date:f.date||null,sent_by:f.sentBy,recipient:f.recipient,recipient_type:f.recipientType,content_type:f.contentType,order_num:f.orderNum,notes:f.notes})})}else{_legacySave('cp11_faxlog',faxLog)}}
@@ -4709,6 +4725,7 @@ function renderMktPage(page){
   else if(page==='mkt-followup')renderMktFollowUp(el);
   else if(page==='mkt-correlation')renderMktCorrelation(el);
   else if(page==='mkt-contacts')renderMktContacts(el);
+  else if(page==='mkt-nurture')renderMktNurture(el);
   else if(page==='mkt-analytics')renderMktAnalytics(el);
 }
 
@@ -4807,7 +4824,7 @@ function showMktDetail(id){
   }
 
   h+='<div class="detail-card"><div class="detail-header"><h3>'+esc(m.name)+'</h3><span class="pipeline-stage '+sc+'" style="margin-left:12px">'+esc(m.stage)+'</span></div>';
-  h+='<div class="detail-grid">'+dcell('Contact',m.contact||'—')+dcell('Type',m.type||'—')+dcell('Date Initiated',fmtDate(m.dateInitiated))+dcell('Expected Volume',m.volume||'—')+dcell('Effort Level',m.effort||'Low')+dcell('Next Follow-Up',fmtDate(m.nextFollowUp))+dcell('Referrals Generated','<span style="font-family:DM Serif Display,serif;font-size:20px;color:var(--teal)">'+refCount+'</span>')+dcell('ROI','<span style="color:'+roi.color+';font-weight:700">'+roi.icon+' '+roi.label+'</span>')+dcell('Created',fmtDate(m.createdDate))+'</div>';
+  h+='<div class="detail-grid">'+dcell('Contact',m.contact||'—')+dcell('Type',m.type||'—')+dcell('Anticipated Cases',m.anticipatedCases||'—')+dcell('Date Initiated',fmtDate(m.dateInitiated))+dcell('Expected Volume',m.volume||'—')+dcell('Effort Level',m.effort||'Low')+dcell('Next Follow-Up',fmtDate(m.nextFollowUp))+dcell('Referrals Generated','<span style="font-family:DM Serif Display,serif;font-size:20px;color:var(--teal)">'+refCount+'</span>')+dcell('ROI','<span style="color:'+roi.color+';font-weight:700">'+roi.icon+' '+roi.label+'</span>')+dcell('Created',fmtDate(m.createdDate))+'</div>';
   // Target locations
   const locs=m.targetLocations||[];
   if(locs.length>0){
@@ -5010,6 +5027,15 @@ function mktAlerts(){
     }
     }catch(e){console.error('mktAlerts: skipped an initiative due to bad data',m&&m.id,e);}
   });
+
+  // 7. Nurture check-ins — contacts due for a 60-day general touch
+  mktContacts.forEach(function(c){
+    try{
+      if(!nurtureDue(c))return;
+      var days=nurtureDaysSince(c);var lt=contactLastTouch(c);
+      alerts.push({type:'nurture',contactId:c.id,id:null,name:c.name+(c.org?' \u2014 '+c.org:''),severity:days>=90?'red':'gold',title:'Nurture Check-In Due',message:(lt?('No contact in '+days+' days. '):'No logged contact yet. ')+'Send a general check-in/check-up email or call.'});
+    }catch(e){}
+  });
   
   // 5. Weekly activity target
   var weekStart=getWeekDates(0)[0];
@@ -5058,6 +5084,9 @@ function updateMktBadges(){
   var fu=mktList.filter(function(m){return m.stage!=='Inactive'&&m.nextFollowUp&&daysBtw(m.nextFollowUp,now)>=0;}).length;
   var fb=document.getElementById('mktFollowUpBadge');
   if(fb){fb.textContent=fu;fb.style.display=fu>0?'inline':'none';}
+  var nd=mktContacts.filter(function(c){return nurtureDue(c)}).length;
+  var nb=document.getElementById('mktNurtureBadge');
+  if(nb){nb.textContent=nd;nb.style.display=nd>0?'inline':'none';}
 }
 
 var mktAlertFilter='all';
@@ -5066,11 +5095,12 @@ function mktAlertCat(type){
   if(type==='no_touch')return 'First Touch';
   if(type==='stale')return 'Stale';
   if(type==='decline')return 'Decline';
+  if(type==='nurture')return 'Nurture';
   return 'KPI';
 }
 function renderMktAlerts(el){
   var all=mktAlerts();
-  var cats=['Follow-Up','First Touch','Stale','Decline','KPI'];
+  var cats=['Follow-Up','First Touch','Stale','Decline','Nurture','KPI'];
   var counts={};cats.forEach(function(c){counts[c]=0;});
   all.forEach(function(a){var c=mktAlertCat(a.type);counts[c]=(counts[c]||0)+1;});
   var alerts=(mktAlertFilter==='all')?all:all.filter(function(a){return mktAlertCat(a.type)===mktAlertFilter;});
@@ -5115,7 +5145,10 @@ function renderMktAlertCard(a){
   h+='<div style="flex:1;min-width:180px"><div style="font-weight:700;color:var(--navy)">'+esc(a.name)+'</div>';
   h+='<div style="font-size:11px;color:var(--gray-500);margin-top:2px">'+esc(a.message||'')+'</div></div>';
   h+='<div style="display:flex;gap:6px;flex-wrap:wrap">';
-  if(a.id){
+  if(a.type==='nurture'){
+    h+='<button class="btn-resolve" onclick="openEditMktContact(\''+a.contactId+'\')">View</button>';
+    h+='<button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="openNurtureResolve(\''+a.contactId+'\')">\u2713 Log Check-In</button>';
+  } else if(a.id){
     h+='<button class="btn-resolve" onclick="showMktDetail(\''+a.id+'\')">View</button>';
     h+='<button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="addMktActivity(\''+a.id+'\')">✓ Log Activity</button>';
   } else {
@@ -5247,9 +5280,9 @@ function populateMktLocations(selected){
 }
 function getMktSelectedLocations(){return Array.from(document.querySelectorAll('.mktLocCb:checked')).map(cb=>cb.value)}
 
-function openNewMktModal(){editingMktId=null;document.getElementById('mktModalTitle').textContent='Add Initiative';document.getElementById('btnDeleteMkt').style.display='none';['mktName','mktContactName','mktContactTitle','mktContactEmail','mktContactPhone','mktAddresses','mktNotes'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});document.getElementById('mktType').value='Law Firm';document.getElementById('mktStage').value='Prospect';document.getElementById('mktDate').value=today();document.getElementById('mktFollowUp').value='';document.getElementById('mktVolume').value='Low (1-3/mo)';document.getElementById('mktEffort').value='Low';populateMktLocations([]);document.getElementById('marketingModal').classList.add('show')}
+function openNewMktModal(){editingMktId=null;document.getElementById('mktModalTitle').textContent='Add Initiative';document.getElementById('btnDeleteMkt').style.display='none';['mktName','mktContactName','mktContactTitle','mktContactEmail','mktContactPhone','mktAddresses','mktNotes'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});document.getElementById('mktType').value='Law Firm';document.getElementById('mktAnticipatedCases').value='';document.getElementById('mktStage').value='Prospect';document.getElementById('mktDate').value=today();document.getElementById('mktFollowUp').value='';document.getElementById('mktVolume').value='Low (1-3/mo)';document.getElementById('mktEffort').value='Low';populateMktLocations([]);document.getElementById('marketingModal').classList.add('show')}
 function openNewMktModalFor(name){openNewMktModal();document.getElementById('mktName').value=name||'';}
-function openEditMktModal(id){const m=mktList.find(x=>x.id===id);if(!m)return;editingMktId=id;document.getElementById('mktModalTitle').textContent='Edit Initiative';document.getElementById('btnDeleteMkt').style.display='block';document.getElementById('mktName').value=m.name||'';var pc=(m.primaryContactId&&mktContacts.find(function(c){return c.id===m.primaryContactId}))||mktContacts.find(function(c){return c.initiativeId===m.id})||null;document.getElementById('mktContactName').value=(pc&&pc.name)||m.contactName||m.contact||'';document.getElementById('mktContactTitle').value=(pc&&pc.title)||m.contactTitle||'';document.getElementById('mktContactEmail').value=(pc&&pc.email)||m.contactEmail||'';document.getElementById('mktContactPhone').value=(pc&&pc.phone)||m.contactPhone||'';document.getElementById('mktAddresses').value=m.addresses||'';document.getElementById('mktType').value=m.type||'Law Firm';document.getElementById('mktStage').value=m.stage||'Prospect';document.getElementById('mktDate').value=m.dateInitiated||'';document.getElementById('mktFollowUp').value=m.nextFollowUp||'';document.getElementById('mktVolume').value=m.volume||'Low (1-3/mo)';document.getElementById('mktEffort').value=m.effort||'Low';document.getElementById('mktNotes').value=m.notes||'';populateMktLocations(m.targetLocations||[]);document.getElementById('marketingModal').classList.add('show')}
+function openEditMktModal(id){const m=mktList.find(x=>x.id===id);if(!m)return;editingMktId=id;document.getElementById('mktModalTitle').textContent='Edit Initiative';document.getElementById('btnDeleteMkt').style.display='block';document.getElementById('mktName').value=m.name||'';var pc=(m.primaryContactId&&mktContacts.find(function(c){return c.id===m.primaryContactId}))||mktContacts.find(function(c){return c.initiativeId===m.id})||null;document.getElementById('mktContactName').value=(pc&&pc.name)||m.contactName||m.contact||'';document.getElementById('mktContactTitle').value=(pc&&pc.title)||m.contactTitle||'';document.getElementById('mktContactEmail').value=(pc&&pc.email)||m.contactEmail||'';document.getElementById('mktContactPhone').value=(pc&&pc.phone)||m.contactPhone||'';document.getElementById('mktAddresses').value=m.addresses||'';document.getElementById('mktType').value=m.type||'Law Firm';document.getElementById('mktAnticipatedCases').value=m.anticipatedCases||'';document.getElementById('mktStage').value=m.stage||'Prospect';document.getElementById('mktDate').value=m.dateInitiated||'';document.getElementById('mktFollowUp').value=m.nextFollowUp||'';document.getElementById('mktVolume').value=m.volume||'Low (1-3/mo)';document.getElementById('mktEffort').value=m.effort||'Low';document.getElementById('mktNotes').value=m.notes||'';populateMktLocations(m.targetLocations||[]);document.getElementById('marketingModal').classList.add('show')}
 function closeMktModal(){document.getElementById('marketingModal').classList.remove('show');editingMktId=null}
 function saveMkt(){
   const name=document.getElementById('mktName').value.trim();if(!name){alert('Enter the organization name.');return;}
@@ -5258,7 +5291,7 @@ function saveMkt(){
   const cEmail=document.getElementById('mktContactEmail').value.trim();
   const cPhone=document.getElementById('mktContactPhone').value.trim();
   const addresses=document.getElementById('mktAddresses').value.trim();
-  const data={name,contact:cName,contactName:cName,contactTitle:cTitle,contactEmail:cEmail,contactPhone:cPhone,addresses:addresses,type:document.getElementById('mktType').value,stage:document.getElementById('mktStage').value,dateInitiated:document.getElementById('mktDate').value,nextFollowUp:document.getElementById('mktFollowUp').value,volume:document.getElementById('mktVolume').value,effort:document.getElementById('mktEffort').value,notes:document.getElementById('mktNotes').value.trim(),targetLocations:getMktSelectedLocations()};
+  const data={name,contact:cName,contactName:cName,contactTitle:cTitle,contactEmail:cEmail,contactPhone:cPhone,addresses:addresses,type:document.getElementById('mktType').value,anticipatedCases:document.getElementById('mktAnticipatedCases').value,stage:document.getElementById('mktStage').value,dateInitiated:document.getElementById('mktDate').value,nextFollowUp:document.getElementById('mktFollowUp').value,volume:document.getElementById('mktVolume').value,effort:document.getElementById('mktEffort').value,notes:document.getElementById('mktNotes').value.trim(),targetLocations:getMktSelectedLocations()};
   var initId;
   if(editingMktId){initId=editingMktId;const idx=mktList.findIndex(m=>m.id===editingMktId);if(idx!==-1)mktList[idx]={...mktList[idx],...data};}
   else{initId=genId();mktList.push({id:initId,...data,createdDate:today(),activityLog:[]});}
@@ -5271,7 +5304,8 @@ function saveMkt(){
     var existing=(pcId&&mktContacts.find(c=>c.id===pcId))
       ||mktContacts.find(c=>c.initiativeId===initId)
       ||mktContacts.find(c=>mktNorm(c.org)===mktNorm(name)&&(mktNorm(c.name)===mktNorm(cName)||(cEmail&&mktNorm(c.email)===mktNorm(cEmail))));
-    var cData={name:cName||name,title:cTitle,org:name,type:data.type,phone:cPhone,email:cEmail,address:firstAddr,initiativeId:initId};
+    var csz=parseCityStateZip(firstAddr);
+    var cData={name:cName||name,title:cTitle,org:name,type:data.type,phone:cPhone,email:cEmail,address:firstAddr,city:csz.city,state:csz.state,zip:csz.zip,initiativeId:initId};
     if(existing){Object.assign(existing,cData);if(init)init.primaryContactId=existing.id;}
     else{var newId=genId();mktContacts.push({id:newId,notes:'',createdDate:today(),...cData});if(init)init.primaryContactId=newId;}
     saveMktContacts();
@@ -5297,7 +5331,7 @@ function deleteMkt(){
 // ══════════════════════════════════════════════════════════════════════
 // MARKETING CONTACTS
 // ══════════════════════════════════════════════════════════════════════
-let editingMcId=null, mcTypeFilter='all';
+let editingMcId=null, mcTypeFilter='all', mcSortBy='org';
 
 function downloadMktContactsCSV(){
   if(!mktContacts.length){alert('No contacts to export yet.');return;}
@@ -5309,12 +5343,85 @@ function downloadMktContactsCSV(){
   downloadCSV('carepath-marketing-contacts-'+today()+'.csv',headers,rows);
 }
 
+function renderMktNurture(el){
+  var candidates=mktContacts.filter(isNurtureCandidate);
+  candidates.sort(function(a,b){return nurtureDaysSince(b)-nurtureDaysSince(a)});
+  var due=candidates.filter(function(c){return nurtureDaysSince(c)>=60});
+  var soon=candidates.filter(function(c){var d=nurtureDaysSince(c);return d>=30&&d<60});
+  var recent=candidates.filter(function(c){return nurtureDaysSince(c)<30});
+  var h='<div class="page-title">Regular Nurture Follow-Up</div><div class="page-subtitle">Contacts with no active initiative, or not contacted in 60+ days. '+due.length+' due now &middot; check in every 60 days.</div>';
+  function sec(title,color,list,empty){
+    var out='<div class="table-card"><div class="table-header"><h3 style="color:'+color+'">'+title+' ('+list.length+')</h3></div>';
+    if(list.length===0){out+='<div style="padding:14px 18px;color:var(--gray-400);font-size:12px">'+empty+'</div></div>';return out;}
+    out+='<div class="table-scroll"><table class="tbl" style="min-width:760px"><thead><tr><th>Contact</th><th>Organization</th><th>Type</th><th>Location</th><th>Last Contact</th><th>Days</th><th></th></tr></thead><tbody>';
+    list.forEach(function(c){
+      var days=nurtureDaysSince(c);var lt=contactLastTouch(c);
+      var dcol=days>=90?'var(--red)':days>=60?'var(--gold)':'var(--gray-500)';
+      out+='<tr><td style="font-weight:600;color:var(--navy);cursor:pointer" onclick="openEditMktContact(\''+c.id+'\')">'+esc(c.name)+'</td><td style="font-size:11px">'+esc(c.org||'\u2014')+'</td><td style="font-size:11px">'+esc(c.type||'\u2014')+'</td><td style="font-size:11px">'+esc(contactLocation(c)||'\u2014')+'</td><td style="font-size:11px">'+(lt?fmtDate(lt):'never')+'</td><td style="font-size:11px;font-weight:700;color:'+dcol+'">'+(days>=999?'\u2014':days+'d')+'</td><td style="white-space:nowrap"><button class="btn-resolve" onclick="openEditMktContact(\''+c.id+'\')">View</button> <button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="openNurtureResolve(\''+c.id+'\')">\u2713 Log Check-In</button></td></tr>';
+    });
+    out+='</tbody></table></div></div>';return out;
+  }
+  if(candidates.length===0){h+='<div class="table-card" style="padding:30px;text-align:center;color:var(--gray-400)">No nurture contacts yet. Contacts without an active initiative will appear here for periodic check-ins.</div>';}
+  else{
+    h+=sec('\u26A0\uFE0F Due Now (60+ days)','var(--red)',due,'Nobody is due right now \u2014 nice work.');
+    h+=sec('\uD83D\uDCC5 Coming Up (30\u201359 days)','var(--gold)',soon,'Nothing coming up in this window.');
+    h+=sec('\u2713 Recently Contacted (under 30 days)','var(--teal)',recent,'\u2014');
+  }
+  el.innerHTML=h;
+}
+var nurtureContactId=null;
+function openNurtureResolve(id){nurtureContactId=id;document.getElementById('nurtureMethod').value='Email';document.getElementById('nurtureDate').value=today();document.getElementById('nurtureNote').value='';var c=mktContacts.find(function(x){return x.id===id});var lbl=document.getElementById('nurtureWho');if(lbl)lbl.textContent=c?(c.name+(c.org?' \u00B7 '+c.org:'')):'';document.getElementById('nurtureModal').classList.add('show');}
+function closeNurtureModal(){document.getElementById('nurtureModal').classList.remove('show');nurtureContactId=null;}
+function saveNurture(){
+  var id=nurtureContactId;var c=mktContacts.find(function(x){return x.id===id});if(!c)return;
+  var method=document.getElementById('nurtureMethod').value;
+  var date=document.getElementById('nurtureDate').value||today();
+  var note=document.getElementById('nurtureNote').value.trim();
+  if(!c.nurtureLog)c.nurtureLog=[];
+  c.nurtureLog.push({date:date,method:method,note:note,by:currentUser||''});
+  c.lastContactDate=date;
+  saveMktContacts();closeNurtureModal();updateMktBadges();renderMktPage(mktCurrentPage);
+}
+
+function parseCityStateZip(addr){
+  var out={city:'',state:'',zip:''};
+  if(!addr)return out;
+  var line=String(addr).split('\n')[0].trim();
+  var m=line.match(/([A-Za-z .'\-]+),\s*([A-Za-z]{2})\.?\s*(\d{5}(?:-\d{4})?)?\s*$/);
+  if(m){out.city=(m[1]||'').trim();out.state=(m[2]||'').toUpperCase();out.zip=(m[3]||'').trim();}
+  else{
+    var z=line.match(/(\d{5}(?:-\d{4})?)\s*$/);if(z)out.zip=z[1];
+    var st=line.match(/,\s*([A-Za-z]{2})\.?\s*(?:\d{5}(?:-\d{4})?)?\s*$/);if(st)out.state=st[1].toUpperCase();
+  }
+  return out;
+}
+function contactHasActiveInitiative(c){
+  if(!c.initiativeId)return false;
+  var init=mktList.find(function(m){return m.id===c.initiativeId});
+  return !!(init&&init.stage!=='Inactive');
+}
+function contactLastTouch(c){
+  var d=c.lastContactDate||'';
+  if(c.initiativeId){var init=mktList.find(function(m){return m.id===c.initiativeId});if(init&&init.lastActivityDate&&init.lastActivityDate>d)d=init.lastActivityDate;}
+  return d||c.createdDate||'';
+}
+function nurtureDaysSince(c){var t=contactLastTouch(c);return t?daysBtw(t,today()):999;}
+function isNurtureCandidate(c){return !contactHasActiveInitiative(c)||nurtureDaysSince(c)>60;}
+function nurtureDue(c){return nurtureDaysSince(c)>=60;}
+function contactLocation(c){var p=[c.city,c.state].filter(Boolean).join(', ');return p||(c.zip||'');}
+
 function renderMktContacts(el){
   const search=(document.getElementById('mcSearchInput')?.value||'').toLowerCase();
   let list=mktContacts.slice();
   if(mcTypeFilter!=='all') list=list.filter(c=>c.type===mcTypeFilter);
   if(search) list=list.filter(c=>(c.name||'').toLowerCase().includes(search)||(c.org||'').toLowerCase().includes(search)||(c.email||'').toLowerCase().includes(search)||(c.phone||'').toLowerCase().includes(search)||(c.notes||'').toLowerCase().includes(search));
-  list.sort((a,b)=>(a.org||a.name||'').localeCompare(b.org||b.name||''));
+  var _sc={
+    org:function(a,b){return (a.org||a.name||'').localeCompare(b.org||b.name||'')},
+    name:function(a,b){return (a.name||'').localeCompare(b.name||'')},
+    type:function(a,b){return (a.type||'').localeCompare(b.type||'')||(a.org||'').localeCompare(b.org||'')},
+    location:function(a,b){return (contactLocation(a)||'zzz').localeCompare(contactLocation(b)||'zzz')||(a.org||'').localeCompare(b.org||'')}
+  };
+  list.sort(_sc[mcSortBy]||_sc.org);
 
   const types={};mktContacts.forEach(c=>{types[c.type]=(types[c.type]||0)+1});
 
@@ -5328,18 +5435,19 @@ function renderMktContacts(el){
 
   h+='<div class="table-card"><div class="table-header"><h3>Contact Directory</h3><div class="table-controls">' +
     '<input class="search-input" id="mcSearchInput" value="'+esc(search)+'" placeholder="Search contacts..." oninput="renderMktContacts(document.getElementById(\'sec-mkt-contacts\'))">' +
+    '<select class="search-input" style="width:auto" onchange="mcSortBy=this.value;renderMktContacts(document.getElementById(\'sec-mkt-contacts\'))"><option value="org"'+(mcSortBy==='org'?' selected':'')+'>Sort: Organization</option><option value="name"'+(mcSortBy==='name'?' selected':'')+'>Sort: Name</option><option value="type"'+(mcSortBy==='type'?' selected':'')+'>Sort: Type</option><option value="location"'+(mcSortBy==='location'?' selected':'')+'>Sort: Location</option></select>' +
     '<button class="filter-btn '+(mcTypeFilter==='all'?'active':'')+'" onclick="mcTypeFilter=\'all\';renderMktContacts(document.getElementById(\'sec-mkt-contacts\'))">All</button>' +
     '<button class="filter-btn '+(mcTypeFilter==='Law Firm'?'active':'')+'" onclick="mcTypeFilter=\'Law Firm\';renderMktContacts(document.getElementById(\'sec-mkt-contacts\'))">Law Firms</button>' +
     '<button class="filter-btn '+(mcTypeFilter==='Primary Care'?'active':'')+'" onclick="mcTypeFilter=\'Primary Care\';renderMktContacts(document.getElementById(\'sec-mkt-contacts\'))">Primary Care</button>' +
     '<button class="filter-btn '+(mcTypeFilter==='Urgent Care'?'active':'')+'" onclick="mcTypeFilter=\'Urgent Care\';renderMktContacts(document.getElementById(\'sec-mkt-contacts\'))">Urgent Care</button>' +
     '<button class="filter-btn '+(mcTypeFilter==='Specialist'?'active':'')+'" onclick="mcTypeFilter=\'Specialist\';renderMktContacts(document.getElementById(\'sec-mkt-contacts\'))">Specialist</button>' +
   '</div></div>';
-  h+='<div class="table-scroll"><table class="tbl" style="min-width:750px"><thead><tr><th>Name</th><th>Title</th><th>Organization</th><th>Type</th><th>Phone</th><th>Email</th><th>Initiative</th><th></th></tr></thead><tbody>';
+  h+='<div class="table-scroll"><table class="tbl" style="min-width:750px"><thead><tr><th>Name</th><th>Title</th><th>Organization</th><th>Type</th><th>Location</th><th>Phone</th><th>Email</th><th>Initiative</th><th></th></tr></thead><tbody>';
   list.forEach(c=>{
     const initName=c.initiativeId?((mktList.find(m=>m.id===c.initiativeId)||{}).name||'—'):'—';
-    h+='<tr onclick="openEditMktContact(\''+c.id+'\')" style="cursor:pointer"><td style="font-weight:600;color:var(--navy)">'+esc(c.name)+'</td><td style="font-size:11px">'+esc(c.title||'—')+'</td><td style="font-size:11px">'+esc(c.org||'—')+'</td><td><span class="pipeline-stage stage-contacted" style="font-size:9px">'+esc(c.type)+'</span></td><td style="font-size:11px">'+esc(c.phone||'—')+'</td><td style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.email||'—')+'</td><td style="font-size:10px;color:var(--teal)">'+esc(initName)+'</td><td><button class="btn-resolve" onclick="event.stopPropagation();openEditMktContact(\''+c.id+'\')">Edit</button></td></tr>';
+    h+='<tr onclick="openEditMktContact(\''+c.id+'\')" style="cursor:pointer"><td style="font-weight:600;color:var(--navy)">'+esc(c.name)+'</td><td style="font-size:11px">'+esc(c.title||'—')+'</td><td style="font-size:11px">'+esc(c.org||'—')+'</td><td><span class="pipeline-stage stage-contacted" style="font-size:9px">'+esc(c.type)+'</span></td><td style="font-size:11px">'+esc(contactLocation(c)||'—')+'</td><td style="font-size:11px">'+esc(c.phone||'—')+'</td><td style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.email||'—')+'</td><td style="font-size:10px;color:var(--teal)">'+esc(initName)+'</td><td><button class="btn-resolve" onclick="event.stopPropagation();openEditMktContact(\''+c.id+'\')">Edit</button></td></tr>';
   });
-  if(list.length===0) h+='<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--gray-400)">No contacts found.</td></tr>';
+  if(list.length===0) h+='<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--gray-400)">No contacts found.</td></tr>';
   h+='</tbody></table></div></div>';
   el.innerHTML=h;
   const inp=document.getElementById('mcSearchInput');if(inp&&search){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}
@@ -5359,7 +5467,8 @@ function closeMktContactModal(){document.getElementById('mktContactModal').class
 
 function saveMktContact(){
   const name=document.getElementById('mcName').value.trim();if(!name){alert('Enter contact name.');return;}
-  const data={name,title:document.getElementById('mcTitle').value.trim(),org:document.getElementById('mcOrg').value.trim(),type:document.getElementById('mcType').value,phone:document.getElementById('mcPhone').value.trim(),email:document.getElementById('mcEmail').value.trim(),address:document.getElementById('mcAddress').value.trim(),notes:document.getElementById('mcNotes').value.trim(),initiativeId:document.getElementById('mcInitiative').value||''};
+  var _addr=document.getElementById('mcAddress').value.trim();var _csz=parseCityStateZip(_addr);
+  const data={name,title:document.getElementById('mcTitle').value.trim(),org:document.getElementById('mcOrg').value.trim(),type:document.getElementById('mcType').value,phone:document.getElementById('mcPhone').value.trim(),email:document.getElementById('mcEmail').value.trim(),address:_addr,city:_csz.city,state:_csz.state,zip:_csz.zip,notes:document.getElementById('mcNotes').value.trim(),initiativeId:document.getElementById('mcInitiative').value||''};
   if(editingMcId){const idx=mktContacts.findIndex(c=>c.id===editingMcId);if(idx!==-1)mktContacts[idx]={...mktContacts[idx],...data};}
   else{mktContacts.push({id:genId(),...data,createdDate:today()});}
   saveMktContacts();closeMktContactModal();renderMktContacts(document.getElementById('sec-mkt-contacts'));
