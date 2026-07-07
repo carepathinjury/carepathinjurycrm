@@ -834,11 +834,13 @@
 <div class="modal-overlay" id="mktActivityModal">
   <div class="modal" style="width:500px">
     <div class="modal-header"><h2>Log Activity</h2><button class="modal-close" onclick="closeMktActivityModal()">&times;</button></div>
-    <div class="modal-body"><div class="form-grid">
-      <div class="form-group"><label>Activity Type</label><select id="mktActType"><option>In-Person Meeting</option><option>Lunch/Dinner</option><option>Office Visit/Drop-off</option><option>Phone Call</option><option>Email Outreach</option><option>Email Campaign</option><option>Gift/Appreciation</option><option>Event/Seminar</option><option>Presentation</option><option>Referral Thank You</option><option>Contract/LOP Discussion</option><option>Follow-Up</option><option>Other</option></select></div>
-      <div class="form-group"><label>Date</label><input type="date" id="mktActDate"></div>
-      <div class="form-group" style="grid-column:1/-1"><label>Description</label><textarea id="mktActNote" rows="3" placeholder="What happened? Key takeaways, next steps..."></textarea></div>
-      <div class="form-group" style="grid-column:1/-1"><label>Set Next Follow-Up Date <span style="font-size:10px;color:var(--gray-400)">(optional — updates the account)</span></label><input type="date" id="mktActFollowUp"></div>
+    <div class="modal-body">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:14px;cursor:pointer;padding:9px 11px;background:rgba(200,151,58,0.08);border:1px solid rgba(200,151,58,0.25);border-radius:8px"><input type="checkbox" id="mktActNone" onchange="toggleMktActNone()"> <strong>No activity yet</strong> — just set a reminder for the next push</label>
+      <div class="form-grid">
+      <div class="form-group" id="mktActTypeGroup"><label>Activity Type</label><select id="mktActType"><option>In-Person Meeting</option><option>Lunch/Dinner</option><option>Office Visit/Drop-off</option><option>Phone Call</option><option>Email Outreach</option><option>Email Campaign</option><option>Gift/Appreciation</option><option>Event/Seminar</option><option>Presentation</option><option>Referral Thank You</option><option>Contract/LOP Discussion</option><option>Follow-Up</option><option>Other</option></select></div>
+      <div class="form-group" id="mktActDateGroup"><label>Date</label><input type="date" id="mktActDate"></div>
+      <div class="form-group" id="mktActNoteGroup" style="grid-column:1/-1"><label>Description</label><textarea id="mktActNote" rows="3" placeholder="What happened? Key takeaways, next steps..."></textarea></div>
+      <div class="form-group" style="grid-column:1/-1"><label id="mktActFollowUpLabel">Set Next Follow-Up Date <span style="font-size:10px;color:var(--gray-400)">(optional — updates the account)</span></label><input type="date" id="mktActFollowUp"></div>
     </div></div>
     <div class="modal-footer"><button class="btn-cancel" onclick="closeMktActivityModal()">Cancel</button><button class="btn-save" onclick="saveMktActivity()">Save Activity</button></div>
   </div>
@@ -4920,22 +4922,40 @@ function showMktDetail(id){
 }
 
 let mktActivityId=null;
+function toggleMktActNone(){
+  var none=document.getElementById('mktActNone').checked;
+  ['mktActTypeGroup','mktActDateGroup','mktActNoteGroup'].forEach(function(gid){var g=document.getElementById(gid);if(g)g.style.display=none?'none':'';});
+  var lbl=document.getElementById('mktActFollowUpLabel');
+  if(lbl)lbl.innerHTML=none?'Reminder / Next Push Date <span style="color:var(--red)">*</span>':'Set Next Follow-Up Date <span style="font-size:10px;color:var(--gray-400)">(optional — updates the account)</span>';
+  var hd=document.querySelector('#mktActivityModal .modal-header h2');if(hd)hd.textContent=none?'Set Reminder':'Log Activity';
+  var sv=document.querySelector('#mktActivityModal .btn-save');if(sv)sv.textContent=none?'Set Reminder':'Save Activity';
+}
 function addMktActivity(id){
   mktActivityId=id;
+  var noneEl=document.getElementById('mktActNone');if(noneEl)noneEl.checked=false;
   document.getElementById('mktActType').value='In-Person Meeting';
   document.getElementById('mktActDate').value=today();
   document.getElementById('mktActNote').value='';
   document.getElementById('mktActFollowUp').value='';
+  toggleMktActNone();
   document.getElementById('mktActivityModal').classList.add('show');
 }
 function closeMktActivityModal(){document.getElementById('mktActivityModal').classList.remove('show');mktActivityId=null;}
 function saveMktActivity(){
-  const note=document.getElementById('mktActNote').value.trim();if(!note){alert('Enter a description.');return;}
-  const type=document.getElementById('mktActType').value;
-  const date=document.getElementById('mktActDate').value||today();
+  const none=document.getElementById('mktActNone')&&document.getElementById('mktActNone').checked;
   const followUp=document.getElementById('mktActFollowUp').value||'';
   const id=mktActivityId;
   const m=mktList.find(x=>x.id===id);if(!m)return;
+  if(none){
+    if(!followUp){alert('Pick a follow-up date for the next push.');return;}
+    m.nextFollowUp=followUp;
+    saveMktData();closeMktActivityModal();updateMktBadges();
+    if(mktCurrentPage==='mkt-pipeline'){showMktDetail(id);}else{renderMktPage(mktCurrentPage);}
+    return;
+  }
+  const note=document.getElementById('mktActNote').value.trim();if(!note){alert('Enter a description.');return;}
+  const type=document.getElementById('mktActType').value;
+  const date=document.getElementById('mktActDate').value||today();
   if(!m.activityLog)m.activityLog=[];
   m.activityLog.push({date:date,type:type,note:note,by:currentUser||''});
   m.lastActivityDate=date;
@@ -4962,9 +4982,11 @@ function mktAlerts(){
       alerts.push({type:'followup',name:m.name,id:m.id,severity:'gold',title:'Follow-Up Due',message:'Follow-up was due '+fmtDate(m.nextFollowUp)+'. Reach out and log your activity.',daysPast:daysBtw(m.nextFollowUp,now)});
     }
     
-    // 2. No first touch — account created but zero activities
+    // 2. No first touch — account created but zero activities (snoozed if a reminder is scheduled)
     if((!m.activityLog||m.activityLog.length===0)&&m.stage!=='Inactive'){
-      alerts.push({type:'no_touch',name:m.name,id:m.id,severity:'gold',title:'New Account — No Activity Yet',message:'This account was created '+fmtDate(m.createdDate)+' but has no logged activities. Schedule your first touchpoint.'});
+      if(!(m.nextFollowUp&&m.nextFollowUp>now)){
+        alerts.push({type:'no_touch',name:m.name,id:m.id,severity:'gold',title:'New Account — No Activity Yet',message:'This account was created '+fmtDate(m.createdDate)+' but has no logged activities. Log a first touch or set a reminder for your next push.'});
+      }
     }
     
     // 3. Stale account — no activity in 14 days (active) or 30 days (others)
