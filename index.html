@@ -1209,7 +1209,17 @@ function _dbUpsertTry(table, row, attempt){
 }
 
 function _dbDelete(table, id){
-  fetch(SUPABASE_URL+'/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:_sbH}).catch(function(e){console.error('Delete error:',table,e);});
+  fetch(SUPABASE_URL+'/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:Object.assign({},_sbH,{'Prefer':'return=representation'})})
+    .then(function(resp){
+      if(!resp.ok){resp.text().then(function(t){console.error('Delete failed:',table,resp.status,t);});showSaveError();return;}
+      return resp.json().then(function(rows){
+        if(Array.isArray(rows)&&rows.length===0){
+          console.error('Delete affected 0 rows: '+table+' id='+id+'. The row exists but was not removed — this almost always means the table is missing a DELETE row-level-security policy.');
+          showSaveError();
+        }
+      }).catch(function(){});
+    })
+    .catch(function(e){console.error('Delete error:',table,e);showSaveError();});
 }
 
 // ─── Save indicator ────────────────────────────────────────────────
@@ -5233,9 +5243,12 @@ function saveMkt(){
     var init=mktList.find(m=>m.id===initId);
     var firstAddr=addresses?addresses.split('\n')[0].trim():'';
     var pcId=init&&init.primaryContactId;
-    var existing=pcId?mktContacts.find(c=>c.id===pcId):null;
+    // Recognize an existing contact for this initiative/org so we don't create duplicates
+    var existing=(pcId&&mktContacts.find(c=>c.id===pcId))
+      ||mktContacts.find(c=>c.initiativeId===initId)
+      ||mktContacts.find(c=>mktNorm(c.org)===mktNorm(name)&&(mktNorm(c.name)===mktNorm(cName)||(cEmail&&mktNorm(c.email)===mktNorm(cEmail))));
     var cData={name:cName||name,title:cTitle,org:name,type:data.type,phone:cPhone,email:cEmail,address:firstAddr,initiativeId:initId};
-    if(existing){Object.assign(existing,cData);}
+    if(existing){Object.assign(existing,cData);if(init)init.primaryContactId=existing.id;}
     else{var newId=genId();mktContacts.push({id:newId,notes:'',createdDate:today(),...cData});if(init)init.primaryContactId=newId;}
     saveMktContacts();
   }
