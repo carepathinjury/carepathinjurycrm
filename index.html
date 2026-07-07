@@ -1184,7 +1184,15 @@ function _dbPatch(table, id, fields){
 }
 
 function _dbUpsert(table, row){
-  _dbUpdate(table, row);
+  _lastLocalSave=Date.now();
+  fetch(SUPABASE_URL+'/rest/v1/'+table, {
+    method:'POST',
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
+    body:JSON.stringify(row)
+  }).then(function(resp){
+    if(resp.ok||resp.status===201||resp.status===204){ showSaveSuccess(); }
+    else { resp.text().then(function(t){console.error('Upsert failed:',table,resp.status,t);}); showSaveError(); }
+  }).catch(function(e){console.error('Upsert error:',table,e);showSaveError();});
 }
 
 function _dbDelete(table, id){
