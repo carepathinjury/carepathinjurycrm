@@ -4266,6 +4266,15 @@ function cmStaffSearch(input, staff) {
 }
 
 let contactTypeFilter='all';
+function downloadContactsCSV(){
+  if(!contacts.length){alert('No contacts to export yet.');return;}
+  var headers=['Company / Firm','Type','Phone','Fax','Email','Send Notes To','Send Billing To','Claim Info Requests','Invoice Info','Provider Line','Extension','Address','Additional Contacts','Notes','Created'];
+  var rows=contacts.slice().sort(function(a,b){return (a.company||'').localeCompare(b.company||'')}).map(function(c){
+    return [c.company||c.name||'',c.type||'',c.phone||'',c.fax||'',c.email||'',c.sendNotesTo||'',c.sendBillingTo||'',c.claimInfoRequests||'',c.invoiceInfo||'',c.providerLine||'',c.extension||'',c.address||'',c.additionalContacts||'',c.notes||'',c.createdDate||''];
+  });
+  downloadCSV('carepath-contacts-'+today()+'.csv',headers,rows);
+}
+
 function renderCmContacts(el){
   const search=(document.getElementById('cmContactSearch')?.value||'').toLowerCase();
   let list=contacts.slice();
@@ -4275,7 +4284,7 @@ function renderCmContacts(el){
   const lawFirms=contacts.filter(c=>c.type==='Law Firm').length;
   const carriers=contacts.filter(c=>c.type==='Insurance Carrier').length;
 
-  let h='<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">Contacts</div><div style="margin-left:auto"><button class="btn-primary" onclick="openNewContactModal()" style="font-size:11px;padding:7px 14px">+ Add Contact</button></div></div>';
+  let h='<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">Contacts</div><div style="margin-left:auto;display:flex;gap:8px"><button class="btn-cancel" onclick="downloadContactsCSV()" style="font-size:11px;padding:7px 14px">&#8681; Download CSV</button><button class="btn-primary" onclick="openNewContactModal()" style="font-size:11px;padding:7px 14px">+ Add Contact</button></div></div>';
   h+='<div class="page-subtitle">'+lawFirms+' law firms, '+carriers+' insurance carriers. '+contacts.length+' total.</div>';
 
   h+='<div class="table-card"><div class="table-header"><h3>Contact Directory</h3><div class="table-controls">' +
