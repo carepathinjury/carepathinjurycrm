@@ -1183,15 +1183,28 @@ function _dbPatch(table, id, fields){
   }).catch(function(e){showSaveError()});
 }
 
-function _dbUpsert(table, row){
+function _dbUpsert(table, row){ _dbUpsertTry(table, row, 0); }
+function _dbUpsertTry(table, row, attempt){
   _lastLocalSave=Date.now();
   fetch(SUPABASE_URL+'/rest/v1/'+table, {
     method:'POST',
     headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
     body:JSON.stringify(row)
   }).then(function(resp){
-    if(resp.ok||resp.status===201||resp.status===204){ showSaveSuccess(); }
-    else { resp.text().then(function(t){console.error('Upsert failed:',table,resp.status,t);}); showSaveError(); }
+    if(resp.ok||resp.status===201||resp.status===204){ showSaveSuccess(); return; }
+    resp.text().then(function(t){
+      // Self-heal: if Supabase says a column doesn't exist, drop it and retry so the record still saves.
+      var m=t.match(/Could not find the '(\w+)' column/i)||t.match(/column "?(\w+)"? (?:of relation|does not exist)/i);
+      var col=m?m[1]:null;
+      if(col&&Object.prototype.hasOwnProperty.call(row,col)&&attempt<5){
+        console.warn('Column "'+col+'" missing on '+table+' — saving without it. Run marketing_migration.sql (and reload the schema) to store this field permanently.');
+        delete row[col];
+        _dbUpsertTry(table, row, attempt+1);
+      } else {
+        console.error('Upsert failed:',table,resp.status,t);
+        showSaveError();
+      }
+    });
   }).catch(function(e){console.error('Upsert error:',table,e);showSaveError();});
 }
 
@@ -5202,7 +5215,7 @@ function getMktSelectedLocations(){return Array.from(document.querySelectorAll('
 
 function openNewMktModal(){editingMktId=null;document.getElementById('mktModalTitle').textContent='Add Initiative';document.getElementById('btnDeleteMkt').style.display='none';['mktName','mktContactName','mktContactTitle','mktContactEmail','mktContactPhone','mktAddresses','mktNotes'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});document.getElementById('mktType').value='Law Firm';document.getElementById('mktStage').value='Prospect';document.getElementById('mktDate').value=today();document.getElementById('mktFollowUp').value='';document.getElementById('mktVolume').value='Low (1-3/mo)';document.getElementById('mktEffort').value='Low';populateMktLocations([]);document.getElementById('marketingModal').classList.add('show')}
 function openNewMktModalFor(name){openNewMktModal();document.getElementById('mktName').value=name||'';}
-function openEditMktModal(id){const m=mktList.find(x=>x.id===id);if(!m)return;editingMktId=id;document.getElementById('mktModalTitle').textContent='Edit Initiative';document.getElementById('btnDeleteMkt').style.display='block';document.getElementById('mktName').value=m.name||'';var pc=m.primaryContactId?mktContacts.find(function(c){return c.id===m.primaryContactId}):null;document.getElementById('mktContactName').value=(pc&&pc.name)||m.contactName||m.contact||'';document.getElementById('mktContactTitle').value=(pc&&pc.title)||m.contactTitle||'';document.getElementById('mktContactEmail').value=(pc&&pc.email)||m.contactEmail||'';document.getElementById('mktContactPhone').value=(pc&&pc.phone)||m.contactPhone||'';document.getElementById('mktAddresses').value=m.addresses||'';document.getElementById('mktType').value=m.type||'Law Firm';document.getElementById('mktStage').value=m.stage||'Prospect';document.getElementById('mktDate').value=m.dateInitiated||'';document.getElementById('mktFollowUp').value=m.nextFollowUp||'';document.getElementById('mktVolume').value=m.volume||'Low (1-3/mo)';document.getElementById('mktEffort').value=m.effort||'Low';document.getElementById('mktNotes').value=m.notes||'';populateMktLocations(m.targetLocations||[]);document.getElementById('marketingModal').classList.add('show')}
+function openEditMktModal(id){const m=mktList.find(x=>x.id===id);if(!m)return;editingMktId=id;document.getElementById('mktModalTitle').textContent='Edit Initiative';document.getElementById('btnDeleteMkt').style.display='block';document.getElementById('mktName').value=m.name||'';var pc=(m.primaryContactId&&mktContacts.find(function(c){return c.id===m.primaryContactId}))||mktContacts.find(function(c){return c.initiativeId===m.id})||null;document.getElementById('mktContactName').value=(pc&&pc.name)||m.contactName||m.contact||'';document.getElementById('mktContactTitle').value=(pc&&pc.title)||m.contactTitle||'';document.getElementById('mktContactEmail').value=(pc&&pc.email)||m.contactEmail||'';document.getElementById('mktContactPhone').value=(pc&&pc.phone)||m.contactPhone||'';document.getElementById('mktAddresses').value=m.addresses||'';document.getElementById('mktType').value=m.type||'Law Firm';document.getElementById('mktStage').value=m.stage||'Prospect';document.getElementById('mktDate').value=m.dateInitiated||'';document.getElementById('mktFollowUp').value=m.nextFollowUp||'';document.getElementById('mktVolume').value=m.volume||'Low (1-3/mo)';document.getElementById('mktEffort').value=m.effort||'Low';document.getElementById('mktNotes').value=m.notes||'';populateMktLocations(m.targetLocations||[]);document.getElementById('marketingModal').classList.add('show')}
 function closeMktModal(){document.getElementById('marketingModal').classList.remove('show');editingMktId=null}
 function saveMkt(){
   const name=document.getElementById('mktName').value.trim();if(!name){alert('Enter the organization name.');return;}
