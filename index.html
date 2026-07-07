@@ -4983,10 +4983,11 @@ function saveMktActivity(){
 
 // ═══ MARKETING ALERTS ═══
 function mktAlerts(){
-  var now=today();
   var alerts=[];
+  try{
+  var now=today();
   
-  mktList.forEach(function(m){
+  (mktList||[]).forEach(function(m){
     try{
     if(m.stage==='Inactive')return;
     var lastAct=m.lastActivityDate||'';
@@ -5029,7 +5030,7 @@ function mktAlerts(){
   });
 
   // 7. Nurture check-ins — contacts due for a 60-day general touch
-  mktContacts.forEach(function(c){
+  (mktContacts||[]).forEach(function(c){
     try{
       if(!nurtureDue(c))return;
       var days=nurtureDaysSince(c);var lt=contactLastTouch(c);
@@ -5040,7 +5041,7 @@ function mktAlerts(){
   // 5. Weekly activity target
   var weekStart=getWeekDates(0)[0];
   var weekActivities=0;
-  mktList.forEach(function(m){(m.activityLog||[]).forEach(function(a){if(a.date>=weekStart)weekActivities++;});});
+  (mktList||[]).forEach(function(m){(m.activityLog||[]).forEach(function(a){if(a.date>=weekStart)weekActivities++;});});
   if(weekActivities<10){
     alerts.push({type:'weekly_target',name:'Weekly Activity Target',id:null,severity:'gold',title:'Weekly Activity Target',message:'Only '+weekActivities+' activities logged this week (target: 10). Keep up your outreach.'});
   }
@@ -5056,11 +5057,11 @@ function mktAlerts(){
       {calls:30,visits:12,meetings:7,contacts:45},
       {calls:30,visits:12,meetings:7,contacts:40}
     ];
-    var mktStartD=null;mktList.forEach(function(m){if(m.createdDate&&(!mktStartD||m.createdDate<mktStartD))mktStartD=m.createdDate;});
+    var mktStartD=null;(mktList||[]).forEach(function(m){if(m.createdDate&&(!mktStartD||m.createdDate<mktStartD))mktStartD=m.createdDate;});
     var moActive=mktStartD?Math.max(0,Math.floor(daysBtw(mktStartD,now)/30)):0;
     var tIdx=Math.min(moActive,5);var tg=MKT_TARGETS_CHECK[tIdx];
     var mo=now.substring(0,7);
-    var moActs=[];mktList.forEach(function(m){(m.activityLog||[]).forEach(function(a){if((a.date||'').startsWith(mo))moActs.push(a);});});
+    var moActs=[];(mktList||[]).forEach(function(m){(m.activityLog||[]).forEach(function(a){if((a.date||'').startsWith(mo))moActs.push(a);});});
     var moCalls=moActs.filter(function(a){return a.type==='Phone Call'}).length;
     var moVisits=moActs.filter(function(a){return a.type==='Office Visit/Drop-off'||a.type==='Lunch/Dinner'}).length;
     var moMeetings=moActs.filter(function(a){return a.type==='In-Person Meeting'||a.type==='Presentation'}).length;
@@ -5072,7 +5073,7 @@ function mktAlerts(){
       alerts.push({type:'monthly_kpi',name:'Monthly KPIs Behind',id:null,severity:'red',title:'Monthly KPIs Behind — Past Mid-Month',message:'Below 50% target on: '+behindMetrics.join(', ')+'. Increase activity to hit monthly goals.'});
     }
   }
-  
+  }catch(e){console.error('mktAlerts fatal:',e);}
   return alerts;
 }
 
@@ -5084,7 +5085,7 @@ function updateMktBadges(){
   var fu=mktList.filter(function(m){return m.stage!=='Inactive'&&m.nextFollowUp&&daysBtw(m.nextFollowUp,now)>=0;}).length;
   var fb=document.getElementById('mktFollowUpBadge');
   if(fb){fb.textContent=fu;fb.style.display=fu>0?'inline':'none';}
-  var nd=mktContacts.filter(function(c){return nurtureDue(c)}).length;
+  var nd=(mktContacts||[]).filter(function(c){return nurtureDue(c)}).length;
   var nb=document.getElementById('mktNurtureBadge');
   if(nb){nb.textContent=nd;nb.style.display=nd>0?'inline':'none';}
 }
