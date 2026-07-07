@@ -445,6 +445,7 @@
     <div class="nav-section-label">Marketing</div>
     <div class="nav-item active" data-page="mkt-pipeline" onclick="mktNav('mkt-pipeline')"><div class="nav-icon">🏢</div> Accounts</div>
     <div class="nav-item" data-page="mkt-alerts" onclick="mktNav('mkt-alerts')"><div class="nav-icon">⚠️</div> Alerts <span class="nav-badge gold" id="mktAlertBadge" style="display:none">0</span></div>
+    <div class="nav-item" data-page="mkt-followup" onclick="mktNav('mkt-followup')"><div class="nav-icon">📅</div> Needs Follow-Up <span class="nav-badge gold" id="mktFollowUpBadge" style="display:none">0</span></div>
     <div class="nav-item" data-page="mkt-correlation" onclick="mktNav('mkt-correlation')"><div class="nav-icon">🔗</div> Referral Impact</div>
     <div class="nav-item" data-page="mkt-contacts" onclick="mktNav('mkt-contacts')"><div class="nav-icon">📇</div> Contacts</div>
     <div class="nav-item" data-page="mkt-analytics" onclick="mktNav('mkt-analytics')"><div class="nav-icon">📊</div> Analytics</div>
@@ -454,6 +455,7 @@
 <div class="main-content" id="mktMain">
   <div class="section active" id="sec-mkt-pipeline"></div>
   <div class="section" id="sec-mkt-alerts"></div>
+  <div class="section" id="sec-mkt-followup"></div>
   <div class="section" id="sec-mkt-correlation"></div>
   <div class="section" id="sec-mkt-contacts"></div>
   <div class="section" id="sec-mkt-analytics"></div>
@@ -1043,6 +1045,7 @@
 const CRM_STAFF = ['Paola','Abigail','Maria','Juan'];
 const CM_STAFF = ['Sean','Sophia','Kent'];
 const PSR_STAFF = ['Miguel','Samuel'];
+const MKT_CRM_REF = ['Matthew L.']; // marketing users granted read-reference access to CRM + Case Management
 const STAFF_COLORS = {'Paola':'#1a7f7a','Abigail':'#c8973a','Maria':'#0f2240','Juan':'#6b5b95','Sean':'#1a7f7a','Sophia':'#c8973a','Kent':'#0f2240','Miguel':'#b5651d','Samuel':'#4a6741'};
 const LOCATIONS = ['Allentown','Wilkes Barre','Old City','Hazleton','Williamsport','Carlisle','Lansdale','Reading','Port Richmond','Germantown','NE Philly','Ridley Park','Pittsburgh'];
 const LOC_CM = {}; // No longer used for assignment — kept for compatibility
@@ -1872,7 +1875,8 @@ function checkAndAddRefSource(source){
   allSources=allSources.concat(['Walk-in','Physician Referral','Self-Referral','Other']);
   // Exact match exists
   var unique=allSources.filter(function(v,i,a){return a.indexOf(v)===i});
-  if(unique.indexOf(source)!==-1)return;
+  var _norm=function(s){return (s||'').trim().toLowerCase();};
+  if(unique.some(function(s){return _norm(s)===_norm(source)}))return;
   // Fuzzy check
   var matches=unique.filter(function(s){return fuzzyMatch(s,source)});
   if(matches.length>0){
@@ -2047,8 +2051,11 @@ function setupUIForRole() {
     tabs.querySelector('[data-module="mkt"]').style.display = 'none';
   }
   if (userRole === 'marketing') {
-    tabs.querySelector('[data-module="crm"]').style.display = 'none';
-    tabs.querySelector('[data-module="cm"]').style.display = 'none';
+    var mktCrmRef = MKT_CRM_REF.includes(currentUser); // Matt: keep CRM + CM for reference
+    if(!mktCrmRef){
+      tabs.querySelector('[data-module="crm"]').style.display = 'none';
+      tabs.querySelector('[data-module="cm"]').style.display = 'none';
+    }
     tabs.querySelector('[data-module="psr"]').style.display = 'none';
   }
   if (userRole === 'nj_mva') {
@@ -3182,9 +3189,11 @@ function populateRefSourceDropdown() {
   REF_SOURCES.forEach(s => { all.push(s); });
   customRefSources.forEach(s => { all.push(s); });
   ['Walk-in','Physician Referral','Self-Referral','Other'].forEach(s => { all.push(s); });
-  // Deduplicate and sort
-  all=all.filter(function(v,i,a){return a.indexOf(v)===i}).sort();
-  all.forEach(s => { const o = document.createElement('option'); o.value = s; dl.appendChild(o); });
+  // Consolidate duplicates case-insensitively (org names pushed first win the canonical spelling)
+  var seen={}, uniq=[];
+  all.forEach(function(s){var v=(s||'').trim();if(!v)return;var k=v.toLowerCase();if(seen[k])return;seen[k]=true;uniq.push(v);});
+  uniq.sort(function(a,b){return a.toLowerCase().localeCompare(b.toLowerCase());});
+  uniq.forEach(s => { const o = document.createElement('option'); o.value = s; dl.appendChild(o); });
 }
 
 function toggleLostReasonReg(){document.getElementById('fLostReasonGroup').style.display=document.getElementById('fStatus').value==='Patient Lost'?'flex':'none'}
@@ -4648,6 +4657,7 @@ function renderMktPage(page){
   const el=document.getElementById('sec-'+page);if(!el)return;
   if(page==='mkt-pipeline')renderMktPipeline(el);
   else if(page==='mkt-alerts')renderMktAlerts(el);
+  else if(page==='mkt-followup')renderMktFollowUp(el);
   else if(page==='mkt-correlation')renderMktCorrelation(el);
   else if(page==='mkt-contacts')renderMktContacts(el);
   else if(page==='mkt-analytics')renderMktAnalytics(el);
@@ -4865,9 +4875,10 @@ function showMktDetail(id){
 let mktActivityId=null;
 function addMktActivity(id){
   mktActivityId=id;
-  document.getElementById('mktActType').value='Meeting';
+  document.getElementById('mktActType').value='In-Person Meeting';
   document.getElementById('mktActDate').value=today();
   document.getElementById('mktActNote').value='';
+  document.getElementById('mktActFollowUp').value='';
   document.getElementById('mktActivityModal').classList.add('show');
 }
 function closeMktActivityModal(){document.getElementById('mktActivityModal').classList.remove('show');mktActivityId=null;}
@@ -4876,12 +4887,14 @@ function saveMktActivity(){
   const type=document.getElementById('mktActType').value;
   const date=document.getElementById('mktActDate').value||today();
   const followUp=document.getElementById('mktActFollowUp').value||'';
-  const m=mktList.find(x=>x.id===mktActivityId);if(!m)return;
+  const id=mktActivityId;
+  const m=mktList.find(x=>x.id===id);if(!m)return;
   if(!m.activityLog)m.activityLog=[];
   m.activityLog.push({date:date,type:type,note:note});
   m.lastActivityDate=date;
   if(followUp)m.nextFollowUp=followUp;
-  saveMktData();closeMktActivityModal();showMktDetail(mktActivityId);
+  saveMktData();closeMktActivityModal();updateMktBadges();
+  if(mktCurrentPage==='mkt-pipeline'){showMktDetail(id);}else{renderMktPage(mktCurrentPage);}
 }
 
 // ═══ MARKETING ALERTS ═══
@@ -4970,20 +4983,46 @@ function updateMktBadges(){
   var count=mktAlerts().length;
   var badge=document.getElementById('mktAlertBadge');
   if(badge){badge.textContent=count;badge.style.display=count>0?'inline':'none';}
+  var now=today();
+  var fu=mktList.filter(function(m){return m.stage!=='Inactive'&&m.nextFollowUp&&daysBtw(m.nextFollowUp,now)>=0;}).length;
+  var fb=document.getElementById('mktFollowUpBadge');
+  if(fb){fb.textContent=fu;fb.style.display=fu>0?'inline':'none';}
 }
 
+var mktAlertFilter='all';
+function mktAlertCat(type){
+  if(type==='followup')return 'Follow-Up';
+  if(type==='no_touch')return 'First Touch';
+  if(type==='stale')return 'Stale';
+  if(type==='decline')return 'Decline';
+  return 'KPI';
+}
 function renderMktAlerts(el){
-  var alerts=mktAlerts();
-  var h='<div class="page-title">Marketing Alerts</div><div class="page-subtitle">'+alerts.length+' items need attention</div>';
-  
-  if(alerts.length===0){
+  var all=mktAlerts();
+  var cats=['Follow-Up','First Touch','Stale','Decline','KPI'];
+  var counts={};cats.forEach(function(c){counts[c]=0;});
+  all.forEach(function(a){var c=mktAlertCat(a.type);counts[c]=(counts[c]||0)+1;});
+  var alerts=(mktAlertFilter==='all')?all:all.filter(function(a){return mktAlertCat(a.type)===mktAlertFilter;});
+
+  var h='<div class="page-title">Marketing Alerts</div><div class="page-subtitle">'+all.length+' item'+(all.length===1?'':'s')+' need attention across your accounts.</div>';
+
+  // Category filter bar
+  h+='<div class="table-card" style="padding:10px 14px;margin-bottom:12px"><div style="display:flex;flex-wrap:wrap;gap:6px">';
+  h+='<button class="filter-btn '+(mktAlertFilter==='all'?'active':'')+'" onclick="mktAlertFilter=\'all\';renderMktAlerts(document.getElementById(\'sec-mkt-alerts\'))">All ('+all.length+')</button>';
+  cats.forEach(function(c){h+='<button class="filter-btn '+(mktAlertFilter===c?'active':'')+'" onclick="mktAlertFilter=\''+c+'\';renderMktAlerts(document.getElementById(\'sec-mkt-alerts\'))">'+c+' ('+(counts[c]||0)+')</button>';});
+  h+='</div></div>';
+
+  if(all.length===0){
     h+='<div class="table-card" style="padding:30px;text-align:center;color:var(--gray-400)">No alerts — all caught up! 🎉</div>';
+    el.innerHTML=h;return;
   }
-  
-  // Group by severity
+  if(alerts.length===0){
+    h+='<div class="table-card" style="padding:24px;text-align:center;color:var(--gray-400)">No '+esc(mktAlertFilter)+' alerts right now.</div>';
+    el.innerHTML=h;return;
+  }
+
   var urgent=alerts.filter(function(a){return a.severity==='red'});
   var attention=alerts.filter(function(a){return a.severity==='gold'});
-  
   if(urgent.length>0){
     h+='<h3 style="font-family:DM Serif Display,serif;font-size:16px;color:var(--red);margin-bottom:10px">🔴 Urgent ('+urgent.length+')</h3>';
     urgent.forEach(function(a){h+=renderMktAlertCard(a);});
@@ -4992,24 +5031,74 @@ function renderMktAlerts(el){
     h+='<h3 style="font-family:DM Serif Display,serif;font-size:16px;color:var(--gold);margin:'+(urgent.length>0?'16px':'0')+' 0 10px">⚠️ Needs Attention ('+attention.length+')</h3>';
     attention.forEach(function(a){h+=renderMktAlertCard(a);});
   }
-  
   el.innerHTML=h;
 }
 
 function renderMktAlertCard(a){
   var borderColor=a.severity==='red'?'var(--red)':'var(--gold)';
-  var tagLabels={followup:'FOLLOW-UP',no_touch:'FIRST TOUCH',stale:'STALE',decline:'DECLINE',weekly_target:'KPI'};
-  var tag=tagLabels[a.type]||a.type.toUpperCase();
+  var tagLabels={followup:'FOLLOW-UP',no_touch:'FIRST TOUCH',stale:'STALE',decline:'DECLINE',weekly_target:'KPI',monthly_kpi:'KPI'};
+  var tag=tagLabels[a.type]||(a.type||'').toUpperCase();
   var h='<div class="table-card" style="border-left:4px solid '+borderColor+';margin-bottom:8px;padding:12px 18px">';
-  h+='<div style="display:flex;align-items:center;gap:12px">';
+  h+='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">';
   h+='<div style="background:'+borderColor+';color:white;font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;white-space:nowrap">'+tag+'</div>';
-  h+='<div style="flex:1"><div style="font-weight:700;color:var(--navy)">'+esc(a.name)+'</div>';
-  h+='<div style="font-size:11px;color:var(--gray-500);margin-top:2px">'+a.message+'</div></div>';
+  h+='<div style="flex:1;min-width:180px"><div style="font-weight:700;color:var(--navy)">'+esc(a.name)+'</div>';
+  h+='<div style="font-size:11px;color:var(--gray-500);margin-top:2px">'+esc(a.message||'')+'</div></div>';
+  h+='<div style="display:flex;gap:6px;flex-wrap:wrap">';
   if(a.id){
-    h+='<button class="btn-primary" onclick="showMktDetail(\''+a.id+'\')" style="font-size:10px;padding:5px 12px;white-space:nowrap">View Account</button>';
+    h+='<button class="btn-resolve" onclick="showMktDetail(\''+a.id+'\')">View</button>';
+    h+='<button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="addMktActivity(\''+a.id+'\')">✓ Log Activity</button>';
+  } else {
+    h+='<button class="btn-resolve" onclick="mktNav(\'mkt-analytics\')">View Analytics</button>';
   }
-  h+='</div></div>';
+  h+='</div></div></div>';
   return h;
+}
+
+function renderMktFollowUp(el){
+  var now=today();
+  var active=mktList.filter(function(m){return m.stage!=='Inactive';});
+  var withFu=active.filter(function(m){return m.nextFollowUp;});
+  withFu.sort(function(a,b){return (a.nextFollowUp||'').localeCompare(b.nextFollowUp||'');});
+  var overdue=withFu.filter(function(m){return daysBtw(m.nextFollowUp,now)>0;});
+  var dueToday=withFu.filter(function(m){return m.nextFollowUp===now;});
+  var soon=withFu.filter(function(m){var d=daysBtw(now,m.nextFollowUp);return d>0&&d<=7;});
+  var later=withFu.filter(function(m){return daysBtw(now,m.nextFollowUp)>7;});
+  var noFu=active.filter(function(m){return !m.nextFollowUp;});
+
+  var h='<div class="page-title">Needs Follow-Up</div><div class="page-subtitle">'+overdue.length+' overdue · '+dueToday.length+' due today · '+soon.length+' due this week.</div>';
+
+  function fuSection(title,color,list,emptyMsg){
+    var s='<div class="table-card"><div class="table-header"><h3 style="color:'+color+'">'+title+' ('+list.length+')</h3></div>';
+    if(list.length===0){s+='<div style="padding:14px 18px;color:var(--gray-400);font-size:12px">'+emptyMsg+'</div></div>';return s;}
+    s+='<div class="table-scroll"><table class="tbl"><thead><tr><th>Organization</th><th>Stage</th><th>Follow-Up Date</th><th>When</th><th>Contact</th><th></th></tr></thead><tbody>';
+    list.forEach(function(m){
+      var past=daysBtw(m.nextFollowUp,now), future=daysBtw(now,m.nextFollowUp), whenTxt, whenColor;
+      if(m.nextFollowUp===now){whenTxt='Today';whenColor='var(--gold)';}
+      else if(past>0){whenTxt=past+' day'+(past===1?'':'s')+' overdue';whenColor='var(--red)';}
+      else{whenTxt='in '+future+' day'+(future===1?'':'s');whenColor='var(--gray-500)';}
+      var sc='stage-'+(m.stage||'').toLowerCase().replace(/\s+/g,'-').replace('active-relationship','active').replace('meeting-scheduled','meeting');
+      s+='<tr><td style="font-weight:600;color:var(--navy);cursor:pointer" onclick="showMktDetail(\''+m.id+'\')">'+esc(m.name)+'</td><td><span class="pipeline-stage '+sc+'">'+esc(m.stage)+'</span></td><td style="font-size:11px">'+fmtDate(m.nextFollowUp)+'</td><td style="font-size:11px;font-weight:700;color:'+whenColor+'">'+whenTxt+'</td><td style="font-size:11px">'+esc(m.contact||'—')+'</td><td style="white-space:nowrap"><button class="btn-resolve" onclick="showMktDetail(\''+m.id+'\')">View</button> <button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="addMktActivity(\''+m.id+'\')">✓ Log Activity</button></td></tr>';
+    });
+    s+='</tbody></table></div></div>';
+    return s;
+  }
+
+  if(withFu.length===0){
+    h+='<div class="table-card" style="padding:30px;text-align:center;color:var(--gray-400)">No accounts have a follow-up date scheduled. Set a Next Follow-Up Date on an account (or log an activity with a follow-up date) to see it here.</div>';
+  } else {
+    h+=fuSection('⚠️ Overdue','var(--red)',overdue,'Nothing overdue — nice work.');
+    h+=fuSection('📌 Due Today','var(--gold)',dueToday,'Nothing due today.');
+    h+=fuSection('📅 This Week','var(--navy)',soon,'Nothing due in the next 7 days.');
+    if(later.length>0) h+=fuSection('🕓 Later','var(--gray-500)',later,'');
+  }
+
+  if(noFu.length>0){
+    h+='<div class="table-card"><div class="table-header"><h3 style="color:var(--gray-500)">No Follow-Up Scheduled ('+noFu.length+')</h3></div><div style="padding:10px 18px 0;font-size:11px;color:var(--gray-500)">Active accounts with no next follow-up date — click one to set it:</div><div style="padding:10px 18px 14px;display:flex;flex-wrap:wrap;gap:6px">';
+    noFu.forEach(function(m){h+='<span onclick="showMktDetail(\''+m.id+'\')" style="cursor:pointer;display:inline-block;padding:4px 10px;border:1px solid var(--gray-200);border-radius:12px;font-size:11px;color:var(--navy)">'+esc(m.name)+'</span>';});
+    h+='</div></div>';
+  }
+
+  el.innerHTML=h;
 }
 
 function renderMktCorrelation(el){
@@ -5122,6 +5211,16 @@ function deleteMkt(){if(!editingMktId||!confirm('Delete?'))return;mktList=mktLis
 // ══════════════════════════════════════════════════════════════════════
 let editingMcId=null, mcTypeFilter='all';
 
+function downloadMktContactsCSV(){
+  if(!mktContacts.length){alert('No contacts to export yet.');return;}
+  var headers=['Name','Title','Organization','Type','Phone','Email','Address','Linked Initiative','Notes','Created'];
+  var rows=mktContacts.map(function(c){
+    var initName=c.initiativeId?((mktList.find(function(m){return m.id===c.initiativeId})||{}).name||''):'';
+    return [c.name||'',c.title||'',c.org||'',c.type||'',c.phone||'',c.email||'',c.address||'',initName,c.notes||'',c.createdDate||''];
+  });
+  downloadCSV('carepath-marketing-contacts-'+today()+'.csv',headers,rows);
+}
+
 function renderMktContacts(el){
   const search=(document.getElementById('mcSearchInput')?.value||'').toLowerCase();
   let list=mktContacts.slice();
@@ -5131,7 +5230,7 @@ function renderMktContacts(el){
 
   const types={};mktContacts.forEach(c=>{types[c.type]=(types[c.type]||0)+1});
 
-  let h='<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">Marketing Contacts</div><div style="margin-left:auto"><button class="btn-primary" onclick="openNewMktContact()" style="font-size:11px;padding:7px 14px">+ Add Contact</button></div></div>';
+  let h='<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">Marketing Contacts</div><div style="margin-left:auto;display:flex;gap:8px"><button class="btn-cancel" onclick="downloadMktContactsCSV()" style="font-size:11px;padding:7px 14px">&#8681; Download CSV</button><button class="btn-primary" onclick="openNewMktContact()" style="font-size:11px;padding:7px 14px">+ Add Contact</button></div></div>';
   h+='<div class="page-subtitle">'+mktContacts.length+' contacts — law firms, physicians, urgent care centers, and more.</div>';
 
   h+='<div class="stats-row" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))">';
