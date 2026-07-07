@@ -4375,7 +4375,7 @@ function saveContact(){
   const cEl=document.getElementById('sec-crm-contacts');const cmEl=document.getElementById('sec-cm-contacts');
   if(cEl&&cEl.classList.contains('active'))renderCmContacts(cEl);else if(cmEl)renderCmContacts(cmEl);
 }
-function deleteContact(){if(!editingContactId||!confirm('Delete contact?'))return;contacts=contacts.filter(c=>c.id!==editingContactId);saveContacts();document.getElementById('caseModal').classList.remove('show');editingContactId=null;
+function deleteContact(){if(!editingContactId||!confirm('Delete contact?'))return;var delId=editingContactId;contacts=contacts.filter(c=>c.id!==delId);if(_useNewTables)_dbDelete('contacts',delId);else _legacySave('cp11_contacts',contacts);document.getElementById('caseModal').classList.remove('show');editingContactId=null;
   const cEl=document.getElementById('sec-crm-contacts');const cmEl=document.getElementById('sec-cm-contacts');
   if(cEl&&cEl.classList.contains('active'))renderCmContacts(cEl);else if(cmEl)renderCmContacts(cmEl);}
 
@@ -5241,7 +5241,21 @@ function saveMkt(){
   }
   saveMktData();closeMktModal();renderActiveModule();
 }
-function deleteMkt(){if(!editingMktId||!confirm('Delete?'))return;mktList=mktList.filter(m=>m.id!==editingMktId);saveMktData();closeMktModal();renderActiveModule();}
+function deleteMkt(){
+  if(!editingMktId||!confirm('Delete this initiative? Its linked contact(s) will also be removed.'))return;
+  var delId=editingMktId;
+  mktList=mktList.filter(m=>m.id!==delId);
+  var linked=mktContacts.filter(c=>c.initiativeId===delId);
+  mktContacts=mktContacts.filter(c=>c.initiativeId!==delId);
+  if(_useNewTables){
+    _dbDelete('marketing_initiatives',delId);
+    linked.forEach(function(c){_dbDelete('marketing_contacts',c.id);});
+  } else {
+    _legacySave('cp11_mkt',mktList);
+    _legacySave('cp11_mktcontacts',mktContacts);
+  }
+  closeMktModal();renderActiveModule();
+}
 
 // ══════════════════════════════════════════════════════════════════════
 // MARKETING CONTACTS
@@ -5314,7 +5328,14 @@ function saveMktContact(){
   saveMktContacts();closeMktContactModal();renderMktContacts(document.getElementById('sec-mkt-contacts'));
 }
 
-function deleteMktContact(){if(!editingMcId||!confirm('Delete contact?'))return;mktContacts=mktContacts.filter(c=>c.id!==editingMcId);saveMktContacts();closeMktContactModal();renderMktContacts(document.getElementById('sec-mkt-contacts'));}
+function deleteMktContact(){
+  if(!editingMcId||!confirm('Delete contact?'))return;
+  var delId=editingMcId;
+  mktContacts=mktContacts.filter(c=>c.id!==delId);
+  if(_useNewTables)_dbDelete('marketing_contacts',delId);
+  else _legacySave('cp11_mktcontacts',mktContacts);
+  closeMktContactModal();renderMktContacts(document.getElementById('sec-mkt-contacts'));
+}
 
 // ══════════════════════════════════════════════════════════════════════
 // CALL LOG SYSTEM (shared across CRM, CM, PSR)
