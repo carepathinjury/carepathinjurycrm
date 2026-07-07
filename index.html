@@ -4970,6 +4970,7 @@ function mktAlerts(){
   var alerts=[];
   
   mktList.forEach(function(m){
+    try{
     if(m.stage==='Inactive')return;
     var lastAct=m.lastActivityDate||'';
     if(!lastAct&&m.activityLog&&m.activityLog.length>0){
@@ -4998,7 +4999,7 @@ function mktAlerts(){
     }
     
     // 4. Referral volume decline
-    var mName=m.name.toLowerCase();
+    var mName=(m.name||'').toLowerCase();
     var sourceRefs=refs.filter(function(r){return(r.referralSource||'').toLowerCase()===mName||(r.lawFirm||'').toLowerCase()===mName});
     if(sourceRefs.length>=3&&m.dateInitiated){
       var recent=sourceRefs.filter(function(r){var d=r.createdDate||'';return d>=now.substring(0,7).replace(/-\d\d$/,'')+'-01'||(daysBtw(r.createdDate||'',now)<=60)}).length;
@@ -5007,6 +5008,7 @@ function mktAlerts(){
         alerts.push({type:'decline',name:m.name,id:m.id,severity:'red',title:'Referral Volume Decline',message:'This source sent '+older+' patients 2-4 months ago but zero in the last 60 days. Check relationship status.'});
       }
     }
+    }catch(e){console.error('mktAlerts: skipped an initiative due to bad data',m&&m.id,e);}
   });
   
   // 5. Weekly activity target
