@@ -4776,7 +4776,7 @@ function showMktDetail(id){
   if(log.length>0){
     h+='<div style="padding:14px 18px">';
     log.sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach(a=>{
-      h+='<div class="update-entry"><span class="update-date">'+fmtDate(a.date)+'</span> — <strong>'+esc(a.type||'Outreach')+'</strong><br>'+esc(a.note)+'</div>';
+      h+='<div class="update-entry"><span class="update-date">'+fmtDate(a.date)+'</span> — <strong>'+esc(a.type||'Outreach')+'</strong>'+(a.by?' <span style="font-size:10px;color:var(--gray-400)">· logged by '+esc(a.by)+'</span>':'')+'<br>'+esc(a.note)+'</div>';
     });
     h+='</div>';
   } else {
@@ -4890,7 +4890,7 @@ function saveMktActivity(){
   const id=mktActivityId;
   const m=mktList.find(x=>x.id===id);if(!m)return;
   if(!m.activityLog)m.activityLog=[];
-  m.activityLog.push({date:date,type:type,note:note});
+  m.activityLog.push({date:date,type:type,note:note,by:currentUser||''});
   m.lastActivityDate=date;
   if(followUp)m.nextFollowUp=followUp;
   saveMktData();closeMktActivityModal();updateMktBadges();
@@ -5303,7 +5303,7 @@ function renderMktAnalytics(el){
   // Referral conversion from marketing
   var totalMktRefs=0,mktConversions=[];
   mktList.forEach(function(m){
-    var refCount=refs.filter(function(r){return (r.referralSource||'')===m.name}).length;
+    var refCount=mktSourceRefs(m).length;
     totalMktRefs+=refCount;
     mktConversions.push({name:m.name,stage:m.stage,effort:m.effort||'Low',volume:m.volume||'—',refs:refCount,roi:mktRoi(m)});
   });
@@ -5432,6 +5432,15 @@ function renderMktAnalytics(el){
     h+='<tr><td style="font-weight:600">'+esc(m.name)+'</td><td>'+esc(m.contact||'—')+'</td><td>'+esc(m.stage)+'</td><td>'+fmtDate(m.nextFollowUp)+'</td><td><span style="color:'+statusColor+';font-weight:700">'+statusText+'</span></td></tr>';
   });
   h+='</tbody></table></div></div>';
+
+  // Activity by team member (this month) — attribution
+  var byPerson={};
+  monthActivities.forEach(function(a){var who=a.by||'Unattributed';if(!byPerson[who])byPerson[who]={total:0,calls:0,visits:0,meetings:0};byPerson[who].total++;if(a.type==='Phone Call')byPerson[who].calls++;if(a.type==='Office Visit/Drop-off'||a.type==='Lunch/Dinner')byPerson[who].visits++;if(a.type==='In-Person Meeting'||a.type==='Presentation')byPerson[who].meetings++;});
+  var people=Object.keys(byPerson).sort(function(a,b){return byPerson[b].total-byPerson[a].total});
+  h+='<div class="table-card"><div class="table-header"><h3>Activity by Team Member — '+new Date().toLocaleString("default",{month:"long"})+'</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Team Member</th><th>Total</th><th>Phone Calls</th><th>Visits</th><th>Meetings</th></tr></thead><tbody>';
+  people.forEach(function(p){var d=byPerson[p];h+='<tr><td style="font-weight:600;color:var(--navy)">'+esc(p)+'</td><td style="font-weight:700">'+d.total+'</td><td>'+d.calls+'</td><td>'+d.visits+'</td><td>'+d.meetings+'</td></tr>';});
+  if(people.length===0)h+='<tr><td colspan="5" style="text-align:center;color:var(--gray-400);padding:20px">No activity logged this month yet.</td></tr>';
+  h+='</tbody></table></div><div style="padding:8px 18px;font-size:10px;color:var(--gray-400)">"Unattributed" = activities logged before per-person tracking was enabled.</div></div>';
 
   // Activity Summary
   var totalActivities=0;var actByType={};
