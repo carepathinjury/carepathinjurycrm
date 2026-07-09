@@ -987,6 +987,22 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="noApptModal">
+  <div class="modal" style="width:460px">
+    <div class="modal-header"><h2>No Upcoming Appointment — Action</h2><button class="modal-close" onclick="document.getElementById('noApptModal').classList.remove('show')">&times;</button></div>
+    <div class="modal-body">
+      <p id="naPatientName" style="font-weight:600;font-size:14px;color:var(--navy);margin-bottom:14px"></p>
+      <div class="form-grid" style="grid-template-columns:1fr">
+        <div class="form-group"><label>Action Taken</label><select id="naAction"><option>Records + Billing Sent</option><option>Scheduling Notified</option><option>Case Status Changed</option></select></div>
+        <div class="form-group"><label>Date</label><input type="date" id="naDate"></div>
+        <div class="form-group"><label>Next Appointment Date (if applicable)</label><input type="date" id="naNextAppt"></div>
+        <div class="form-group"><label>Notes (optional)</label><textarea id="naNotes" placeholder="Details..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="document.getElementById('noApptModal').classList.remove('show')">Cancel</button><button class="btn-save" onclick="submitNoAppt()">Submit</button></div>
+  </div>
+</div>
+
 <!-- PIP Resolve Modal -->
 <div class="modal-overlay" id="pipResolveModal">
   <div class="modal" style="width:460px">
@@ -1084,9 +1100,9 @@ var _useNewTables = false;
 
 // ─── Field mapping: JS camelCase <-> DB snake_case ─────────────────
 var _refMap = {id:'id',patientName:'patient_name',dob:'dob',phone:'phone',email:'email',doi:'doi',caseType:'case_type',location:'location',language:'language',attorney:'attorney',lawFirm:'law_firm',lawContact:'law_contact',referralSource:'referral_source',apptDate:'appt_date',status:'status',notes:'notes',alertType:'alert_type',paperworkCompleted:'paperwork_completed',recordsNeeded:'records_needed',customAlerts:'custom_alerts',registeredBy:'registered_by',alertAssignedTo:'alert_assigned_to',apptConfirmAssignedTo:'appt_confirm_assigned_to',lastContactDate:'last_contact_date',dateScheduledOn:'date_scheduled_on',daysToSchedule:'days_to_schedule',apptOutcome:'appt_outcome',apptOutcomeReason:'appt_outcome_reason',lastApptFollowUp:'last_appt_follow_up',createdDate:'created_date',enteredAt:'entered_at',updateLog:'update_log',lostReason:'lost_reason',lostDate:'lost_date',lostNotes:'lost_notes',emailResolved:'email_resolved',emailLastFollowUp:'email_last_follow_up'};
-var _caseMap = {id:'id',sourceRefId:'source_ref_id',patientName:'patient_name',dob:'dob',phone:'phone',email:'email',doi:'doi',caseType:'case_type',location:'location',language:'language',attorney:'attorney',lawFirm:'law_firm',lawContact:'law_contact',referralSource:'referral_source',assigned:'assigned',apptDate:'appt_date',apptPrn:'appt_prn',prnLastCheck:'prn_last_check',recordsSent:'records_sent',missingInfo:'missing_info',followUpDate:'follow_up_date',notes:'notes',status:'status',createdDate:'created_date',settledDate:'settled_date',statusChangeDate:'status_change_date',introEmailSentDate:'intro_email_sent_date',settlementEmailSent:'settlement_email_sent',settlementEmailDate:'settlement_email_date',inLitigation:'in_litigation',adjusterResolved:'adjuster_resolved',adjusterResolvedDate:'adjuster_resolved_date',adjusterLastFollowUp:'adjuster_last_follow_up',pipResolved:'pip_resolved',pipResolvedDate:'pip_resolved_date',pipLastFollowUp:'pip_last_follow_up',pipExhausted:'pip_exhausted',dismissedAlerts:'dismissed_alerts',manualAlerts:'manual_alerts',statusHistory:'status_history'};
+var _caseMap = {id:'id',sourceRefId:'source_ref_id',patientName:'patient_name',dob:'dob',phone:'phone',email:'email',doi:'doi',caseType:'case_type',location:'location',language:'language',attorney:'attorney',lawFirm:'law_firm',lawContact:'law_contact',referralSource:'referral_source',assigned:'assigned',apptDate:'appt_date',apptPrn:'appt_prn',prnLastCheck:'prn_last_check',recordsSent:'records_sent',missingInfo:'missing_info',followUpDate:'follow_up_date',notes:'notes',status:'status',createdDate:'created_date',settledDate:'settled_date',statusChangeDate:'status_change_date',introEmailSentDate:'intro_email_sent_date',settlementEmailSent:'settlement_email_sent',settlementEmailDate:'settlement_email_date',inLitigation:'in_litigation',adjusterResolved:'adjuster_resolved',adjusterResolvedDate:'adjuster_resolved_date',adjusterLastFollowUp:'adjuster_last_follow_up',pipResolved:'pip_resolved',pipResolvedDate:'pip_resolved_date',pipLastFollowUp:'pip_last_follow_up',pipExhausted:'pip_exhausted',dismissedAlerts:'dismissed_alerts',manualAlerts:'manual_alerts',statusHistory:'status_history',noApptLastCheck:'no_appt_last_check'};
 
-var _dateFields = ['dob','doi','appt_date','created_date','lost_date','settled_date','records_sent','follow_up_date','date_scheduled_on','last_contact_date','last_appt_follow_up','email_last_follow_up','status_change_date','intro_email_sent_date','settlement_email_date','adjuster_resolved_date','adjuster_last_follow_up','pip_resolved_date','pip_last_follow_up','prn_last_check'];
+var _dateFields = ['dob','doi','appt_date','created_date','lost_date','settled_date','records_sent','follow_up_date','date_scheduled_on','last_contact_date','last_appt_follow_up','email_last_follow_up','status_change_date','intro_email_sent_date','settlement_email_date','adjuster_resolved_date','adjuster_last_follow_up','pip_resolved_date','pip_last_follow_up','prn_last_check','no_appt_last_check'];
 
 var _boolFields=['email_resolved','settlement_email_sent','in_litigation','adjuster_resolved','pip_resolved','pip_exhausted','appt_prn'];
 var _intFields=['days_to_schedule'];
@@ -1188,17 +1204,25 @@ function _dbUpdate(table, row){
 
 // Partial update — only sends the specified fields, not the entire record
 // This prevents overwriting other users' changes on fields you didn't modify
-function _dbPatch(table, id, fields){
+function _dbPatch(table, id, fields){ if(!fields.updated_at)fields.updated_at=new Date().toISOString(); _dbPatchTry(table,id,fields,0); }
+function _dbPatchTry(table, id, fields, attempt){
   _lastLocalSave=Date.now();
-  fields.updated_at=new Date().toISOString();
   fetch(SUPABASE_URL+'/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id), {
     method:'PATCH',
     headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
     body:JSON.stringify(fields)
   }).then(function(resp){
-    if(resp.ok||resp.status===204) showSaveSuccess();
-    else showSaveError();
-  }).catch(function(e){showSaveError()});
+    if(resp.ok||resp.status===204){showSaveSuccess();return;}
+    resp.text().then(function(t){
+      var m=t.match(/Could not find the '(\w+)' column/i)||t.match(/column "?(\w+)"? (?:of relation|does not exist)/i);
+      var col=m?m[1]:null;
+      if(col&&Object.prototype.hasOwnProperty.call(fields,col)&&attempt<8){
+        console.warn('Column "'+col+'" missing on '+table+' — patching without it. Run the cases schema migration to persist this field.');
+        delete fields[col];
+        _dbPatchTry(table,id,fields,attempt+1);
+      } else {console.error('Patch failed:',table,resp.status,t);showSaveError();}
+    });
+  }).catch(function(e){console.error('Patch error:',table,e);showSaveError();});
 }
 
 function _dbUpsert(table, row){ _dbUpsertTry(table, row, 0); }
@@ -2322,6 +2346,17 @@ function cmAlerts() {
       var daysSinceCheck=lastCheck?daysBtw(lastCheck,now):999;
       if(daysSinceCheck>=60){
         alerts.push({ type:'prn-check', severity:'gold', title:'PRN Patient — 60-Day Appointment Check', message:'This patient is marked PRN. Check if they are scheduled for any appointments. If so, enter the date. Last checked: '+(lastCheck?fmtDate(lastCheck):'Never'), caseId:c.id, patientName:c.patientName, assigned:c.assigned, location:c.location, daysSince:daysSinceCheck });
+      }
+    }
+    // NO UPCOMING APPT & NOT PRN — 30-day recurring check to see if they're back on schedule
+    if((c.status==='Active'||c.status==='In Litigation') && !c.apptPrn){
+      var hasUpcoming = c.apptDate && daysBtw(now, c.apptDate) >= 0;
+      if(!hasUpcoming){
+        var lastNAC = c.noApptLastCheck || '';
+        var dsNAC = lastNAC ? daysBtw(lastNAC, now) : (c.apptDate ? daysBtw(c.apptDate, now) : (c.createdDate ? daysBtw(c.createdDate, now) : 999));
+        if(dsNAC >= 30){
+          alerts.push({ type:'no-appt-check', severity:'gold', title:'No Upcoming Appointment — 30-Day Check', message:'Active patient has no upcoming appointment and is not marked PRN. Check if they are back on the schedule and take any needed action (records/billing, scheduling, status). Last checked: '+(lastNAC?fmtDate(lastNAC):'Never'), caseId:c.id, patientName:c.patientName, assigned:c.assigned, location:c.location, daysSince:dsNAC });
+        }
       }
     }
     } catch(e){console.error('CM alert error for',c.patientName,e);}
@@ -3839,6 +3874,8 @@ function renderCmAlertCard(a,i) {
     actionBtns+='<button class="btn-resolve" style="background:rgba(200,151,58,0.12);color:var(--gold);border-color:rgba(200,151,58,0.3)" onclick="markSettlementEmailSent(\''+a.caseId+'\')">✉ Mark Sent</button>';
   } else if(a.type==='records-billing'){
     actionBtns+='<button class="btn-resolve" style="background:rgba(200,151,58,0.12);color:var(--gold);border-color:rgba(200,151,58,0.3)" onclick="openRecordsBillingModal(\''+a.caseId+'\')">📄 Mark Sent</button>';
+  } else if(a.type==='no-appt-check'){
+    actionBtns+='<button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="openNoApptModal(\''+a.caseId+'\')">📋 Log Action</button>';
   } else {
     actionBtns+='<button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="dismissCmAlert(\''+a.caseId+'\',\''+a.type+'\')">✓ Done</button>';
   }
@@ -3915,8 +3952,9 @@ function submitMissingInfo(){
   _markModified(c.id);
   if(_useNewTables)_dbPatch('cases',c.id,patchFields);
   else _legacySave('cp11_cases',cases);
+  var _miId=missingInfoCaseId;
   closeMissingInfoModal();renderActiveModule();
-  if(cmCurrentPage==='cm-detail')showCmDetail(missingInfoCaseId);
+  if(cmCurrentPage==='cm-detail')showCmDetail(_miId);
 }
 
 // ── RECORDS & BILLING MODAL ──
@@ -3971,6 +4009,36 @@ function submitAdjusterResolve(){
   _markModified(c.id);if(_useNewTables)_dbPatch('cases',c.id,patchFields);else _legacySave('cp11_cases',cases);
   document.getElementById('adjusterResolveModal').classList.remove('show');renderActiveModule();
   if(cmCurrentPage==='cm-detail')showCmDetail(adjCaseId);
+}
+
+var noApptCaseId=null;
+function openNoApptModal(caseId){
+  noApptCaseId=caseId;var c=cases.find(function(x){return x.id===caseId});if(!c)return;
+  document.getElementById('naPatientName').textContent=c.patientName;
+  document.getElementById('naAction').value='Records + Billing Sent';
+  document.getElementById('naDate').value=today();
+  document.getElementById('naNextAppt').value='';
+  document.getElementById('naNotes').value='';
+  document.getElementById('noApptModal').classList.add('show');
+}
+function submitNoAppt(){
+  var c=cases.find(function(x){return x.id===noApptCaseId});if(!c)return;
+  var action=document.getElementById('naAction').value;
+  var dateStr=document.getElementById('naDate').value||today();
+  var nextAppt=document.getElementById('naNextAppt').value;
+  var notes=document.getElementById('naNotes').value.trim();
+  c.noApptLastCheck=dateStr;
+  var patchFields={no_appt_last_check:dateStr,updated_at:new Date().toISOString()};
+  if(nextAppt){c.apptDate=nextAppt;patchFields.appt_date=nextAppt;}
+  var logLine='['+dateStr+'] No-appt check: '+action+(nextAppt?(' - next appt '+fmtDate(nextAppt)):'')+(notes?(' - '+notes):'');
+  c.notes=(c.notes?c.notes+'\n':'')+logLine;
+  patchFields.notes=c.notes;
+  _markModified(c.id);
+  if(_useNewTables)_dbPatch('cases',c.id,patchFields);else _legacySave('cp11_cases',cases);
+  var _id=noApptCaseId;
+  document.getElementById('noApptModal').classList.remove('show');noApptCaseId=null;
+  renderActiveModule();
+  if(cmCurrentPage==='cm-detail')showCmDetail(_id);
 }
 
 // ── PIP RESOLVE ──
