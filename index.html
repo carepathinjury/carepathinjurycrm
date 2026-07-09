@@ -741,7 +741,7 @@
   <div class="modal" style="width:580px">
     <div class="modal-header"><h2 id="mktModalTitle">Add Initiative</h2><button class="modal-close" onclick="closeMktModal()">&times;</button></div>
     <div class="modal-body"><div class="form-grid">
-      <div class="form-group full"><label>Organization Name <span style="color:var(--red)">*</span></label><input type="text" id="mktName" placeholder="e.g. Morgan &amp; Morgan"><div style="font-size:10px;color:var(--gray-400);margin-top:3px">Used as the Referral Source in the CRM — enter it exactly as staff will select it on a referral.</div></div>
+      <div class="form-group full"><label>Organization Name <span style="color:var(--red)">*</span></label><input type="text" id="mktName" list="mktOrgList" placeholder="e.g. Morgan &amp; Morgan" autocomplete="off"><datalist id="mktOrgList"></datalist><div style="font-size:10px;color:var(--gray-400);margin-top:3px">Used as the Referral Source in the CRM — enter it exactly as staff will select it on a referral.</div></div>
       <div class="form-group"><label>Primary Contact Name</label><input type="text" id="mktContactName" placeholder="Jane Doe"></div>
       <div class="form-group"><label>Title / Role</label><input type="text" id="mktContactTitle" placeholder="Managing Partner"></div>
       <div class="form-group"><label>Email</label><input type="email" id="mktContactEmail" placeholder="email@example.com"></div>
@@ -3234,19 +3234,26 @@ let editingRefId = null;
 
 const REF_SOURCES=['10x Law','Altman Law','Booth Chiro','Brach Eichler LLC','Brain Health Centers of America','Brandon J Broderick','Brandon Swartz','Brett Tessler & Associates','Brideburg Spine','Cherry Hill Office','Chiropractic Wellness & Rehab','Clearfield & Kofsky','Cohen, Feeley, Altemose and Rambo','Dashevsky, Horwitz, Kuhn, Novello & Shorr','Cordisco & Saile','Dion, Solomon & Shapiro','Dr. Lyons','Dr. Andy Kim','Eric Brauer Law','Fellerman Law','Foxworth Law Group','Fredsone, Statmore, and Bitterman','Galerman Law','Germantown Office','Gibbons & Crighton','Google','H. Rosen Law','Healthbridge','HealthMark','Hourigan, Kluger & Quinn P.C.','Injury Links','Injured Call Today','Integrated Medical Care','J Fine Law','Jeffery S Gross, Esquire','Kavensky Law','Kitlay Law Offices','Kotlar Hernandez and Cohen Law Offices','Kwartler Manus','Lassiter & Associates','Law offices of Jared S. Zafran LLC','Law offices of Eric B. Brauer','Lundy Law','LVP','Malamut Law','Martin Law','Matt Bittenbender','Matt Breslin','MedNinja/Krasno Krasno','Mednick, Mezyk & Kredo','Morgan & Morgan','New Heights Chiro and Wellness','O\'donnel Law Offices','On It Med','Panaia Chiropractic','Patient Referral','Pearson Kutcher','Percision Health & Wellness','Philadelphia Pain Center','Pond Lehocky','Port Richmond Office','Pujlos Law Group','Robinson Law','Rodden, Rodden & Breslin Law','Rosenbaum & Associates','Simon & Simon','Spinal Rehab Network','Stampone Law','Stark & Stark','Stern & Cohen','Stoll Medical Group','Swartz Culleton','TMT Pharmacy','Wapner Neuman','Weinerman Pain and Wellness','Woodland Spine'];
 
-function populateRefSourceDropdown() {
-  const dl = document.getElementById('refSourceList');
-  dl.innerHTML = '';
+function getUnifiedRefSources(){
   var all=[];
-  mktList.forEach(m => { all.push(m.name); });
-  REF_SOURCES.forEach(s => { all.push(s); });
-  customRefSources.forEach(s => { all.push(s); });
-  ['Walk-in','Physician Referral','Self-Referral','Other'].forEach(s => { all.push(s); });
-  // Consolidate duplicates case-insensitively (org names pushed first win the canonical spelling)
+  (mktList||[]).forEach(function(m){ if(m.name) all.push(m.name); });
+  REF_SOURCES.forEach(function(s){ all.push(s); });
+  (customRefSources||[]).forEach(function(s){ all.push(s); });
+  ['Walk-in','Physician Referral','Self-Referral','Other'].forEach(function(s){ all.push(s); });
   var seen={}, uniq=[];
   all.forEach(function(s){var v=(s||'').trim();if(!v)return;var k=v.toLowerCase();if(seen[k])return;seen[k]=true;uniq.push(v);});
   uniq.sort(function(a,b){return a.toLowerCase().localeCompare(b.toLowerCase());});
-  uniq.forEach(s => { const o = document.createElement('option'); o.value = s; dl.appendChild(o); });
+  return uniq;
+}
+function populateRefSourceDropdown() {
+  const dl = document.getElementById('refSourceList'); if(!dl) return;
+  dl.innerHTML = '';
+  getUnifiedRefSources().forEach(function(s){ const o=document.createElement('option'); o.value=s; dl.appendChild(o); });
+}
+function populateMktOrgList(){
+  var dl=document.getElementById('mktOrgList'); if(!dl) return;
+  dl.innerHTML='';
+  getUnifiedRefSources().forEach(function(s){ var o=document.createElement('option'); o.value=s; dl.appendChild(o); });
 }
 
 function toggleLostReasonReg(){document.getElementById('fLostReasonGroup').style.display=document.getElementById('fStatus').value==='Patient Lost'?'flex':'none'}
@@ -4758,6 +4765,7 @@ function renderMktPipeline(el){
   h+='<div class="stats-row" style="grid-template-columns:repeat(5,1fr)">'+stat('Total',mktList.length,'teal')+stat('Active Relationships',activeRels,'gold')+stat('New This Month',thisMonthNew,'')+stat('Prospects',mktList.filter(m=>m.stage==='Prospect').length,'')+stat('Follow-Up Alerts',followUpAlerts.length,followUpAlerts.length>0?'red':'')+'</div>';
 
   // Follow-up alerts
+  try{
   if(followUpAlerts.length>0){
     h+='<div style="margin-bottom:16px">';
     followUpAlerts.forEach((a,i)=>{
@@ -4768,6 +4776,7 @@ function renderMktPipeline(el){
     });
     h+='</div>';
   }
+  }catch(e){console.error('pipeline alerts error:',e);}
 
   // Filter and search
   const search=(document.getElementById('mktSearchInput')?.value||'').toLowerCase();
@@ -5100,6 +5109,7 @@ function mktAlertCat(type){
   return 'KPI';
 }
 function renderMktAlerts(el){
+ try{
   var all=mktAlerts();
   var cats=['Follow-Up','First Touch','Stale','Decline','Nurture','KPI'];
   var counts={};cats.forEach(function(c){counts[c]=0;});
@@ -5134,6 +5144,7 @@ function renderMktAlerts(el){
     attention.forEach(function(a){h+=renderMktAlertCard(a);});
   }
   el.innerHTML=h;
+ }catch(e){console.error('renderMktAlerts error:',e);if(el)el.innerHTML='<div class="page-title">Marketing Alerts</div><div class="table-card" style="padding:20px;color:var(--red)">Couldn\'t render alerts: '+esc(e&&e.message)+'<br><span style="font-size:11px;color:var(--gray-500)">Screenshot this and share it.</span></div>';}
 }
 
 function renderMktAlertCard(a){
@@ -5281,12 +5292,20 @@ function populateMktLocations(selected){
 }
 function getMktSelectedLocations(){return Array.from(document.querySelectorAll('.mktLocCb:checked')).map(cb=>cb.value)}
 
-function openNewMktModal(){editingMktId=null;document.getElementById('mktModalTitle').textContent='Add Initiative';document.getElementById('btnDeleteMkt').style.display='none';['mktName','mktContactName','mktContactTitle','mktContactEmail','mktContactPhone','mktAddresses','mktNotes'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});document.getElementById('mktType').value='Law Firm';document.getElementById('mktAnticipatedCases').value='';document.getElementById('mktStage').value='Prospect';document.getElementById('mktDate').value=today();document.getElementById('mktFollowUp').value='';document.getElementById('mktVolume').value='Low (1-3/mo)';document.getElementById('mktEffort').value='Low';populateMktLocations([]);document.getElementById('marketingModal').classList.add('show')}
+function openNewMktModal(){editingMktId=null;document.getElementById('mktModalTitle').textContent='Add Initiative';document.getElementById('btnDeleteMkt').style.display='none';['mktName','mktContactName','mktContactTitle','mktContactEmail','mktContactPhone','mktAddresses','mktNotes'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});document.getElementById('mktType').value='Law Firm';document.getElementById('mktAnticipatedCases').value='';document.getElementById('mktStage').value='Prospect';document.getElementById('mktDate').value=today();document.getElementById('mktFollowUp').value='';document.getElementById('mktVolume').value='Low (1-3/mo)';document.getElementById('mktEffort').value='Low';populateMktLocations([]);populateMktOrgList();document.getElementById('marketingModal').classList.add('show')}
 function openNewMktModalFor(name){openNewMktModal();document.getElementById('mktName').value=name||'';}
-function openEditMktModal(id){const m=mktList.find(x=>x.id===id);if(!m)return;editingMktId=id;document.getElementById('mktModalTitle').textContent='Edit Initiative';document.getElementById('btnDeleteMkt').style.display='block';document.getElementById('mktName').value=m.name||'';var pc=(m.primaryContactId&&mktContacts.find(function(c){return c.id===m.primaryContactId}))||mktContacts.find(function(c){return c.initiativeId===m.id})||null;document.getElementById('mktContactName').value=(pc&&pc.name)||m.contactName||m.contact||'';document.getElementById('mktContactTitle').value=(pc&&pc.title)||m.contactTitle||'';document.getElementById('mktContactEmail').value=(pc&&pc.email)||m.contactEmail||'';document.getElementById('mktContactPhone').value=(pc&&pc.phone)||m.contactPhone||'';document.getElementById('mktAddresses').value=m.addresses||'';document.getElementById('mktType').value=m.type||'Law Firm';document.getElementById('mktAnticipatedCases').value=m.anticipatedCases||'';document.getElementById('mktStage').value=m.stage||'Prospect';document.getElementById('mktDate').value=m.dateInitiated||'';document.getElementById('mktFollowUp').value=m.nextFollowUp||'';document.getElementById('mktVolume').value=m.volume||'Low (1-3/mo)';document.getElementById('mktEffort').value=m.effort||'Low';document.getElementById('mktNotes').value=m.notes||'';populateMktLocations(m.targetLocations||[]);document.getElementById('marketingModal').classList.add('show')}
+function openEditMktModal(id){const m=mktList.find(x=>x.id===id);if(!m)return;editingMktId=id;document.getElementById('mktModalTitle').textContent='Edit Initiative';document.getElementById('btnDeleteMkt').style.display='block';document.getElementById('mktName').value=m.name||'';var pc=(m.primaryContactId&&mktContacts.find(function(c){return c.id===m.primaryContactId}))||mktContacts.find(function(c){return c.initiativeId===m.id})||null;document.getElementById('mktContactName').value=(pc&&pc.name)||m.contactName||m.contact||'';document.getElementById('mktContactTitle').value=(pc&&pc.title)||m.contactTitle||'';document.getElementById('mktContactEmail').value=(pc&&pc.email)||m.contactEmail||'';document.getElementById('mktContactPhone').value=(pc&&pc.phone)||m.contactPhone||'';document.getElementById('mktAddresses').value=m.addresses||'';document.getElementById('mktType').value=m.type||'Law Firm';document.getElementById('mktAnticipatedCases').value=m.anticipatedCases||'';document.getElementById('mktStage').value=m.stage||'Prospect';document.getElementById('mktDate').value=m.dateInitiated||'';document.getElementById('mktFollowUp').value=m.nextFollowUp||'';document.getElementById('mktVolume').value=m.volume||'Low (1-3/mo)';document.getElementById('mktEffort').value=m.effort||'Low';document.getElementById('mktNotes').value=m.notes||'';populateMktLocations(m.targetLocations||[]);populateMktOrgList();document.getElementById('marketingModal').classList.add('show')}
 function closeMktModal(){document.getElementById('marketingModal').classList.remove('show');editingMktId=null}
 function saveMkt(){
-  const name=document.getElementById('mktName').value.trim();if(!name){alert('Enter the organization name.');return;}
+  var name=document.getElementById('mktName').value.trim();if(!name){alert('Enter the organization name.');return;}
+  // Consolidate duplicate / near-duplicate organization names so CRM + Marketing stay in sync
+  var _dupExact=mktList.find(function(m){return m.id!==editingMktId&&mktNorm(m.name)===mktNorm(name)});
+  if(_dupExact){ if(!confirm('An initiative for "'+_dupExact.name+'" already exists. Keep this as a separate one anyway?'))return; }
+  else{
+    var _cands=mktList.filter(function(m){return m.id!==editingMktId}).map(function(m){return m.name}).concat(REF_SOURCES,(customRefSources||[])).filter(Boolean);
+    var _fz=_cands.filter(function(x){return mktNorm(x)!==mktNorm(name)&&fuzzyMatch(x,name)});
+    if(_fz.length){ if(confirm('A similar referral source already exists: "'+_fz[0]+'".\n\nUse that exact spelling instead of "'+name+'"? (Keeps your CRM + Marketing lists consolidated.)')){name=_fz[0];document.getElementById('mktName').value=name;} }
+  }
   const cName=document.getElementById('mktContactName').value.trim();
   const cTitle=document.getElementById('mktContactTitle').value.trim();
   const cEmail=document.getElementById('mktContactEmail').value.trim();
@@ -7473,7 +7492,7 @@ document.addEventListener('click', function(e) {
 });
 
 // Modal close on overlay — wrapped in try-catch so missing modals don't break init
-['referralModal','resolveModal','apptConfirmModal','updateLogModal','marketingModal','caseModal','callLogModal','ticketModal','recordsBillingModal','missingInfoModal','introEmailModal','cmAlertModal','mktActivityModal','mktContactModal','pinModal','changePwModal','addAlertModal','adjusterResolveModal','pipResolveModal','precertModal','callbackModal','callbackUpdateModal','paperworkModal'].forEach(function(id){
+['resolveModal','apptConfirmModal','updateLogModal','caseModal','callLogModal','ticketModal','recordsBillingModal','missingInfoModal','introEmailModal','cmAlertModal','pinModal','changePwModal','addAlertModal','adjusterResolveModal','pipResolveModal','precertModal','callbackModal','callbackUpdateModal','paperworkModal'].forEach(function(id){
   try{
     var el=document.getElementById(id);
     if(el)el.addEventListener('click',function(e){if(e.target===this){this.classList.remove('show');if(id==='pinModal'&&currentUser==='Manager'&&!managerUnlocked)logout();}});
