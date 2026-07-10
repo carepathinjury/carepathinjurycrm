@@ -527,7 +527,7 @@
   </div>
   <div class="nav-section">
     <div class="nav-section-label">Metrics</div>
-    <div class="nav-item" id="njmvaNavMgrDash" data-page="njmva-analytics" onclick="if(currentUser==='Manager'||userRole==='nj_mva'){njmvaNav('njmva-analytics')}else{promptPIN('njmva-analytics')}" style="display:none"><div class="nav-icon">📊</div> Analytics</div>
+    <div class="nav-item" id="njmvaNavMgrDash" data-page="njmva-analytics" onclick="if(currentUser==='Manager'||userRole==='nj_mva'||userRole==='exec'){njmvaNav('njmva-analytics')}else{promptPIN('njmva-analytics')}" style="display:none"><div class="nav-icon">📊</div> Analytics</div>
   </div>
   <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential</p></div>
 </nav>
@@ -2120,7 +2120,7 @@ function setupUIForRole() {
   const tabs = document.getElementById('topTabs');
   tabs.querySelectorAll('.top-tab').forEach(t => t.style.display = 'flex');
   // Marketing pipeline: only visible to marketing team and manager
-  if (userRole !== 'marketing' && userRole !== 'manager') {
+  if (userRole !== 'marketing' && userRole !== 'manager' && userRole !== 'exec') {
     tabs.querySelector('[data-module="mkt"]').style.display = 'none';
   }
   if (userRole === 'marketing') {
@@ -2141,7 +2141,7 @@ function setupUIForRole() {
     // PSR can access CRM and CM for reference — no tabs hidden
   }
   const showMgr = userRole === 'manager' || managerUnlocked;
-  document.getElementById('crmNavMgrDash').style.display = (showMgr || MKT_CRM_REF.includes(currentUser)) ? 'flex' : 'none';
+  document.getElementById('crmNavMgrDash').style.display = (showMgr || MKT_CRM_REF.includes(currentUser) || userRole==='exec') ? 'flex' : 'none';
   document.getElementById('crmNavMgrMetrics').style.display = showMgr ? 'flex' : 'none';
   document.getElementById('cmNavMgrDash').style.display = showMgr ? 'flex' : 'none';
   document.getElementById('crmNavMyMetrics').style.display = CRM_STAFF.includes(currentUser) ? 'flex' : 'none';
@@ -2150,9 +2150,9 @@ function setupUIForRole() {
   document.getElementById('psrNavMgrDash').style.display = showMgr ? 'flex' : 'none';
   // NJ MVA access
   var njmvaTab=document.querySelector('.top-tab[data-module="njmva"]');
-  if(njmvaTab)njmvaTab.style.display=(userRole==='nj_mva'||userRole==='manager'||managerUnlocked)?'':'none';
+  if(njmvaTab)njmvaTab.style.display=(userRole==='nj_mva'||userRole==='manager'||managerUnlocked||userRole==='exec')?'':'none';
   var njmvaMgr=document.getElementById('njmvaNavMgrDash');
-  if(njmvaMgr)njmvaMgr.style.display=(userRole==='manager'||managerUnlocked||userRole==='nj_mva')?'flex':'none';
+  if(njmvaMgr)njmvaMgr.style.display=(userRole==='manager'||managerUnlocked||userRole==='nj_mva'||userRole==='exec')?'flex':'none';
 }
 
 function switchModule(mod) {
@@ -2925,11 +2925,11 @@ function getFilteredRefs(){
 function toggleNoShowDrilldown(){var el=document.getElementById('noShowDrilldown');if(el)el.style.display=el.style.display==='none'?'block':'none';}
 
 function openCrmMgrDash(){
-  if(userRole==='manager'||managerUnlocked||MKT_CRM_REF.includes(currentUser)){crmNav('crm-mgr-dash');}
+  if(userRole==='manager'||managerUnlocked||MKT_CRM_REF.includes(currentUser)||userRole==='exec'){crmNav('crm-mgr-dash');}
   else{promptPIN('crm-mgr-dash');}
 }
 function renderCrmMgrDash(el) {
-  if (!(userRole==='manager'||managerUnlocked||MKT_CRM_REF.includes(currentUser))) return;
+  if (!(userRole==='manager'||managerUnlocked||MKT_CRM_REF.includes(currentUser)||userRole==='exec')) return;
   let filteredRefs=refs;
   if(crmMgrDateFrom)filteredRefs=filteredRefs.filter(r=>(r.createdDate||'')>=crmMgrDateFrom);
   if(crmMgrDateTo)filteredRefs=filteredRefs.filter(r=>(r.createdDate||'')<=crmMgrDateTo);
@@ -5725,7 +5725,8 @@ function renderMktAnalytics(el){
   });
   h+='</tbody></table></div></div>';
 
-  // Activity by team member (this month) — attribution
+  // Activity by team member (this month) — attribution (hidden from exec/analytics-only roles)
+  if(userRole!=='exec'){
   var byPerson={};
   monthActivities.forEach(function(a){var who=a.by||'Unattributed';if(!byPerson[who])byPerson[who]={total:0,calls:0,visits:0,meetings:0};byPerson[who].total++;if(a.type==='Phone Call')byPerson[who].calls++;if(a.type==='Office Visit/Drop-off'||a.type==='Lunch/Dinner')byPerson[who].visits++;if(a.type==='In-Person Meeting'||a.type==='Presentation')byPerson[who].meetings++;});
   var people=Object.keys(byPerson).sort(function(a,b){return byPerson[b].total-byPerson[a].total});
@@ -5733,6 +5734,7 @@ function renderMktAnalytics(el){
   people.forEach(function(p){var d=byPerson[p];h+='<tr><td style="font-weight:600;color:var(--navy)">'+esc(p)+'</td><td style="font-weight:700">'+d.total+'</td><td>'+d.calls+'</td><td>'+d.visits+'</td><td>'+d.meetings+'</td></tr>';});
   if(people.length===0)h+='<tr><td colspan="5" style="text-align:center;color:var(--gray-400);padding:20px">No activity logged this month yet.</td></tr>';
   h+='</tbody></table></div><div style="padding:8px 18px;font-size:10px;color:var(--gray-400)">"Unattributed" = activities logged before per-person tracking was enabled.</div></div>';
+  }
 
   // Activity Summary
   var totalActivities=0;var actByType={};
