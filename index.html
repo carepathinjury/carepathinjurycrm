@@ -285,6 +285,7 @@
       <button onclick="handleLogin()" style="width:100%;padding:11px;background:var(--teal);color:white;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:6px;transition:opacity 0.2s" id="loginBtn">Sign In</button>
     </div>
     <div class="login-switch">Manager? <a onclick="loginAsManager()">Access manager dashboard</a></div>
+    <div style="margin-top:14px;font-size:10px;color:var(--gray-400)">build 2026-07-07-readonly-v3</div>
   </div>
 </div>
 
@@ -1445,6 +1446,7 @@ function saveSingleFax(f){
 function saveRobin(){if(_useNewTables){_dbUpsert('system_config',{key:'robin_idx',value:robinIdx,updated_at:new Date().toISOString()})}else{_legacySave('cp11_robin',robinIdx.toString())}}
 
 function _legacySave(k,v){
+  if(_isExecRO() && (k==='cp11_cases'||k==='cp11_refs'))return;
   _lastLocalSave=Date.now();
   var val=(typeof v==='string')?v:JSON.stringify(v);
   var parsed;try{parsed=JSON.parse(val)}catch(e){parsed=val;}
@@ -2012,6 +2014,8 @@ function loadRecordsData(arr){
 // ══════════════════════════════════════════════════════════════════════
 let currentUser = null;
 let currentEmail = '';
+const BUILD_VERSION='2026-07-07-readonly-v3';
+try{console.log('%cCarePath build: '+BUILD_VERSION,'color:#1a7f7a;font-weight:700');}catch(e){}
 let userRole = null; // 'scheduler','case_mgr','marketing','manager'
 let managerUnlocked = false;
 let activeModule = 'crm';
@@ -2063,7 +2067,7 @@ function loginAs(name, role) {
   currentUser = name; userRole = role;
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('appWrapper').classList.remove('hidden');
-  document.getElementById('topUser').textContent = name + (role?' \u00B7 '+role:'');
+  document.getElementById('topUser').textContent = name + (role?' \u00B7 '+role:'') + ' \u00B7 b'+BUILD_VERSION.slice(-2);
   setupUIForRole();
   // Default module based on role
   if (role === 'marketing') switchModule('mkt');
@@ -2526,6 +2530,7 @@ function renderCrmAlertCard(a, i) {
     desc='<strong>'+esc(a.patientName)+'</strong> '+prev+' on '+fmtDate(a.apptDate)+'. '+a.daysSinceFollowUp+'d since last follow-up.'+contact;
     btn='<button class="btn-resolve" style="background:rgba(192,57,43,0.08);color:var(--red);border-color:rgba(192,57,43,0.2)" onclick="openApptConfirmModal(\''+a.id+'\')">Resolve</button>';
   }
+  if(_isExecRO())btn='';
   return '<div class="alert-card'+(gold?' gold-alert':'')+'" style="animation-delay:'+(i*0.05)+'s;transform:translateY(10px)">'+
     '<div class="alert-icon '+(gold?'gold':'red')+'">'+(gold?'&#128203;':'&#9888;')+'</div>'+
     '<div class="alert-body"><div class="alert-title">'+title+'</div><div class="alert-desc">'+desc+'</div>'+
@@ -3595,6 +3600,7 @@ function togglePaperworkFields(){
   document.getElementById('paperworkDateGroup').style.display=val==='resent'?'block':'none';
 }
 function submitPaperworkResolve(){
+  if(_isExecRO()){showReadOnly();return;}
   var r=refs.find(function(x){return x.id===paperworkRefId});if(!r)return;
   var outcome=document.getElementById('paperworkOutcome').value;
   var notes=document.getElementById('paperworkNotes').value.trim();
@@ -3621,6 +3627,7 @@ function submitPaperworkResolve(){
 function toggleResolveFields(){const v=document.getElementById('resolveOutcome').value;document.getElementById('resolveApptGroup').style.display=v==='scheduled'?'flex':'none';document.getElementById('resolveContactGroup').style.display=v==='unable'?'flex':'none';document.getElementById('resolveLostReasonGroup').style.display=v==='lost'?'flex':'none'}
 
 function submitResolve(){
+  if(_isExecRO()){showReadOnly();return;}
   const r=refs.find(x=>x.id===resolveRefId);if(!r)return;
   const outcome=document.getElementById('resolveOutcome').value,notes=document.getElementById('resolveNotes').value.trim();
   if(outcome==='scheduled'){
@@ -3881,6 +3888,7 @@ function renderCmDashboard(el) {
 function renderCmAlertCard(a,i) {
   const gold=a.severity==='gold';
   let actionBtns='<button class="btn-resolve" onclick="showCmDetail(\''+a.caseId+'\')">View</button>';
+  if(!_isExecRO()){
   if(a.type==='intro-email'){
     actionBtns+='<button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="resolveIntroEmail(\''+a.caseId+'\')">✉ Mark Sent</button>';
   } else if(a.type==='missing-info'){
@@ -3897,6 +3905,7 @@ function renderCmAlertCard(a,i) {
     actionBtns+='<button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="openNoApptModal(\''+a.caseId+'\')">📋 Log Action</button>';
   } else {
     actionBtns+='<button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="dismissCmAlert(\''+a.caseId+'\',\''+a.type+'\')">✓ Done</button>';
+  }
   }
   return '<div class="alert-card'+(gold?' gold-alert':'')+'" style="animation-delay:'+(i*0.05)+'s;transform:translateY(10px)"><div class="alert-icon '+(gold?'gold':'red')+'">'+(a.type==='intro-email'?'✉':gold?'&#128203;':'&#9888;')+'</div><div class="alert-body"><div class="alert-title">'+esc(a.title)+'</div><div class="alert-desc">'+esc(a.message)+'</div><div class="alert-meta">'+esc(a.patientName)+' · '+esc(a.location||'')+' · '+esc(a.assigned)+(a.daysSince!=null?' · '+a.daysSince+' days':'')+'</div></div><div class="alert-action">'+actionBtns+'</div></div>';
 }
