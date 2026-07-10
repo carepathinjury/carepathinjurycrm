@@ -1175,6 +1175,7 @@ async function _dbFetchAll(table){
 }
 
 function _dbInsert(table, row){
+  if(_roBlocked(table))return;
   _lastLocalSave=Date.now();
   fetch(SUPABASE_URL+'/rest/v1/'+table, {
     method:'POST',
@@ -1187,6 +1188,7 @@ function _dbInsert(table, row){
 }
 
 function _dbUpdate(table, row){
+  if(_roBlocked(table))return;
   _lastLocalSave=Date.now();
   var id=row.id||row.key;
   var idCol=(table==='system_config')?'key':'id';
@@ -1204,7 +1206,7 @@ function _dbUpdate(table, row){
 
 // Partial update — only sends the specified fields, not the entire record
 // This prevents overwriting other users' changes on fields you didn't modify
-function _dbPatch(table, id, fields){ if(!fields.updated_at)fields.updated_at=new Date().toISOString(); _dbPatchTry(table,id,fields,0); }
+function _dbPatch(table, id, fields){ if(_roBlocked(table))return; if(!fields.updated_at)fields.updated_at=new Date().toISOString(); _dbPatchTry(table,id,fields,0); }
 function _dbPatchTry(table, id, fields, attempt){
   _lastLocalSave=Date.now();
   fetch(SUPABASE_URL+'/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id), {
@@ -1225,7 +1227,7 @@ function _dbPatchTry(table, id, fields, attempt){
   }).catch(function(e){console.error('Patch error:',table,e);showSaveError();});
 }
 
-function _dbUpsert(table, row){ _dbUpsertTry(table, row, 0); }
+function _dbUpsert(table, row){ if(_roBlocked(table))return; _dbUpsertTry(table, row, 0); }
 function _dbUpsertTry(table, row, attempt){
   _lastLocalSave=Date.now();
   fetch(SUPABASE_URL+'/rest/v1/'+table, {
@@ -1251,6 +1253,7 @@ function _dbUpsertTry(table, row, attempt){
 }
 
 function _dbDelete(table, id){
+  if(_roBlocked(table))return;
   fetch(SUPABASE_URL+'/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:Object.assign({},_sbH,{'Prefer':'return=representation'})})
     .then(function(resp){
       if(!resp.ok){resp.text().then(function(t){console.error('Delete failed:',table,resp.status,t);});showSaveError();return;}
@@ -1266,6 +1269,14 @@ function _dbDelete(table, id){
 
 // ─── Save indicator ────────────────────────────────────────────────
 var _saveTimer=null;
+function _isExecRO(){return userRole==='exec';}
+function _roBlocked(table){ if(_isExecRO() && (table==='referrals'||table==='cases')){ showReadOnly(); return true; } return false; }
+function showReadOnly(){
+  var el=document.getElementById('saveIndicator');
+  if(!el){el=document.createElement('div');el.id='saveIndicator';el.style.cssText='position:fixed;bottom:20px;right:20px;padding:8px 16px;border-radius:8px;font-family:DM Sans;font-size:11px;font-weight:600;z-index:998;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:opacity 0.3s;pointer-events:none';document.body.appendChild(el);}
+  el.style.background='#8a6d3b';el.style.color='white';el.textContent='\uD83D\uDC41 View-only access — not saved';el.style.opacity='1';
+  clearTimeout(_saveTimer);_saveTimer=setTimeout(function(){el.style.opacity='0'},2500);
+}
 function showSaveSuccess(){
   var el=document.getElementById('saveIndicator');
   if(!el){el=document.createElement('div');el.id='saveIndicator';el.style.cssText='position:fixed;bottom:20px;right:20px;padding:8px 16px;border-radius:8px;font-family:DM Sans;font-size:11px;font-weight:600;z-index:998;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:opacity 0.3s;pointer-events:none';document.body.appendChild(el);}
@@ -2022,6 +2033,7 @@ async function handleLogin() {
       btn.textContent='Sign In'; btn.disabled=false; return;
     }
     var user = rows[0];
+    user.role=(user.role||'').trim().toLowerCase();
     // Compare password (trim both sides to handle hidden spaces)
     if(user.password.trim() !== pw.trim()){
       errEl.textContent='Invalid email or password.'; errEl.style.display='block';
@@ -3312,6 +3324,7 @@ function setAlertCheckboxes(alerts){
 }
 
 function openNewRefModal() {
+  if(_isExecRO()){showReadOnly();return;}
   editingRefId = null;
   document.getElementById('refModalTitle').textContent = 'Register New Referral';
   document.getElementById('btnDeleteRef').style.display = 'none';
@@ -3361,6 +3374,7 @@ function openEditRefModal(id) {
 function closeRefModal(){document.getElementById('referralModal').classList.remove('show');editingRefId=null}
 
 function saveReferral() {
+  if(_isExecRO()){showReadOnly();return;}
   var lastName = document.getElementById('fLastName').value.trim();
   var firstName = document.getElementById('fFirstName').value.trim();
   if (!lastName) {alert('Last Name is required.');return;}
@@ -3922,6 +3936,7 @@ function toggleMiFields(){
   document.getElementById('miDateGroup').style.display='flex'; // always show date
 }
 function submitMissingInfo(){
+  if(_isExecRO()){showReadOnly();return;}
   const c=cases.find(x=>x.id===missingInfoCaseId);if(!c)return;
   const outcome=document.getElementById('miOutcome').value;
   const dateStr=document.getElementById('miDate').value;
@@ -3999,6 +4014,7 @@ function openAdjusterResolveModal(caseId){
   document.getElementById('adjusterResolveModal').classList.add('show');
 }
 function submitAdjusterResolve(){
+  if(_isExecRO()){showReadOnly();return;}
   var c=cases.find(function(x){return x.id===adjCaseId});if(!c)return;
   var outcome=document.getElementById('adjOutcome').value;
   var dateStr=document.getElementById('adjDate').value;
@@ -4022,6 +4038,7 @@ function openNoApptModal(caseId){
   document.getElementById('noApptModal').classList.add('show');
 }
 function submitNoAppt(){
+  if(_isExecRO()){showReadOnly();return;}
   var c=cases.find(function(x){return x.id===noApptCaseId});if(!c)return;
   var action=document.getElementById('naAction').value;
   var dateStr=document.getElementById('naDate').value||today();
@@ -4735,13 +4752,14 @@ let editingCaseId=null;
 
 function cmAutoAssign(){document.getElementById('cAssigned').value=getNextCM()}
 
-function openNewCaseModal(){try{editingCaseId=null;document.getElementById('caseModalTitle').textContent='New Case';document.getElementById('btnDeleteCase').style.display='none';['cLastName','cFirstName','cDOB','cPhone','cEmail','cDOI','cAttorney','cLawFirm','cLawContact','cRefSource','cApptDate','cRecordsSent','cMissingInfo','cFollowUp','cNotes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});document.getElementById('cDateOpened').value=today();document.getElementById('cCaseType').value='WC';document.getElementById('cLocation').value='';document.getElementById('cLanguage').value='English';document.getElementById('cAssigned').value=getNextCM();document.getElementById('cStatus').value='Active';document.querySelectorAll('.caseAlertCb').forEach(function(cb){cb.checked=false});try{populateLawFirmDropdown();populateRefSourceDropdown();}catch(e){}document.getElementById('caseModal').classList.add('show')}catch(e){console.error('Error opening case modal:',e);alert('Error opening form. Please try again.')}}
+function openNewCaseModal(){if(_isExecRO()){showReadOnly();return;}try{editingCaseId=null;document.getElementById('caseModalTitle').textContent='New Case';document.getElementById('btnDeleteCase').style.display='none';['cLastName','cFirstName','cDOB','cPhone','cEmail','cDOI','cAttorney','cLawFirm','cLawContact','cRefSource','cApptDate','cRecordsSent','cMissingInfo','cFollowUp','cNotes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});document.getElementById('cDateOpened').value=today();document.getElementById('cCaseType').value='WC';document.getElementById('cLocation').value='';document.getElementById('cLanguage').value='English';document.getElementById('cAssigned').value=getNextCM();document.getElementById('cStatus').value='Active';document.querySelectorAll('.caseAlertCb').forEach(function(cb){cb.checked=false});try{populateLawFirmDropdown();populateRefSourceDropdown();}catch(e){}document.getElementById('caseModal').classList.add('show')}catch(e){console.error('Error opening case modal:',e);alert('Error opening form. Please try again.')}}
 
 function openEditCaseModal(id){const c=cases.find(x=>x.id===id);if(!c)return;editingCaseId=id;document.getElementById('caseModalTitle').textContent='Edit Case';document.getElementById('btnDeleteCase').style.display='block';var nameParts=(c.patientName||'').split(',');document.getElementById('cLastName').value=(nameParts[0]||'').trim();document.getElementById('cFirstName').value=(nameParts[1]||'').trim();document.getElementById('cDOB').value=c.dob||'';document.getElementById('cPhone').value=c.phone||'';document.getElementById('cEmail').value=c.email||'';document.getElementById('cDOI').value=c.doi||'';document.getElementById('cCaseType').value=c.caseType||'WC';document.getElementById('cLocation').value=c.location||'';document.getElementById('cLanguage').value=c.language||'English';document.getElementById('cAttorney').value=c.attorney||'';document.getElementById('cLawFirm').value=c.lawFirm||'';document.getElementById('cLawContact').value=c.lawContact||'';document.getElementById('cRefSource').value=c.referralSource||'';document.getElementById('cAssigned').value=c.assigned||'Sean';document.getElementById('cDateOpened').value=c.createdDate||'';document.getElementById('cApptDate').value=c.apptDate||'';document.getElementById('cApptPrn').checked=!!c.apptPrn;document.getElementById('cRecordsSent').value=c.recordsSent||'';document.getElementById('cMissingInfo').value=c.missingInfo||'';document.getElementById('cFollowUp').value=c.followUpDate||'';document.getElementById('cNotes').value=c.notes||'';document.getElementById('cStatus').value=c.status||'Active';var alerts=(c.missingInfo||'').split(' | ').filter(Boolean);document.querySelectorAll('.caseAlertCb').forEach(cb=>{cb.checked=alerts.includes(cb.value)});populateLawFirmDropdown();populateRefSourceDropdown();document.getElementById('caseModal').classList.add('show')}
 
 function closeCaseModal(){document.getElementById('caseModal').classList.remove('show');editingCaseId=null}
 
 function saveCase(){
+  if(_isExecRO()){showReadOnly();return;}
   var lastName=document.getElementById('cLastName').value.trim();
   var firstName=document.getElementById('cFirstName').value.trim();
   if(!lastName){alert('Last Name is required.');return;}
