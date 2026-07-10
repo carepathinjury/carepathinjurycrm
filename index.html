@@ -527,7 +527,7 @@
   </div>
   <div class="nav-section">
     <div class="nav-section-label">Metrics</div>
-    <div class="nav-item" id="njmvaNavMgrDash" data-page="njmva-analytics" onclick="if(currentUser==='Manager'||userRole==='nj_mva'||userRole==='exec'){njmvaNav('njmva-analytics')}else{promptPIN('njmva-analytics')}" style="display:none"><div class="nav-icon">📊</div> Analytics</div>
+    <div class="nav-item" id="njmvaNavMgrDash" data-page="njmva-analytics" onclick="if(currentUser==='Manager'||userRole==='nj_mva'||_isExec()){njmvaNav('njmva-analytics')}else{promptPIN('njmva-analytics')}" style="display:none"><div class="nav-icon">📊</div> Analytics</div>
   </div>
   <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential</p></div>
 </nav>
@@ -1269,7 +1269,9 @@ function _dbDelete(table, id){
 
 // ─── Save indicator ────────────────────────────────────────────────
 var _saveTimer=null;
-function _isExecRO(){return userRole==='exec';}
+var EXEC_USERS = ['Gabriel','ghuh@carepathinjury.com'];
+function _isExec(){ var u=(currentUser||'').trim().toLowerCase(), e=(currentEmail||'').trim().toLowerCase(); return userRole==='exec' || EXEC_USERS.some(function(n){var x=n.toLowerCase();return x===u||x===e;}); }
+function _isExecRO(){return _isExec();}
 function _roBlocked(table){ if(_isExecRO() && (table==='referrals'||table==='cases')){ showReadOnly(); return true; } return false; }
 function showReadOnly(){
   var el=document.getElementById('saveIndicator');
@@ -2009,6 +2011,7 @@ function loadRecordsData(arr){
 // LOGIN & MODULE SWITCHING
 // ══════════════════════════════════════════════════════════════════════
 let currentUser = null;
+let currentEmail = '';
 let userRole = null; // 'scheduler','case_mgr','marketing','manager'
 let managerUnlocked = false;
 let activeModule = 'crm';
@@ -2034,6 +2037,7 @@ async function handleLogin() {
     }
     var user = rows[0];
     user.role=(user.role||'').trim().toLowerCase();
+    currentEmail = email;
     // Compare password (trim both sides to handle hidden spaces)
     if(user.password.trim() !== pw.trim()){
       errEl.textContent='Invalid email or password.'; errEl.style.display='block';
@@ -2059,7 +2063,7 @@ function loginAs(name, role) {
   currentUser = name; userRole = role;
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('appWrapper').classList.remove('hidden');
-  document.getElementById('topUser').textContent = name;
+  document.getElementById('topUser').textContent = name + (role?' \u00B7 '+role:'');
   setupUIForRole();
   // Default module based on role
   if (role === 'marketing') switchModule('mkt');
@@ -2084,7 +2088,7 @@ function loginAsManager(name) {
 }
 
 function logout() {
-  currentUser = null; userRole = null; managerUnlocked = false;
+  currentUser = null; currentEmail=''; userRole = null; managerUnlocked = false;
   document.getElementById('loginScreen').classList.remove('hidden');
   document.getElementById('appWrapper').classList.add('hidden');
   document.getElementById('loginEmail').value = '';
@@ -2132,7 +2136,7 @@ function setupUIForRole() {
   const tabs = document.getElementById('topTabs');
   tabs.querySelectorAll('.top-tab').forEach(t => t.style.display = 'flex');
   // Marketing pipeline: only visible to marketing team and manager
-  if (userRole !== 'marketing' && userRole !== 'manager' && userRole !== 'exec') {
+  if (userRole !== 'marketing' && userRole !== 'manager' && !_isExec()) {
     tabs.querySelector('[data-module="mkt"]').style.display = 'none';
   }
   if (userRole === 'marketing') {
@@ -2153,7 +2157,7 @@ function setupUIForRole() {
     // PSR can access CRM and CM for reference — no tabs hidden
   }
   const showMgr = userRole === 'manager' || managerUnlocked;
-  document.getElementById('crmNavMgrDash').style.display = (showMgr || MKT_CRM_REF.includes(currentUser) || userRole==='exec') ? 'flex' : 'none';
+  document.getElementById('crmNavMgrDash').style.display = (showMgr || MKT_CRM_REF.includes(currentUser) || _isExec()) ? 'flex' : 'none';
   document.getElementById('crmNavMgrMetrics').style.display = showMgr ? 'flex' : 'none';
   document.getElementById('cmNavMgrDash').style.display = showMgr ? 'flex' : 'none';
   document.getElementById('crmNavMyMetrics').style.display = CRM_STAFF.includes(currentUser) ? 'flex' : 'none';
@@ -2162,9 +2166,9 @@ function setupUIForRole() {
   document.getElementById('psrNavMgrDash').style.display = showMgr ? 'flex' : 'none';
   // NJ MVA access
   var njmvaTab=document.querySelector('.top-tab[data-module="njmva"]');
-  if(njmvaTab)njmvaTab.style.display=(userRole==='nj_mva'||userRole==='manager'||managerUnlocked||userRole==='exec')?'':'none';
+  if(njmvaTab)njmvaTab.style.display=(userRole==='nj_mva'||userRole==='manager'||managerUnlocked||_isExec())?'':'none';
   var njmvaMgr=document.getElementById('njmvaNavMgrDash');
-  if(njmvaMgr)njmvaMgr.style.display=(userRole==='manager'||managerUnlocked||userRole==='nj_mva'||userRole==='exec')?'flex':'none';
+  if(njmvaMgr)njmvaMgr.style.display=(userRole==='manager'||managerUnlocked||userRole==='nj_mva'||_isExec())?'flex':'none';
 }
 
 function switchModule(mod) {
@@ -2937,11 +2941,11 @@ function getFilteredRefs(){
 function toggleNoShowDrilldown(){var el=document.getElementById('noShowDrilldown');if(el)el.style.display=el.style.display==='none'?'block':'none';}
 
 function openCrmMgrDash(){
-  if(userRole==='manager'||managerUnlocked||MKT_CRM_REF.includes(currentUser)||userRole==='exec'){crmNav('crm-mgr-dash');}
+  if(userRole==='manager'||managerUnlocked||MKT_CRM_REF.includes(currentUser)||_isExec()){crmNav('crm-mgr-dash');}
   else{promptPIN('crm-mgr-dash');}
 }
 function renderCrmMgrDash(el) {
-  if (!(userRole==='manager'||managerUnlocked||MKT_CRM_REF.includes(currentUser)||userRole==='exec')) return;
+  if (!(userRole==='manager'||managerUnlocked||MKT_CRM_REF.includes(currentUser)||_isExec())) return;
   let filteredRefs=refs;
   if(crmMgrDateFrom)filteredRefs=filteredRefs.filter(r=>(r.createdDate||'')>=crmMgrDateFrom);
   if(crmMgrDateTo)filteredRefs=filteredRefs.filter(r=>(r.createdDate||'')<=crmMgrDateTo);
@@ -3652,6 +3656,7 @@ function closeApptConfirmModal(){document.getElementById('apptConfirmModal').cla
 function toggleApptFields(){const v=document.getElementById('apptOutcome').value;document.getElementById('apptNewDateGroup').style.display=v==='rescheduled'?'flex':'none';document.getElementById('apptContactDateGroup').style.display=(v==='no_show'||v==='cancelled')?'flex':'none';document.getElementById('apptReasonGroup').style.display=(v==='no_show'||v==='cancelled')?'flex':'none'}
 
 function submitApptConfirm(){
+  if(_isExecRO()){showReadOnly();return;}
   const r=refs.find(x=>x.id===apptConfirmRefId);if(!r)return;
   const outcome=document.getElementById('apptOutcome').value,notes=document.getElementById('apptConfirmNotes').value.trim();
   const reason=(outcome==='no_show'||outcome==='cancelled')?document.getElementById('apptReason').value:'';
@@ -3898,6 +3903,7 @@ function renderCmAlertCard(a,i) {
 
 let introEmailCaseId=null;
 function resolveIntroEmail(caseId){
+  if(_isExecRO()){showReadOnly();return;}
   introEmailCaseId=caseId;
   const c=cases.find(x=>x.id===caseId);
   document.getElementById('introEmailPatient').textContent=c?c.patientName:'';
@@ -3985,6 +3991,7 @@ function openRecordsBillingModal(caseId){
 }
 function closeRecordsBillingModal(){document.getElementById('recordsBillingModal').classList.remove('show');rbCaseId=null;}
 function submitRecordsBilling(){
+  if(_isExecRO()){showReadOnly();return;}
   const c=cases.find(x=>x.id===rbCaseId);if(!c)return;
   const dateStr=document.getElementById('rbDate').value;
   if(!dateStr){alert('Please enter the date records were sent.');return;}
@@ -4070,6 +4077,7 @@ function openPipResolveModal(caseId){
   document.getElementById('pipResolveModal').classList.add('show');
 }
 function submitPipResolve(){
+  if(_isExecRO()){showReadOnly();return;}
   var c=cases.find(function(x){return x.id===pipCaseId});if(!c)return;
   var outcome=document.getElementById('pipOutcome').value;
   var dateStr=document.getElementById('pipDate').value;
@@ -4131,6 +4139,7 @@ function submitCaseStatus(caseId){
   showCmDetail(caseId);
 }
 function markSettlementEmailSent(caseId){
+  if(_isExecRO()){showReadOnly();return;}
   var c=cases.find(function(x){return x.id===caseId});if(!c)return;
   if(confirm('Confirm that the settlement update email has been sent?')){
     c.settlementEmailSent=true;
@@ -4258,7 +4267,7 @@ function deleteFaxEntry(id){
   renderActiveModule();
 }
 
-function dismissCmAlert(caseId,type){const c=cases.find(x=>x.id===caseId);if(!c)return;
+function dismissCmAlert(caseId,type){if(_isExecRO()){showReadOnly();return;}const c=cases.find(x=>x.id===caseId);if(!c)return;
   if(type.startsWith('manual-')){const mid=type.replace('manual-','');const ma=(c.manualAlerts||[]).find(m=>m.id===mid);if(ma){ma.completed=true;ma.completedDate=today();}
     _markModified(c.id);
     if(_useNewTables)_dbPatch('cases',c.id,{manual_alerts:c.manualAlerts||[]});
@@ -4710,6 +4719,7 @@ function showCmDetail(id){
 
 let cmAlertCaseId=null, cmAlertEditId=null;
 function addCmManualAlert(caseId){
+  if(_isExecRO()){showReadOnly();return;}
   cmAlertCaseId=caseId;cmAlertEditId=null;
   document.getElementById('cmAlertModalTitle').textContent='Add Reminder';
   document.getElementById('btnDeleteCma').style.display='none';
@@ -5744,7 +5754,7 @@ function renderMktAnalytics(el){
   h+='</tbody></table></div></div>';
 
   // Activity by team member (this month) — attribution (hidden from exec/analytics-only roles)
-  if(userRole!=='exec'){
+  if(!_isExec()){
   var byPerson={};
   monthActivities.forEach(function(a){var who=a.by||'Unattributed';if(!byPerson[who])byPerson[who]={total:0,calls:0,visits:0,meetings:0};byPerson[who].total++;if(a.type==='Phone Call')byPerson[who].calls++;if(a.type==='Office Visit/Drop-off'||a.type==='Lunch/Dinner')byPerson[who].visits++;if(a.type==='In-Person Meeting'||a.type==='Presentation')byPerson[who].meetings++;});
   var people=Object.keys(byPerson).sort(function(a,b){return byPerson[b].total-byPerson[a].total});
@@ -5814,6 +5824,7 @@ function saveCustomAlert(){
   showCrmDetail(addAlertRefId);
 }
 function completeCustomAlert(refId,alertId){
+  if(_isExecRO()){showReadOnly();return;}
   var r=refs.find(function(x){return x.id===refId});
   if(!r||!r.customAlerts)return;
   var a=r.customAlerts.find(function(x){return x.id===alertId});
