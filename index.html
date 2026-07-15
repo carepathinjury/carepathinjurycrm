@@ -5456,7 +5456,7 @@ function deleteMkt(){
 // ══════════════════════════════════════════════════════════════════════
 // MARKETING CONTACTS
 // ══════════════════════════════════════════════════════════════════════
-let editingMcId=null, mcTypeFilter='all', mcSortBy='org';
+let editingMcId=null, mcTypeFilter='all', mcSortBy='org', mcOfficeFilter=[];
 
 function downloadMktContactsCSV(){
   if(!mktContacts.length){alert('No contacts to export yet.');return;}
@@ -5535,10 +5535,23 @@ function isNurtureCandidate(c){return !contactHasActiveInitiative(c)||nurtureDay
 function nurtureDue(c){return nurtureDaysSince(c)>=60;}
 function contactLocation(c){var p=[c.city,c.state].filter(Boolean).join(', ');return p||(c.zip||'');}
 
+function contactOffices(c){
+  if(!c||!c.initiativeId)return [];
+  var m=mktList.find(function(x){return x.id===c.initiativeId});
+  return (m&&m.targetLocations)||[];
+}
+function toggleMcOffice(loc){
+  var i=mcOfficeFilter.indexOf(loc);
+  if(i===-1)mcOfficeFilter.push(loc); else mcOfficeFilter.splice(i,1);
+  renderMktContacts(document.getElementById('sec-mkt-contacts'));
+}
+function clearMcOffices(){mcOfficeFilter=[];renderMktContacts(document.getElementById('sec-mkt-contacts'));}
+
 function renderMktContacts(el){
   const search=(document.getElementById('mcSearchInput')?.value||'').toLowerCase();
   let list=mktContacts.slice();
   if(mcTypeFilter!=='all') list=list.filter(c=>c.type===mcTypeFilter);
+  if(mcOfficeFilter.length) list=list.filter(function(c){return contactOffices(c).some(function(l){return mcOfficeFilter.indexOf(l)!==-1})});
   if(search) list=list.filter(c=>(c.name||'').toLowerCase().includes(search)||(c.org||'').toLowerCase().includes(search)||(c.email||'').toLowerCase().includes(search)||(c.phone||'').toLowerCase().includes(search)||(c.notes||'').toLowerCase().includes(search));
   var _sc={
     org:function(a,b){return (a.org||a.name||'').localeCompare(b.org||b.name||'')},
@@ -5551,11 +5564,25 @@ function renderMktContacts(el){
   const types={};mktContacts.forEach(c=>{types[c.type]=(types[c.type]||0)+1});
 
   let h='<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">Marketing Contacts</div><div style="margin-left:auto;display:flex;gap:8px"><button class="btn-cancel" onclick="downloadMktContactsCSV()" style="font-size:11px;padding:7px 14px">&#8681; Download CSV</button><button class="btn-primary" onclick="openNewMktContact()" style="font-size:11px;padding:7px 14px">+ Add Contact</button></div></div>';
-  h+='<div class="page-subtitle">'+mktContacts.length+' contacts — law firms, physicians, urgent care centers, and more.</div>';
+  h+='<div class="page-subtitle">'+(list.length===mktContacts.length?(mktContacts.length+' contacts'):(list.length+' of '+mktContacts.length+' contacts'))+' — law firms, physicians, urgent care centers, and more.</div>';
 
   h+='<div class="stats-row" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))">';
   h+=stat('Total',mktContacts.length,'teal');
   ['Law Firm','Primary Care','Urgent Care','Specialist','Insurance','Community Org'].forEach(t=>{if(types[t])h+=stat(t,types[t],'');});
+  h+='</div>';
+
+  var officeCounts={};
+  mktContacts.forEach(function(c){contactOffices(c).forEach(function(l){officeCounts[l]=(officeCounts[l]||0)+1});});
+  var unlinked=mktContacts.filter(function(c){return contactOffices(c).length===0}).length;
+  h+='<div class="table-card" style="padding:10px 14px;margin-bottom:10px"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">';
+  h+='<span style="font-size:11px;font-weight:700;color:var(--gray-500);margin-right:2px">Filter by office:</span>';
+  h+='<button class="filter-btn '+(mcOfficeFilter.length===0?'active':'')+'" onclick="clearMcOffices()">All Offices</button>';
+  LOCATIONS.forEach(function(l){
+    var on=mcOfficeFilter.indexOf(l)!==-1;
+    h+='<button class="filter-btn '+(on?'active':'')+'" onclick="toggleMcOffice(\''+l+'\')">'+(on?'\u2713 ':'')+esc(l)+' ('+(officeCounts[l]||0)+')</button>';
+  });
+  h+='</div>';
+  h+='<div style="font-size:10px;color:var(--gray-400);margin-top:7px">'+(mcOfficeFilter.length?('Showing contacts linked to any of '+mcOfficeFilter.length+' selected office'+(mcOfficeFilter.length===1?'':'s')+'. Click a selected office to remove it.'):('Select one or more offices to narrow the list. Offices come from the Target Locations on each contact\u2019s initiative'+(unlinked?(' \u2014 '+unlinked+' contact'+(unlinked===1?' has':'s have')+' no linked initiative, so they only appear under \u201cAll Offices\u201d'):'')+'.'))+'</div>';
   h+='</div>';
 
   h+='<div class="table-card"><div class="table-header"><h3>Contact Directory</h3><div class="table-controls">' +
