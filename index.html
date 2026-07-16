@@ -1175,21 +1175,91 @@ async function _dbFetchAll(table){
   }catch(e){console.error('Fetch error:',table,e);return [];}
 }
 
+// ─── DURABLE WRITE QUEUE — a failed save is NEVER silently lost ───
+var _PENDING_KEY='cp_pending_writes_v1';
+function _pendingLoad(){try{return JSON.parse(localStorage.getItem(_PENDING_KEY)||'[]')}catch(e){return []}}
+function _pendingSave(q){try{localStorage.setItem(_PENDING_KEY,JSON.stringify(q))}catch(e){console.error('Could not persist pending queue',e)}}
+function _pendingAdd(op,table,id,payload){
+  var q=_pendingLoad();
+  q=q.filter(function(x){return !(x.table===table&&x.id===id&&x.op===op)});
+  q.push({op:op,table:table,id:id,payload:payload,at:new Date().toISOString(),by:(typeof currentUser!=='undefined'&&currentUser)||''});
+  _pendingSave(q);_pendingBanner();
+  console.error('QUEUED UNSAVED WRITE:',op,table,id);
+}
+function _pendingBanner(){
+  var q=_pendingLoad();var el=document.getElementById('pendingBanner');
+  if(!q.length){if(el&&el.parentNode)el.parentNode.removeChild(el);return;}
+  if(!el){el=document.createElement('div');el.id='pendingBanner';
+    el.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:#c0392b;color:#fff;font-family:DM Sans,sans-serif;font-size:12px;font-weight:700;padding:9px 14px;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,0.25)';
+    document.body.appendChild(el);}
+  var btn='style="background:#fff;color:#c0392b;border:none;border-radius:5px;padding:4px 10px;font-weight:700;font-size:11px;cursor:pointer;font-family:inherit"';
+  el.innerHTML='\u26A0 '+q.length+' record'+(q.length===1?'':'s')+' NOT saved to the database yet \u2014 do not close this tab. '+
+    '<button '+btn+' onclick="_pendingRetry(true)">Retry now</button>'+
+    '<button '+btn+' onclick="_pendingDownload()">Download backup</button>';
+}
+async function _pendingRetry(manual){
+  var q=_pendingLoad(); if(!q.length){if(manual)alert('Nothing pending \u2014 everything is saved.');return;}
+  var remaining=[];
+  for(var i=0;i<q.length;i++){
+    var it=q[i];
+    try{
+      var url=SUPABASE_URL+'/rest/v1/'+it.table, opts;
+      if(it.op==='patch'){
+        url+='?id=eq.'+encodeURIComponent(it.id);
+        opts={method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(it.payload)};
+      } else {
+        opts={method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(it.payload)};
+      }
+      var resp=await fetch(url,opts);
+      if(resp.ok||resp.status===201||resp.status===204){continue;}
+      var t=await resp.text();
+      var m=t.match(/Could not find the '(\w+)' column/i)||t.match(/column "?(\w+)"? (?:of relation|does not exist)/i);
+      if(m&&Object.prototype.hasOwnProperty.call(it.payload,m[1])){delete it.payload[m[1]];i--;continue;}
+      console.error('Retry still failing:',it.table,it.id,resp.status,t);
+      remaining.push(it);
+    }catch(e){remaining.push(it);}
+  }
+  _pendingSave(remaining);_pendingBanner();
+  if(remaining.length===0){showSaveSuccess();if(manual)alert('All pending records saved successfully.');}
+  else if(manual)alert(remaining.length+' record(s) still could not save. Click "Download backup" so nothing is lost.');
+}
+function _pendingDownload(){
+  var q=_pendingLoad();
+  if(!q.length){alert('Nothing pending.');return;}
+  var blob=new Blob([JSON.stringify(q,null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='carepath-unsaved-records-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+
 function _dbInsert(table, row){
   if(_roBlocked(table))return;
+  _dbInsertTry(table,row,0);
+}
+function _dbInsertTry(table, row, attempt){
   _lastLocalSave=Date.now();
   fetch(SUPABASE_URL+'/rest/v1/'+table, {
     method:'POST',
-    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
     body:JSON.stringify(row)
   }).then(function(resp){
-    if(resp.ok||resp.status===201||resp.status===204) showSaveSuccess();
-    else showSaveError();
-  }).catch(function(e){showSaveError()});
+    if(resp.ok||resp.status===201||resp.status===204){showSaveSuccess();return;}
+    resp.text().then(function(t){
+      var m=t.match(/Could not find the '(\w+)' column/i)||t.match(/column "?(\w+)"? (?:of relation|does not exist)/i);
+      var col=m?m[1]:null;
+      if(col&&Object.prototype.hasOwnProperty.call(row,col)&&attempt<10){
+        console.warn('Column "'+col+'" missing on '+table+' \u2014 saving without it.');
+        delete row[col];_dbInsertTry(table,row,attempt+1);return;
+      }
+      console.error('INSERT FAILED:',table,resp.status,t);
+      _pendingAdd('insert',table,row.id,row);showSaveError();
+    }).catch(function(){_pendingAdd('insert',table,row.id,row);showSaveError();});
+  }).catch(function(e){console.error('Insert error:',table,e);_pendingAdd('insert',table,row.id,row);showSaveError();});
 }
 
 function _dbUpdate(table, row){
   if(_roBlocked(table))return;
+  var _updRow=row;
   _lastLocalSave=Date.now();
   var id=row.id||row.key;
   var idCol=(table==='system_config')?'key':'id';
@@ -1223,9 +1293,9 @@ function _dbPatchTry(table, id, fields, attempt){
         console.warn('Column "'+col+'" missing on '+table+' — patching without it. Run the cases schema migration to persist this field.');
         delete fields[col];
         _dbPatchTry(table,id,fields,attempt+1);
-      } else {console.error('Patch failed:',table,resp.status,t);showSaveError();}
+      } else {console.error('Patch failed:',table,resp.status,t);_pendingAdd('patch',table,id,fields);showSaveError();}
     });
-  }).catch(function(e){console.error('Patch error:',table,e);showSaveError();});
+  }).catch(function(e){console.error('Patch error:',table,e);_pendingAdd('patch',table,id,fields);showSaveError();});
 }
 
 function _dbUpsert(table, row){ if(_roBlocked(table))return; _dbUpsertTry(table, row, 0); }
@@ -1247,10 +1317,11 @@ function _dbUpsertTry(table, row, attempt){
         _dbUpsertTry(table, row, attempt+1);
       } else {
         console.error('Upsert failed:',table,resp.status,t);
+        _pendingAdd('insert',table,row.id,row);
         showSaveError();
       }
     });
-  }).catch(function(e){console.error('Upsert error:',table,e);showSaveError();});
+  }).catch(function(e){console.error('Upsert error:',table,e);_pendingAdd('insert',table,row.id,row);showSaveError();});
 }
 
 function _dbDelete(table, id){
@@ -1317,6 +1388,7 @@ async function _loadFromSupabase(){
       });
       if(r[9]){crmMetrics={};cmMetrics={};psrMetrics={};r[9].forEach(function(m){var k=m.staff+'_'+m.date;var d={staff:m.staff,date:m.date,phoneCalls:m.phone_calls||0,emailsSent:m.emails_sent||0,faxesSent:m.faxes_sent||0};if(m.module==='crm')crmMetrics[k]=d;else if(m.module==='cm')cmMetrics[k]=d;else if(m.module==='psr'){var psrD={staff:m.staff,date:m.date};if(m.data&&typeof m.data==='object'){for(var pk in m.data)psrD[pk]=m.data[pk];}psrMetrics[k]=psrD;}});}
       console.log('✅ Loaded refs:'+refs.length+' cases:'+cases.length+' contacts:'+contacts.length);
+      try{_pendingBanner();_pendingRetry(false);}catch(e){console.error('pending retry failed',e);}
       console.log('📌 CODE VERSION: 2026-05-12-v3');
     } else {
       // Fallback to old app_data
@@ -1466,6 +1538,7 @@ function _markModified(id){
 
 async function _pollSupabase(){
   if(!_supabaseReady||!currentUser||!_useNewTables)return;
+  try{if(_pendingLoad().length)await _pendingRetry(false);}catch(e){}
   if(Date.now()-_lastLocalSave<5000)return;
   try{
     var changed=false;
