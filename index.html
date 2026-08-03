@@ -119,13 +119,13 @@
   /* ── MODAL ─── */
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,34,64,0.55);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
   .modal-overlay.show{display:flex}
-  .modal{background:white;border-radius:var(--radius-lg);width:700px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:modalIn 0.25s ease}
+  .modal{background:white;border-radius:var(--radius-lg);width:700px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--shadow-lg);animation:modalIn 0.25s ease}
   @keyframes modalIn{from{opacity:0;transform:translateY(20px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
   .modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--gray-200)}
   .modal-header h2{font-family:"DM Serif Display",serif;font-size:18px;color:var(--navy)}
   .modal-close{width:32px;height:32px;border:none;background:var(--gray-100);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--gray-600);transition:all 0.2s}
   .modal-close:hover{background:var(--red-light);color:white}
-  .modal-body{padding:22px 24px}
+  .modal-body{padding:22px 24px;overflow-y:auto;flex:1 1 auto}
   .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .form-group{display:flex;flex-direction:column}
   .form-group.full{grid-column:1/-1}
@@ -449,7 +449,6 @@
     <div class="nav-item" data-page="mkt-followup" onclick="mktNav('mkt-followup')"><div class="nav-icon">📅</div> Needs Follow-Up <span class="nav-badge gold" id="mktFollowUpBadge" style="display:none">0</span></div>
     <div class="nav-item" data-page="mkt-correlation" onclick="mktNav('mkt-correlation')"><div class="nav-icon">🔗</div> Referral Impact</div>
     <div class="nav-item" data-page="mkt-contacts" onclick="mktNav('mkt-contacts')"><div class="nav-icon">📇</div> Contacts</div>
-    <div class="nav-item" data-page="mkt-nurture" onclick="mktNav('mkt-nurture')"><div class="nav-icon">🌱</div> Nurture <span class="nav-badge gold" id="mktNurtureBadge" style="display:none">0</span></div>
     <div class="nav-item" data-page="mkt-analytics" onclick="mktNav('mkt-analytics')"><div class="nav-icon">📊</div> Analytics</div>
   </div>
   <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential</p></div>
@@ -460,7 +459,6 @@
   <div class="section" id="sec-mkt-followup"></div>
   <div class="section" id="sec-mkt-correlation"></div>
   <div class="section" id="sec-mkt-contacts"></div>
-  <div class="section" id="sec-mkt-nurture"></div>
   <div class="section" id="sec-mkt-analytics"></div>
 </div>
 </div>
@@ -835,19 +833,6 @@
 </div>
 
 <!-- Marketing Activity Modal -->
-<div class="modal-overlay" id="nurtureModal">
-  <div class="modal" style="width:460px">
-    <div class="modal-header"><h2>Log Check-In</h2><button class="modal-close" onclick="closeNurtureModal()">&times;</button></div>
-    <div class="modal-body">
-      <div id="nurtureWho" style="font-size:12px;font-weight:600;color:var(--navy);margin-bottom:12px"></div>
-      <div class="form-grid">
-      <div class="form-group"><label>Method</label><select id="nurtureMethod"><option>Email</option><option>Call</option></select></div>
-      <div class="form-group"><label>Date Sent</label><input type="date" id="nurtureDate"></div>
-      <div class="form-group full"><label>Notes</label><textarea id="nurtureNote" rows="3" placeholder="What was covered in the check-in..."></textarea></div>
-    </div></div>
-    <div class="modal-footer"><button class="btn-cancel" onclick="closeNurtureModal()">Cancel</button><button class="btn-save" onclick="saveNurture()">Log Check-In</button></div>
-  </div>
-</div>
 <div class="modal-overlay" id="mktActivityModal">
   <div class="modal" style="width:500px">
     <div class="modal-header"><h2>Log Activity</h2><button class="modal-close" onclick="closeMktActivityModal()">&times;</button></div>
@@ -4924,7 +4909,6 @@ function renderMktPage(page){
   else if(page==='mkt-followup')renderMktFollowUp(el);
   else if(page==='mkt-correlation')renderMktCorrelation(el);
   else if(page==='mkt-contacts')renderMktContacts(el);
-  else if(page==='mkt-nurture')renderMktNurture(el);
   else if(page==='mkt-analytics')renderMktAnalytics(el);
 }
 
@@ -4951,24 +4935,10 @@ let mktStageFilter='all';
 function renderMktPipeline(el){
   const activeRels=mktList.filter(m=>m.stage==='Active Relationship').length;
   const thisMonth=today().substring(0,7);const thisMonthNew=mktList.filter(m=>(m.dateInitiated||'').startsWith(thisMonth)).length;
-  const followUpAlerts=mktAlerts();
 
   let h='<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">Marketing</div><div style="margin-left:auto"><button class="btn-primary" onclick="openNewMktModal()" style="font-size:11px;padding:7px 14px">+ New Initiative</button></div></div><div class="page-subtitle">Track leads, relationships, and referral impact.</div>';
-  h+='<div class="stats-row" style="grid-template-columns:repeat(5,1fr)">'+stat('Total',mktList.length,'teal')+stat('Active Relationships',activeRels,'gold')+stat('New This Month',thisMonthNew,'')+stat('Prospects',mktList.filter(m=>m.stage==='Prospect').length,'')+stat('Follow-Up Alerts',followUpAlerts.length,followUpAlerts.length>0?'red':'')+'</div>';
+  h+='<div class="stats-row" style="grid-template-columns:repeat(5,1fr)">'+stat('Total',mktList.length,'teal')+stat('Active Relationships',activeRels,'gold')+stat('New This Month',thisMonthNew,'')+stat('Prospects',mktList.filter(m=>m.stage==='Prospect').length,'')+stat('Follow-Up Alerts',mktAlerts().length,mktAlerts().length>0?'red':'')+'</div>';
 
-  // Follow-up alerts
-  try{
-  if(followUpAlerts.length>0){
-    h+='<div style="margin-bottom:16px">';
-    followUpAlerts.forEach((a,i)=>{
-      var sevClass=a.severity==='red'?'red-alert':'gold-alert';
-      var sevIcon=a.severity==='red'?'red':'gold';
-      var actions=a.id?('<button class="btn-resolve" onclick="showMktDetail(\''+a.id+'\')">View</button><button class="btn-resolve" style="background:rgba(200,151,58,0.12);color:var(--gold);border-color:rgba(200,151,58,0.3)" onclick="openEditMktModal(\''+a.id+'\')">Update</button>'):'';
-      h+='<div class="alert-card '+sevClass+'" style="animation-delay:'+(i*0.05)+'s;transform:translateY(10px)"><div class="alert-icon '+sevIcon+'">📅</div><div class="alert-body"><div class="alert-title">'+esc(a.title||'Alert')+'</div><div class="alert-desc"><strong>'+esc(a.name)+'</strong> — '+esc(a.message||'')+'</div></div><div class="alert-action">'+actions+'</div></div>';
-    });
-    h+='</div>';
-  }
-  }catch(e){console.error('pipeline alerts error:',e);}
 
   // Filter and search
   const search=(document.getElementById('mktSearchInput')?.value||'').toLowerCase();
@@ -5012,7 +4982,12 @@ function renderMktPipeline(el){
 // Marketing initiative detail with activity log
 function showMktDetail(id){
   const m=mktList.find(x=>x.id===id);if(!m)return;
-  const el=document.getElementById('sec-mkt-pipeline');
+  // make the pipeline section active so the detail is actually visible from any page
+  mktCurrentPage='mkt-pipeline';
+  document.querySelectorAll('#module-mkt .section').forEach(function(x){x.classList.remove('active')});
+  document.querySelectorAll('#mktSidebar .nav-item').forEach(function(n){n.classList.remove('active')});
+  var _nav=document.querySelector('#mktSidebar .nav-item[data-page="mkt-pipeline"]');if(_nav)_nav.classList.add('active');
+  const el=document.getElementById('sec-mkt-pipeline');if(el)el.classList.add('active');
   const refCount=refs.filter(r=>(r.referralSource||'').toLowerCase()===m.name.toLowerCase()||(r.lawFirm||'').toLowerCase()===m.name.toLowerCase()).length;
   const roi=mktRoi(m);
   const sc='stage-'+(m.stage||'').toLowerCase().replace(/\s+/g,'-').replace('active-relationship','active').replace('meeting-scheduled','meeting');
@@ -5209,11 +5184,10 @@ function mktAlerts(){
       }
     }
     
-    // 3. Stale account — no activity in 14 days (active) or 30 days (others)
+        // 3. No activity in 60+ days -> check in with the source
     else{
-      var staleThreshold=(m.stage==='Active Relationship')?14:30;
-      if(daysSinceAct>=staleThreshold){
-        alerts.push({type:'stale',name:m.name,id:m.id,severity:daysSinceAct>=45?'red':'gold',title:'Stale Account — '+daysSinceAct+' Days Since Activity',message:'Last activity: '+fmtDate(lastAct)+'. '+(m.stage==='Active Relationship'?'Active relationships need contact every 2 weeks.':'Re-engage this account to maintain the relationship.')});
+      if(daysSinceAct>=60){
+        alerts.push({type:'stale',name:m.name,id:m.id,severity:daysSinceAct>=90?'red':'gold',title:'Check In — '+daysSinceAct+' Days No Activity',message:'No contact or activity logged for this source in '+daysSinceAct+' days. Reach out to check in.'});
       }
     }
     
@@ -5230,14 +5204,6 @@ function mktAlerts(){
     }catch(e){console.error('mktAlerts: skipped an initiative due to bad data',m&&m.id,e);}
   });
 
-  // 7. Nurture check-ins — contacts due for a 60-day general touch
-  (mktContacts||[]).forEach(function(c){
-    try{
-      if(!nurtureDue(c))return;
-      var days=nurtureDaysSince(c);var lt=contactLastTouch(c);
-      alerts.push({type:'nurture',contactId:c.id,id:null,name:c.name+(c.org?' \u2014 '+c.org:''),severity:days>=90?'red':'gold',title:'Nurture Check-In Due',message:(lt?('No contact in '+days+' days. '):'No logged contact yet. ')+'Send a general check-in/check-up email or call.'});
-    }catch(e){}
-  });
   
   // 5. Weekly activity target
   var weekStart=getWeekDates(0)[0];
@@ -5286,9 +5252,6 @@ function updateMktBadges(){
   var fu=mktList.filter(function(m){return m.stage!=='Inactive'&&m.nextFollowUp&&daysBtw(m.nextFollowUp,now)>=0;}).length;
   var fb=document.getElementById('mktFollowUpBadge');
   if(fb){fb.textContent=fu;fb.style.display=fu>0?'inline':'none';}
-  var nd=(mktContacts||[]).filter(function(c){return nurtureDue(c)}).length;
-  var nb=document.getElementById('mktNurtureBadge');
-  if(nb){nb.textContent=nd;nb.style.display=nd>0?'inline':'none';}
 }
 
 var mktAlertFilter='all';
@@ -5297,13 +5260,12 @@ function mktAlertCat(type){
   if(type==='no_touch')return 'First Touch';
   if(type==='stale')return 'Stale';
   if(type==='decline')return 'Decline';
-  if(type==='nurture')return 'Nurture';
   return 'KPI';
 }
 function renderMktAlerts(el){
  try{
   var all=mktAlerts();
-  var cats=['Follow-Up','First Touch','Stale','Decline','Nurture','KPI'];
+  var cats=['Follow-Up','First Touch','Stale','Decline','KPI'];
   var counts={};cats.forEach(function(c){counts[c]=0;});
   all.forEach(function(a){var c=mktAlertCat(a.type);counts[c]=(counts[c]||0)+1;});
   var alerts=(mktAlertFilter==='all')?all:all.filter(function(a){return mktAlertCat(a.type)===mktAlertFilter;});
@@ -5349,10 +5311,7 @@ function renderMktAlertCard(a){
   h+='<div style="flex:1;min-width:180px"><div style="font-weight:700;color:var(--navy)">'+esc(a.name)+'</div>';
   h+='<div style="font-size:11px;color:var(--gray-500);margin-top:2px">'+esc(a.message||'')+'</div></div>';
   h+='<div style="display:flex;gap:6px;flex-wrap:wrap">';
-  if(a.type==='nurture'){
-    h+='<button class="btn-resolve" onclick="openEditMktContact(\''+a.contactId+'\')">View</button>';
-    h+='<button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="openNurtureResolve(\''+a.contactId+'\')">\u2713 Log Check-In</button>';
-  } else if(a.id){
+  if(a.id){
     h+='<button class="btn-resolve" onclick="showMktDetail(\''+a.id+'\')">View</button>';
     h+='<button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="addMktActivity(\''+a.id+'\')">✓ Log Activity</button>';
   } else {
@@ -5555,45 +5514,6 @@ function downloadMktContactsCSV(){
   downloadCSV('carepath-marketing-contacts-'+today()+'.csv',headers,rows);
 }
 
-function renderMktNurture(el){
-  var candidates=mktContacts.filter(isNurtureCandidate);
-  candidates.sort(function(a,b){return nurtureDaysSince(b)-nurtureDaysSince(a)});
-  var due=candidates.filter(function(c){return nurtureDaysSince(c)>=60});
-  var soon=candidates.filter(function(c){var d=nurtureDaysSince(c);return d>=30&&d<60});
-  var recent=candidates.filter(function(c){return nurtureDaysSince(c)<30});
-  var h='<div class="page-title">Regular Nurture Follow-Up</div><div class="page-subtitle">Contacts with no active initiative, or not contacted in 60+ days. '+due.length+' due now &middot; check in every 60 days.</div>';
-  function sec(title,color,list,empty){
-    var out='<div class="table-card"><div class="table-header"><h3 style="color:'+color+'">'+title+' ('+list.length+')</h3></div>';
-    if(list.length===0){out+='<div style="padding:14px 18px;color:var(--gray-400);font-size:12px">'+empty+'</div></div>';return out;}
-    out+='<div class="table-scroll"><table class="tbl" style="min-width:760px"><thead><tr><th>Contact</th><th>Organization</th><th>Type</th><th>Location</th><th>Last Contact</th><th>Days</th><th></th></tr></thead><tbody>';
-    list.forEach(function(c){
-      var days=nurtureDaysSince(c);var lt=contactLastTouch(c);
-      var dcol=days>=90?'var(--red)':days>=60?'var(--gold)':'var(--gray-500)';
-      out+='<tr><td style="font-weight:600;color:var(--navy);cursor:pointer" onclick="openEditMktContact(\''+c.id+'\')">'+esc(c.name)+'</td><td style="font-size:11px">'+esc(c.org||'\u2014')+'</td><td style="font-size:11px">'+esc(c.type||'\u2014')+'</td><td style="font-size:11px">'+esc(contactLocation(c)||'\u2014')+'</td><td style="font-size:11px">'+(lt?fmtDate(lt):'never')+'</td><td style="font-size:11px;font-weight:700;color:'+dcol+'">'+(days>=999?'\u2014':days+'d')+'</td><td style="white-space:nowrap"><button class="btn-resolve" onclick="openEditMktContact(\''+c.id+'\')">View</button> <button class="btn-resolve" style="background:rgba(26,127,122,0.08);color:var(--teal);border-color:rgba(26,127,122,0.2)" onclick="openNurtureResolve(\''+c.id+'\')">\u2713 Log Check-In</button></td></tr>';
-    });
-    out+='</tbody></table></div></div>';return out;
-  }
-  if(candidates.length===0){h+='<div class="table-card" style="padding:30px;text-align:center;color:var(--gray-400)">No nurture contacts yet. Contacts without an active initiative will appear here for periodic check-ins.</div>';}
-  else{
-    h+=sec('\u26A0\uFE0F Due Now (60+ days)','var(--red)',due,'Nobody is due right now \u2014 nice work.');
-    h+=sec('\uD83D\uDCC5 Coming Up (30\u201359 days)','var(--gold)',soon,'Nothing coming up in this window.');
-    h+=sec('\u2713 Recently Contacted (under 30 days)','var(--teal)',recent,'\u2014');
-  }
-  el.innerHTML=h;
-}
-var nurtureContactId=null;
-function openNurtureResolve(id){nurtureContactId=id;document.getElementById('nurtureMethod').value='Email';document.getElementById('nurtureDate').value=today();document.getElementById('nurtureNote').value='';var c=mktContacts.find(function(x){return x.id===id});var lbl=document.getElementById('nurtureWho');if(lbl)lbl.textContent=c?(c.name+(c.org?' \u00B7 '+c.org:'')):'';document.getElementById('nurtureModal').classList.add('show');}
-function closeNurtureModal(){document.getElementById('nurtureModal').classList.remove('show');nurtureContactId=null;}
-function saveNurture(){
-  var id=nurtureContactId;var c=mktContacts.find(function(x){return x.id===id});if(!c)return;
-  var method=document.getElementById('nurtureMethod').value;
-  var date=document.getElementById('nurtureDate').value||today();
-  var note=document.getElementById('nurtureNote').value.trim();
-  if(!c.nurtureLog)c.nurtureLog=[];
-  c.nurtureLog.push({date:date,method:method,note:note,by:currentUser||''});
-  c.lastContactDate=date;
-  saveMktContacts();closeNurtureModal();updateMktBadges();renderMktPage(mktCurrentPage);
-}
 
 function parseCityStateZip(addr){
   var out={city:'',state:'',zip:''};
@@ -5607,32 +5527,29 @@ function parseCityStateZip(addr){
   }
   return out;
 }
-function contactHasActiveInitiative(c){
-  if(!c.initiativeId)return false;
-  var init=mktList.find(function(m){return m.id===c.initiativeId});
-  return !!(init&&init.stage!=='Inactive');
-}
-function contactLastTouch(c){
-  var d=c.lastContactDate||'';
-  if(c.initiativeId){var init=mktList.find(function(m){return m.id===c.initiativeId});if(init&&init.lastActivityDate&&init.lastActivityDate>d)d=init.lastActivityDate;}
-  return d||c.createdDate||'';
-}
-function nurtureDaysSince(c){var t=contactLastTouch(c);return t?daysBtw(t,today()):999;}
-function isNurtureCandidate(c){return !contactHasActiveInitiative(c)||nurtureDaysSince(c)>60;}
-function nurtureDue(c){return nurtureDaysSince(c)>=60;}
-function contactLocation(c){var p=[c.city,c.state].filter(Boolean).join(', ');return p||(c.zip||'');}
-
-function contactOffices(c){
-  if(!c||!c.initiativeId)return [];
-  var m=mktList.find(function(x){return x.id===c.initiativeId});
-  return (m&&m.targetLocations)||[];
-}
 function toggleMcOffice(loc){
   var i=mcOfficeFilter.indexOf(loc);
   if(i===-1)mcOfficeFilter.push(loc); else mcOfficeFilter.splice(i,1);
   renderMktContacts(document.getElementById('sec-mkt-contacts'));
 }
 function clearMcOffices(){mcOfficeFilter=[];renderMktContacts(document.getElementById('sec-mkt-contacts'));}
+
+function contactOffices(c){
+  if(!c||!c.initiativeId)return [];
+  var m=mktList.find(function(x){return x.id===c.initiativeId});
+  return (m&&m.targetLocations)||[];
+}
+function officeCityState(name){
+  var o=(typeof OF_OFFICES!=='undefined')&&OF_OFFICES.find(function(x){return x.name===name});
+  if(!o||!o.address)return name;
+  var m=String(o.address).match(/,\s*([A-Za-z .'\-]+),\s*([A-Za-z]{2})\b/);
+  return m?(m[1].trim()+', '+m[2].toUpperCase()):name;
+}
+function contactLocation(c){
+  var offs=contactOffices(c);
+  if(offs&&offs.length) return offs.map(officeCityState).join(' \u00b7 ');
+  var p=[c.city,c.state].filter(Boolean).join(", ");return p||(c.zip||"");
+}
 
 function renderMktContacts(el){
   const search=(document.getElementById('mcSearchInput')?.value||'').toLowerCase();
