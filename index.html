@@ -5326,7 +5326,7 @@ function renderMktAlertCard(a){
 }
 
 // ═══════════════ MARKETING WEEKLY/MONTHLY/QUARTERLY SNAPSHOT ═══════════════
-var mktReports=[], mktReportsLoaded=false, mktReportPeriod='weekly', mktReportDraft=null;
+var mktReports=[], mktReportsLoaded=false, mktReportPeriod='weekly', mktReportDraft=null, mktReportAnchor=null;
 var MKT_REPORT_RAMP=[
   {label:'Field touches (Phone Calls - Connected)', m:['10','10-20','10-20','15-30','15-45','15-45']},
   {label:'Field touches (drop-offs / visits)',      m:['5','10','10','10-15','10-15','10-15']},
@@ -5334,6 +5334,11 @@ var MKT_REPORT_RAMP=[
   {label:'Net-new CRM contacts added',              m:['100-150','50','40-50','40-50','40-50','30-50']},
   {label:'Follow-up touches (phone + email)',       m:['\u2014','20','20','30','30','30']}
 ];
+function mktWeekStartOf(dateStr){
+  var d=new Date(dateStr+'T12:00:00'); var dow=d.getDay();
+  d.setDate(d.getDate()-(dow===0?6:dow-1));
+  return d.toISOString().split('T')[0];
+}
 function mktReportRecipients(pt){
   var w=['kvoelker@carepathinjury.com','mlewis@carepathinjury.com'];
   if(pt==='weekly')return w;
@@ -5341,11 +5346,11 @@ function mktReportRecipients(pt){
   return w.concat(['qu@carepathinjury.com','ghuh@carepathinjury.com']);
 }
 function mktReportKey(pt){
-  var now=today();
-  if(pt==='weekly')return getWeekDates(0)[0];
-  if(pt==='monthly')return now.substring(0,7);
-  var q=Math.floor(new Date().getMonth()/3)+1;
-  return now.substring(0,4)+'-Q'+q;
+  var a=mktReportAnchor||today();
+  if(pt==='weekly')return mktReportAnchor?mktWeekStartOf(a):getWeekDates(0)[0];
+  if(pt==='monthly')return a.substring(0,7);
+  var q=Math.floor(new Date(a+'T12:00:00').getMonth()/3)+1;
+  return a.substring(0,4)+'-Q'+q;
 }
 function mktReportPeriodLabel(pt){
   var k=mktReportKey(pt);
@@ -5356,18 +5361,22 @@ function mktReportPeriodLabel(pt){
 function mktRampIndex(){
   var start=null;(mktList||[]).forEach(function(m){if(m.dateInitiated&&(!start||m.dateInitiated<start))start=m.dateInitiated;});
   if(!start)return 0;
-  var s=new Date(start),n=new Date();
-  var mo=(n.getFullYear()-s.getFullYear())*12+(n.getMonth()-s.getMonth());
+  var sD=new Date(start),n=new Date((mktReportAnchor||today())+'T12:00:00');
+  var mo=(n.getFullYear()-sD.getFullYear())*12+(n.getMonth()-sD.getMonth());
   return Math.max(0,Math.min(5,mo));
 }
+function setMktReportAnchor(val){mktReportCollect();mktReportAnchor=val||null;mktReportDraft=null;renderMktReport(document.getElementById('sec-mkt-report'));}
+function clearMktReportAnchor(){setMktReportAnchor(null);}
 function mktReportMetrics(pt){
-  var now=today(), thisMonth=now.substring(0,7), weekStart=getWeekDates(0)[0], pStart;
-  if(pt==='weekly')pStart=weekStart;
-  else if(pt==='monthly')pStart=thisMonth+'-01';
-  else{var qm=Math.floor(new Date().getMonth()/3)*3;pStart=now.substring(0,4)+'-'+String(qm+1).padStart(2,'0')+'-01';}
-  function inR(d){return d&&d>=pStart&&d<=now;}
+  var now=today();
+  var anchored=!!mktReportAnchor, a=mktReportAnchor||now;
+  var pStart,pEnd,monthKey;
+  if(pt==='weekly'){pStart=anchored?mktWeekStartOf(a):getWeekDates(0)[0];var ws=new Date(pStart+'T12:00:00');ws.setDate(ws.getDate()+6);pEnd=anchored?ws.toISOString().split('T')[0]:now;monthKey=pStart.substring(0,7);}
+  else if(pt==='monthly'){monthKey=a.substring(0,7);pStart=monthKey+'-01';pEnd=anchored?monthKey+'-31':now;}
+  else{var d0=new Date(a+'T12:00:00');var qm=Math.floor(d0.getMonth()/3)*3;pStart=a.substring(0,4)+'-'+String(qm+1).padStart(2,'0')+'-01';var qe=new Date(d0.getFullYear(),qm+3,0);pEnd=anchored?qe.toISOString().split('T')[0]:now;monthKey=a.substring(0,7);}
+  function inR(d){return d&&d>=pStart&&d<=pEnd;}
   var pA=[],mA=[];
-  (mktList||[]).forEach(function(m){(m.activityLog||[]).forEach(function(a){if(inR(a.date))pA.push(a);if((a.date||'').startsWith(thisMonth))mA.push(a);});});
+  (mktList||[]).forEach(function(m){(m.activityLog||[]).forEach(function(a2){if(inR(a2.date))pA.push(a2);if((a2.date||'').startsWith(monthKey))mA.push(a2);});});
   function C(arr,f){return arr.filter(f).length;}
   var isCall=function(a){return a.type==='Phone Call';},
       isVisit=function(a){return a.type==='Office Visit/Drop-off'||a.type==='Lunch/Dinner';},
@@ -5379,7 +5388,7 @@ function mktReportMetrics(pt){
     visits:{p:C(pA,isVisit),m:C(mA,isVisit)},
     intro:{p:C(pA,isIntro),m:C(mA,isIntro)},
     inperson:{p:C(pA,isInPerson),m:C(mA,isInPerson)},
-    contacts:{p:(mktContacts||[]).filter(function(c){return inR(c.createdDate);}).length,m:(mktContacts||[]).filter(function(c){return (c.createdDate||'').startsWith(thisMonth);}).length},
+    contacts:{p:(mktContacts||[]).filter(function(c){return inR(c.createdDate);}).length,m:(mktContacts||[]).filter(function(c){return (c.createdDate||'').startsWith(monthKey);}).length},
     follow:{p:C(pA,isFollow),m:C(mA,isFollow)},
     autoPartnerEmail:C(mA,function(a){return a.type==='Email Campaign';})>0,
     autoNewsletter:C(mA,function(a){return (a.note||'').toLowerCase().indexOf('newsletter')!==-1;})>0
@@ -5429,7 +5438,7 @@ async function renderMktReport(el){
 
   // Header fields
   h+='<div class="table-card" style="padding:14px 18px"><div class="form-grid" style="grid-template-columns:repeat(3,minmax(0,1fr))">'
-    +'<div class="form-group"><label>Week of</label><input type="text" value="'+esc(mktReportPeriodLabel(pt))+'" readonly style="background:var(--gray-50,#f6f7f9)"></div>'
+    +'<div class="form-group"><label>'+(pt==='weekly'?'Week of (pick any date)':(pt==='monthly'?'Month (pick any date)':'Quarter (pick any date)'))+'</label><input type="date" id="mktRepAnchor" value="'+esc(mktReportAnchor||'')+'" onchange="setMktReportAnchor(this.value)"><div style="font-size:10px;color:var(--gray-400);margin-top:3px">'+esc(mktReportPeriodLabel(pt))+(mktReportAnchor?' &middot; <span style=\'color:var(--teal);cursor:pointer;font-weight:600\' onclick=\'clearMktReportAnchor()\'>back to current</span>':' (current)')+'</div></div>'
     +'<div class="form-group"><label>Prepared by</label><input type="text" id="mktRepPreparedBy" value="'+esc(d.preparedBy)+'"></div>'
     +'<div class="form-group"><label>Date sent</label><input type="date" id="mktRepDateSent" value="'+esc(d.dateSent)+'"></div>'
     +'</div></div>';
@@ -5477,6 +5486,7 @@ async function renderMktReport(el){
     +'<button class="btn-primary" style="font-size:12px" onclick="submitMktReport()">Save &amp; Mark Submitted</button>'
     +'<button class="btn-cancel" style="font-size:12px" onclick="saveMktReport(false)">Save Draft</button>'
     +'<button class="btn-cancel" style="font-size:12px" onclick="copyMktReport()">\u2398 Copy</button>'
+    +'<button class="btn-primary" style="font-size:12px;background:var(--teal)" onclick="sendMktReportNow()">\uD83D\uDCE4 Send Now</button>'
     +'<button class="btn-cancel" style="font-size:12px" onclick="emailMktReport()">\u2709 Open Email</button>'
     +'<button class="btn-cancel" style="font-size:12px" onclick="printMktReport()">\u2399 Print</button>'
     +'<span style="margin-left:auto;font-size:10px;color:var(--gray-400)">Emails to: '+esc(recips.join(', '))+'</span>'
@@ -5540,6 +5550,21 @@ function emailMktReport(){
   var body=mktReportPlainText();
   var href='mailto:'+encodeURIComponent(recips.join(','))+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);
   window.location.href=href;
+}
+var MKT_FN_URL='https://bzxynoloymdldykobybq.functions.supabase.co/send-mkt-report';
+async function sendMktReportNow(){
+  var row=await saveMktReport(true);
+  var pt=row.period_type, key=row.period_key, recips=(row.recipients||[]).join(', ');
+  if(!confirm('Send this '+pt+' snapshot ('+key+') now to:\n\n'+recips+'\n\nThis emails the report immediately.'))return;
+  try{
+    var resp=await fetch(MKT_FN_URL+'?type='+encodeURIComponent(pt)+'&key='+encodeURIComponent(key)+'&force=1',{
+      method:'POST', headers:{'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'}
+    });
+    var out={};try{out=await resp.json();}catch(e){}
+    if(resp.ok&&out.sent){alert('Sent to: '+(out.to||recips));renderMktReport(document.getElementById('sec-mkt-report'));}
+    else if(resp.ok){alert('Nothing was sent: '+(out.note||'no matching report')+'\n\nMake sure the report is saved for this period.');}
+    else{alert('Send failed (status '+resp.status+'). Check the Edge Function is deployed and its Resend secrets are set.');}
+  }catch(e){alert('Could not reach the send service: '+e.message+'\n\nUse Open Email as a fallback.');}
 }
 function printMktReport(){var w=window.open('','_blank');w.document.write('<pre style="font-family:ui-monospace,Menlo,monospace;font-size:12px;white-space:pre-wrap;padding:24px">'+esc(mktReportPlainText())+'</pre>');w.document.close();w.print();}
 
