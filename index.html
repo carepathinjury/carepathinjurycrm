@@ -1571,7 +1571,9 @@ async function _pollSupabase(){
     if(changed){
       try{updateAllBadges()}catch(e){}
       var modal=document.querySelector('.modal-overlay.show');
-      if(!modal){try{renderActiveModule()}catch(e){}}
+      var editingReport=(activeModule==='mkt'&&mktCurrentPage==='mkt-report');
+      if(editingReport){try{if(typeof mktReportCollect==='function')mktReportCollect();}catch(e){}}  // preserve in-progress typing, don't rebuild
+      if(!modal&&!editingReport){try{renderActiveModule()}catch(e){}}
     }
     // Poll callbacks separately (no field mapping needed)
     try{
@@ -5401,6 +5403,7 @@ function mktReportEnsureDraft(pt){
   if(mktReportDraft&&mktReportDraft._pt===pt&&mktReportDraft._key===key)return mktReportDraft;
   var ex=getMktReport(pt,key), d=(ex&&ex.data)?ex.data:{};
   var met=mktReportMetrics(pt);
+  try{var _st=localStorage.getItem(_mktDraftKey(pt,key));if(_st){var _sd=JSON.parse(_st);if(_sd&&_sd._pt===pt&&_sd._key===key){mktReportDraft=_sd;return mktReportDraft;}}}catch(e){}
   mktReportDraft={_pt:pt,_key:key,
     preparedBy: ex?ex.prepared_by:(currentUser||''),
     dateSent: (ex&&ex.date_sent)||today(),
@@ -5412,6 +5415,8 @@ function mktReportEnsureDraft(pt){
     status: ex?ex.status:'draft'};
   return mktReportDraft;
 }
+function _mktDraftKey(pt,key){return 'cp_mkt_draft_'+pt+'_'+key;}
+function _mktDraftStash(){try{if(mktReportDraft)localStorage.setItem(_mktDraftKey(mktReportDraft._pt,mktReportDraft._key),JSON.stringify(mktReportDraft));}catch(e){}}
 function mktReportCollect(){
   var d=mktReportDraft; if(!d)return;
   function v(id){var e=document.getElementById(id);return e?e.value:'';}
@@ -5421,6 +5426,7 @@ function mktReportCollect(){
   var nl=document.getElementById('mktRepNewsletter'); if(nl)d.newsletter=nl.checked;
   d.meetings=d.meetings.map(function(_,i){return {source:v('bSrc'+i),office:v('bOff'+i),outcome:v('bOut'+i)};});
   d.newSources=d.newSources.map(function(_,i){return {source:v('cSrc'+i),office:v('cOff'+i),type:v('cType'+i)};});
+  _mktDraftStash();
 }
 function mktRepAddRow(which){mktReportCollect();if(which==='b')mktReportDraft.meetings.push({source:'',office:'',outcome:''});else mktReportDraft.newSources.push({source:'',office:'',type:''});renderMktReport(document.getElementById('sec-mkt-report'));}
 function mktRepDelRow(which,i){mktReportCollect();if(which==='b')mktReportDraft.meetings.splice(i,1);else mktReportDraft.newSources.splice(i,1);if(mktReportDraft.meetings.length===0)mktReportDraft.meetings.push({source:'',office:'',outcome:''});if(mktReportDraft.newSources.length===0)mktReportDraft.newSources.push({source:'',office:'',type:''});renderMktReport(document.getElementById('sec-mkt-report'));}
@@ -5493,6 +5499,7 @@ async function renderMktReport(el){
     +'</div>';
 
   el.innerHTML=h;
+  try{el.querySelectorAll('input,textarea,select').forEach(function(node){node.addEventListener('input',function(){try{mktReportCollect();}catch(e){}});});}catch(e){}
 }
 
 function mktReportPlainText(){
@@ -5538,6 +5545,7 @@ async function saveMktReport(submitted){
   var i=(mktReports||[]).findIndex(function(r){return r.id===id;});
   if(i>=0)mktReports[i]=Object.assign({},mktReports[i],row); else mktReports.push(row);
   if(_useNewTables)_dbUpsert('mkt_reports',row); else _legacySave('cp11_mktreports',mktReports);
+  try{localStorage.removeItem(_mktDraftKey(d._pt,d._key));}catch(e){}
   showSaveSuccess();
   return row;
 }
