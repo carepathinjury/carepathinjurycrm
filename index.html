@@ -1384,6 +1384,7 @@ async function _loadFromSupabase(){
       if(r[7])mktContacts=r[7].map(function(x){return{id:x.id,name:x.name,title:x.title,org:x.org,type:x.type,phone:x.phone,email:x.email,address:x.address,city:x.city||'',state:x.state||'',zip:x.zip||'',notes:x.notes,initiativeId:x.initiative_id,lastContactDate:x.last_contact_date||'',nurtureLog:x.nurture_log||[],createdDate:x.created_date||''}});
       if(r[8])r[8].forEach(function(x){
         if(x.key==='robin_idx')robinIdx=parseInt(x.value)||0;
+        else if(x.key==='mkt_ramp_override'){var _rv=parseInt(x.value);mktRampOverride=isNaN(_rv)?null:_rv;}
         else if(x.key==='custom_law_firms')try{customLawFirms=Array.isArray(x.value)?x.value:JSON.parse(x.value)}catch(e){customLawFirms=[];}
         else if(x.key==='custom_ref_sources')try{customRefSources=Array.isArray(x.value)?x.value:JSON.parse(x.value)}catch(e){customRefSources=[];}
       });
@@ -1600,6 +1601,7 @@ setInterval(_pollSupabase,10000);
 // Kick off
 var refs=[],mktList=[],cases=[],contacts=[],mktContacts=[];
 var callLog=[],crmMetrics={},cmMetrics={},robinIdx=0;
+var mktRampOverride=1; // Month 2 (0-indexed=1). 0-5 forces M1-M6; null = auto from earliest initiative
 var tickets=[],psrMetrics={},faxLog=[];
 var customLawFirms=[],customRefSources=[];
 function genId(){return Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8)+'_'+Math.random().toString(36).slice(2,5)}
@@ -5218,9 +5220,24 @@ function renderMktPipeline(el){
   const search=(document.getElementById('mktSearchInput')?.value||'').toLowerCase();
   let list=mktList.slice();
   if(mktStageFilter!=='all') list=list.filter(m=>m.stage===mktStageFilter);
+  if(mktOfficeFilter.length) list=list.filter(m=>accountOffices(m).some(l=>mktOfficeFilter.indexOf(l)!==-1));
   if(search) list=list.filter(m=>(m.name||'').toLowerCase().includes(search)||(m.contact||'').toLowerCase().includes(search)||(m.type||'').toLowerCase().includes(search)||(m.notes||'').toLowerCase().includes(search));
   list.sort((a,b)=>(b.dateInitiated||'').localeCompare(a.dateInitiated||''));
 
+  // Office filter (mirrors Contacts)
+  var acctOfficeCounts={};
+  mktList.forEach(function(m){accountOffices(m).forEach(function(l){acctOfficeCounts[l]=(acctOfficeCounts[l]||0)+1});});
+  var acctUnlinked=mktList.filter(function(m){return accountOffices(m).length===0}).length;
+  h+='<div class="table-card" style="padding:10px 14px;margin-bottom:10px"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">';
+  h+='<span style="font-size:11px;font-weight:700;color:var(--gray-500);margin-right:2px">Filter by office:</span>';
+  h+='<button class="filter-btn '+(mktOfficeFilter.length===0?'active':'')+'" onclick="clearMktOffices()">All Offices</button>';
+  LOCATIONS.forEach(function(l){
+    var on=mktOfficeFilter.indexOf(l)!==-1;
+    h+='<button class="filter-btn '+(on?'active':'')+'" onclick="toggleMktOffice(\''+l+'\')">'+(on?'\u2713 ':'')+esc(l)+' ('+(acctOfficeCounts[l]||0)+')</button>';
+  });
+  h+='</div>';
+  h+='<div style="font-size:10px;color:var(--gray-400);margin-top:7px">'+(mktOfficeFilter.length?('Showing accounts targeting any of '+mktOfficeFilter.length+' selected office'+(mktOfficeFilter.length===1?'':'s')+'. Click a selected office to remove it.'):('Select one or more offices to narrow the list. Offices come from each account\u2019s Target Locations'+(acctUnlinked?(' \u2014 '+acctUnlinked+' account'+(acctUnlinked===1?' has':'s have')+' no target office, so they only appear under \u201cAll Offices\u201d'):'')+'.'))+'</div>';
+  h+='</div>';
   // Table with filters
   h+='<div class="table-card"><div class="table-header"><h3>Initiatives</h3><div class="table-controls">' +
     '<input class="search-input" id="mktSearchInput" value="'+esc(search)+'" placeholder="Search accounts..." oninput="renderMktPipeline(document.getElementById(\'sec-mkt-pipeline\'))">' +
@@ -5629,11 +5646,18 @@ function mktReportPeriodLabel(pt){
   return k.replace('-Q',' Q');
 }
 function mktRampIndex(){
+  if(mktRampOverride!==null&&mktRampOverride!==undefined)return Math.max(0,Math.min(5,mktRampOverride));
   var start=null;(mktList||[]).forEach(function(m){if(m.dateInitiated&&(!start||m.dateInitiated<start))start=m.dateInitiated;});
   if(!start)return 0;
   var sD=new Date(start),n=new Date((mktReportAnchor||today())+'T12:00:00');
   var mo=(n.getFullYear()-sD.getFullYear())*12+(n.getMonth()-sD.getMonth());
   return Math.max(0,Math.min(5,mo));
+}
+function setMktRampMonth(val){
+  mktRampOverride=(val===''||val===null||val==='auto')?null:(parseInt(val)||0);
+  if(_useNewTables)_dbUpsert('system_config',{key:'mkt_ramp_override',value:(mktRampOverride===null?'':mktRampOverride),updated_at:new Date().toISOString()});
+  else _legacySave('cp11_mktramp',mktRampOverride);
+  renderMktReport(document.getElementById('sec-mkt-report'));
 }
 function setMktReportAnchor(val){mktReportCollect();mktReportAnchor=val||null;mktReportDraft=null;renderMktReport(document.getElementById('sec-mkt-report'));}
 function clearMktReportAnchor(){setMktReportAnchor(null);}
@@ -5751,7 +5775,7 @@ async function renderMktReport(el){
   h+=ta('mktRepOnDeck','F. On deck next '+(pt==='weekly'?'week':'period'),d.onDeck);
 
   // Reference targets
-  h+='<div class="table-card"><div class="table-header"><h3>Reference \u2014 monthly activity targets (ramp plan)</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Metric</th><th style="text-align:center">M1</th><th style="text-align:center">M2</th><th style="text-align:center">M3</th><th style="text-align:center">M4</th><th style="text-align:center">M5</th><th style="text-align:center">M6</th></tr></thead><tbody>';
+  h+='<div class="table-card"><div class="table-header"><h3>Reference \u2014 monthly activity targets (ramp plan)</h3><div class="table-controls"><span style="font-size:11px;font-weight:600;color:var(--gray-500);margin-right:4px">Program month:</span><select onchange="setMktRampMonth(this.value)" style="border:1px solid var(--gray-200);border-radius:5px;padding:5px 8px;font-size:12px">'+[0,1,2,3,4,5].map(function(i){return '<option value="'+i+'"'+(ri===i&&mktRampOverride!==null?' selected':'')+'>Month '+(i+1)+'</option>';}).join('')+'<option value="auto"'+(mktRampOverride===null?' selected':'')+'>Auto</option>'+'</select></div></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Metric</th><th style="text-align:center">M1</th><th style="text-align:center">M2</th><th style="text-align:center">M3</th><th style="text-align:center">M4</th><th style="text-align:center">M5</th><th style="text-align:center">M6</th></tr></thead><tbody>';
   MKT_REPORT_RAMP.forEach(function(row){h+='<tr><td>'+row.label+'</td>'+row.m.map(function(v,i){return '<td style="text-align:center'+(i===ri?';background:rgba(26,127,122,0.10);font-weight:700':'')+'">'+v+'</td>';}).join('')+'</tr>';});
   h+='</tbody></table></div><div style="padding:8px 18px;font-size:10px;color:var(--gray-400)">Highlighted column = current ramp month (M'+(ri+1)+').</div></div>';
 
@@ -6055,6 +6079,10 @@ function deleteMkt(){
 // MARKETING CONTACTS
 // ══════════════════════════════════════════════════════════════════════
 let editingMcId=null, mcTypeFilter='all', mcSortBy='org', mcOfficeFilter=[];
+var mktOfficeFilter=[];
+function accountOffices(m){return (m&&m.targetLocations)||[];}
+function toggleMktOffice(loc){var i=mktOfficeFilter.indexOf(loc);if(i===-1)mktOfficeFilter.push(loc);else mktOfficeFilter.splice(i,1);renderMktPipeline(document.getElementById('sec-mkt-pipeline'));}
+function clearMktOffices(){mktOfficeFilter=[];renderMktPipeline(document.getElementById('sec-mkt-pipeline'));}
 
 function downloadMktContactsCSV(){
   if(!mktContacts.length){alert('No contacts to export yet.');return;}
