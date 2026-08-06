@@ -1088,13 +1088,13 @@ var _useNewTables = false;
 
 // ─── Field mapping: JS camelCase <-> DB snake_case ─────────────────
 var _refMap = {id:'id',patientName:'patient_name',dob:'dob',phone:'phone',email:'email',doi:'doi',caseType:'case_type',location:'location',language:'language',attorney:'attorney',lawFirm:'law_firm',lawContact:'law_contact',referralSource:'referral_source',apptDate:'appt_date',status:'status',notes:'notes',alertType:'alert_type',paperworkCompleted:'paperwork_completed',recordsNeeded:'records_needed',customAlerts:'custom_alerts',registeredBy:'registered_by',alertAssignedTo:'alert_assigned_to',apptConfirmAssignedTo:'appt_confirm_assigned_to',lastContactDate:'last_contact_date',dateScheduledOn:'date_scheduled_on',daysToSchedule:'days_to_schedule',apptOutcome:'appt_outcome',apptOutcomeReason:'appt_outcome_reason',lastApptFollowUp:'last_appt_follow_up',createdDate:'created_date',enteredAt:'entered_at',updateLog:'update_log',lostReason:'lost_reason',lostDate:'lost_date',lostNotes:'lost_notes',emailResolved:'email_resolved',emailLastFollowUp:'email_last_follow_up'};
-var _caseMap = {id:'id',sourceRefId:'source_ref_id',patientName:'patient_name',dob:'dob',phone:'phone',email:'email',doi:'doi',caseType:'case_type',location:'location',language:'language',attorney:'attorney',lawFirm:'law_firm',lawContact:'law_contact',referralSource:'referral_source',assigned:'assigned',apptDate:'appt_date',apptPrn:'appt_prn',prnLastCheck:'prn_last_check',recordsSent:'records_sent',missingInfo:'missing_info',followUpDate:'follow_up_date',notes:'notes',status:'status',createdDate:'created_date',settledDate:'settled_date',statusChangeDate:'status_change_date',introEmailSentDate:'intro_email_sent_date',settlementEmailSent:'settlement_email_sent',settlementEmailDate:'settlement_email_date',inLitigation:'in_litigation',adjusterResolved:'adjuster_resolved',adjusterResolvedDate:'adjuster_resolved_date',adjusterLastFollowUp:'adjuster_last_follow_up',pipResolved:'pip_resolved',pipResolvedDate:'pip_resolved_date',pipLastFollowUp:'pip_last_follow_up',pipExhausted:'pip_exhausted',dismissedAlerts:'dismissed_alerts',manualAlerts:'manual_alerts',statusHistory:'status_history',noApptLastCheck:'no_appt_last_check'};
+var _caseMap = {id:'id',sourceRefId:'source_ref_id',patientName:'patient_name',dob:'dob',phone:'phone',email:'email',doi:'doi',caseType:'case_type',location:'location',language:'language',attorney:'attorney',lawFirm:'law_firm',lawContact:'law_contact',referralSource:'referral_source',assigned:'assigned',apptDate:'appt_date',apptPrn:'appt_prn',prnLastCheck:'prn_last_check',recordsSent:'records_sent',missingInfo:'missing_info',followUpDate:'follow_up_date',notes:'notes',status:'status',createdDate:'created_date',settledDate:'settled_date',statusChangeDate:'status_change_date',introEmailSentDate:'intro_email_sent_date',settlementEmailSent:'settlement_email_sent',settlementEmailDate:'settlement_email_date',inLitigation:'in_litigation',adjusterResolved:'adjuster_resolved',adjusterResolvedDate:'adjuster_resolved_date',adjusterLastFollowUp:'adjuster_last_follow_up',pipResolved:'pip_resolved',pipResolvedDate:'pip_resolved_date',pipLastFollowUp:'pip_last_follow_up',pipExhausted:'pip_exhausted',dismissedAlerts:'dismissed_alerts',manualAlerts:'manual_alerts',statusHistory:'status_history',noApptLastCheck:'no_appt_last_check',taskLog:'task_log'};
 
 var _dateFields = ['dob','doi','appt_date','created_date','lost_date','settled_date','records_sent','follow_up_date','date_scheduled_on','last_contact_date','last_appt_follow_up','email_last_follow_up','status_change_date','intro_email_sent_date','settlement_email_date','adjuster_resolved_date','adjuster_last_follow_up','pip_resolved_date','pip_last_follow_up','prn_last_check','no_appt_last_check'];
 
 var _boolFields=['email_resolved','settlement_email_sent','in_litigation','adjuster_resolved','pip_resolved','pip_exhausted','appt_prn'];
 var _intFields=['days_to_schedule'];
-var _jsonFields=['records_needed','custom_alerts','update_log','dismissed_alerts','manual_alerts','status_history','target_locations','activity_log'];
+var _jsonFields=['records_needed','custom_alerts','update_log','dismissed_alerts','manual_alerts','status_history','target_locations','activity_log','task_log'];
 
 function _toDb(obj, fieldMap){
   var row={};
@@ -3788,14 +3788,14 @@ function renderCmPage(page) {
 var cmMgrDateFrom='',cmMgrDateTo='';
 function applyCmDateFilter(){
   try{
-  cmMgrDateFrom=document.getElementById('cmMgrFrom').value||'';
-  cmMgrDateTo=document.getElementById('cmMgrTo').value||'';
-  console.log('📅 CM filter:',cmMgrDateFrom,'to',cmMgrDateTo);
+  var fe=document.getElementById('cmMgrFrom'), te=document.getElementById('cmMgrTo');
+  cmMgrDateFrom=(fe&&fe.value)||''; cmMgrDateTo=(te&&te.value)||'';
   var el=document.querySelector('#module-cm .section.active');
-  console.log('📅 Active section:',el?el.id:'NONE FOUND');
-  if(el)renderCmDashboard(el);
-  else console.error('❌ No active CM section found');
-  }catch(e){console.error('❌ applyCmDateFilter error:',e);}
+  if(!el)el=document.getElementById('sec-cm-dashboard');
+  if(!el)return;
+  if(el.id==='sec-cm-mgr-dash'&&typeof renderCmMgrDash==='function')renderCmMgrDash(el);
+  else renderCmDashboard(el);
+  }catch(e){console.error('applyCmDateFilter error:',e);}
 }
 function clearCmDateFilter(){
   cmMgrDateFrom='';cmMgrDateTo='';
@@ -3804,6 +3804,131 @@ function clearCmDateFilter(){
 }
 
 function toggleCmDrilldown(id){var el=document.getElementById('cmDrill-'+id);if(el)el.style.display=el.style.display==='none'?'block':'none';}
+
+// CM task-completion analytics
+function _logCmTask(c, task){
+  if(!c)return;
+  if(!Array.isArray(c.taskLog))c.taskLog=[];
+  // one-time backfill: seed pre-existing completions (attributed to the assigned CM) so nothing is lost
+  if(c.taskLog.length===0){
+    [['Adjuster Resolved',c.adjusterResolvedDate],['PIP Resolved',c.pipResolvedDate],['Intro Email Sent',c.introEmailSentDate],['Settlement Email',c.settlementEmailDate],['Records/Billing Sent',c.recordsSent],['No-Appt Check',c.noApptLastCheck],['Status Updated',c.statusChangeDate]].forEach(function(d){
+      if(d[1])c.taskLog.push({task:d[0],by:c.assigned||null,date:String(d[1]).substring(0,10),legacy:true});
+    });
+  }
+  c.taskLog.push({task:task,by:(typeof currentUser!=='undefined'&&currentUser)||null,date:today()});
+  try{if(_useNewTables)_dbPatch('cases',c.id,{task_log:c.taskLog});else _legacySave('cp11_cases',cases);}catch(e){console.error('task log save',e);}
+}
+function _cmTaskEvents(c){
+  // authoritative log (carries who + when) once a case has been touched since logging began
+  if(Array.isArray(c.taskLog)&&c.taskLog.length){
+    return c.taskLog.map(function(e){return {task:e.task,date:String(e.date||'').substring(0,10),by:e.by||null};});
+  }
+  // legacy fallback (no attribution -> assigned CM)
+  var ev=[], D=function(x){return x?String(x).substring(0,10):'';};
+  if(c.adjusterResolvedDate) ev.push({task:'Adjuster Resolved',   date:D(c.adjusterResolvedDate),by:null});
+  if(c.pipResolvedDate)      ev.push({task:'PIP Resolved',        date:D(c.pipResolvedDate),by:null});
+  if(c.introEmailSentDate)   ev.push({task:'Intro Email Sent',    date:D(c.introEmailSentDate),by:null});
+  if(c.settlementEmailDate)  ev.push({task:'Settlement Email',    date:D(c.settlementEmailDate),by:null});
+  if(c.recordsSent)          ev.push({task:'Records/Billing Sent',date:D(c.recordsSent),by:null});
+  if(c.noApptLastCheck)      ev.push({task:'No-Appt Check',       date:D(c.noApptLastCheck),by:null});
+  if(c.statusChangeDate)     ev.push({task:'Status Updated',      date:D(c.statusChangeDate),by:null});
+  return ev;
+}
+function _cmTaskEventsLEGACY_UNUSED(c){
+  var ev=[], D=function(x){return x?String(x).substring(0,10):'';};
+  if(c.adjusterResolvedDate) ev.push({task:'Adjuster Resolved',   date:D(c.adjusterResolvedDate)});
+  if(c.pipResolvedDate)      ev.push({task:'PIP Resolved',        date:D(c.pipResolvedDate)});
+  if(c.introEmailSentDate)   ev.push({task:'Intro Email Sent',    date:D(c.introEmailSentDate)});
+  if(c.settlementEmailDate)  ev.push({task:'Settlement Email',    date:D(c.settlementEmailDate)});
+  if(c.recordsSent)          ev.push({task:'Records/Billing Sent',date:D(c.recordsSent)});
+  if(c.noApptLastCheck)      ev.push({task:'No-Appt Check',       date:D(c.noApptLastCheck)});
+  if(c.statusChangeDate)     ev.push({task:'Status Updated',      date:D(c.statusChangeDate)});
+  return ev;
+}
+function _cmMonthKey(d){return d?String(d).substring(0,7):'';}
+function _cmMonthLabel(k){var p=k.split('-');return new Date(+p[0],+p[1]-1,1).toLocaleDateString('en-US',{month:'short',year:'numeric'});}
+function _cmRecentMonths(n){var out=[],d=new Date();d.setDate(1);for(var i=0;i<n;i++){out.unshift(d.toISOString().substring(0,7));d.setMonth(d.getMonth()-1);}return out;}
+function renderCmClaimResolution(allCases){
+  var months=_cmRecentMonths(6), rows={};
+  months.forEach(function(m){rows[m]={cohort:0,obtained:0};});
+  var outstandingNow=0, obtainedAll=0, obtainedByMonth={};
+  months.forEach(function(m){obtainedByMonth[m]=0;});
+  (allCases||[]).forEach(function(c){
+    var hasFlag=c.missingInfo&&c.missingInfo.indexOf('Missing Claim Info')!==-1;
+    var obt=(c.taskLog||[]).filter(function(e){return e.task==='Claim Info Obtained';});
+    if(hasFlag)outstandingNow++;
+    if(obt.length)obtainedAll++;
+    obt.forEach(function(e){var mk=_cmMonthKey(e.date);if(obtainedByMonth[mk]!==undefined)obtainedByMonth[mk]++;});
+    if(hasFlag||obt.length){ // this patient needed claim info
+      var cm=_cmMonthKey(c.createdDate);
+      if(rows[cm]){rows[cm].cohort++; if(obt.length)rows[cm].obtained++;}
+    }
+  });
+  var denom=obtainedAll+outstandingNow, overallPct=denom>0?Math.round(obtainedAll/denom*100):0;
+  var h='<div class="table-card"><div class="table-header"><h3>Missing Claim Info — Resolution Rate</h3></div>';
+  h+='<div class="stats-row" style="grid-template-columns:repeat(3,1fr);padding:14px 18px 4px">'
+    +stat('Obtained (tracked)',obtainedAll,'teal')+stat('Still Outstanding',outstandingNow,'red')+stat('Resolve Rate',overallPct+'%','')+'</div>';
+  h+='<div class="table-scroll"><table class="tbl"><thead><tr><th>Intake Month</th><th style="text-align:center">Needed Claim Info</th><th style="text-align:center">Obtained</th><th style="text-align:center">Still Missing</th><th style="text-align:center">Resolve Rate</th><th style="text-align:center">Obtained in month</th></tr></thead><tbody>';
+  months.forEach(function(m){var r=rows[m];var still=r.cohort-r.obtained;var pct=r.cohort>0?Math.round(r.obtained/r.cohort*100):0;
+    var col=pct>=80?'#27ae60':pct>=50?'#c8973a':'#c0392b';
+    h+='<tr><td style="font-weight:600;color:var(--navy)">'+_cmMonthLabel(m)+'</td>'
+      +'<td style="text-align:center">'+r.cohort+'</td>'
+      +'<td style="text-align:center;font-weight:700;color:var(--teal)">'+r.obtained+'</td>'
+      +'<td style="text-align:center;color:'+(still>0?'var(--red)':'var(--gray-400)')+'">'+still+'</td>'
+      +'<td style="text-align:center;font-weight:700;color:'+(r.cohort>0?col:'var(--gray-300)')+'">'+(r.cohort>0?pct+'%':'—')+'</td>'
+      +'<td style="text-align:center;color:var(--gray-500)">'+obtainedByMonth[m]+'</td></tr>';
+  });
+  h+='</tbody></table></div><div style="padding:8px 18px;font-size:10px;color:var(--gray-400)">Grouped by the patient’s intake month (claim info is needed at intake). “Obtained” counts cases we cleared; “Obtained in month” is throughput regardless of intake. Tracking began when this feature was deployed — claim-info alerts resolved before then aren’t counted, so early months may read low.</div></div>';
+  return h;
+}
+function renderCmMonthlyTrend(allCases){
+  var months=_cmRecentMonths(6), rows={};
+  months.forEach(function(m){rows[m]={created:0,settled:0,tasks:0};});
+  (allCases||[]).forEach(function(c){
+    var cm=_cmMonthKey(c.createdDate); if(rows[cm])rows[cm].created++;
+    var sm=_cmMonthKey(c.settledDate); if(rows[sm])rows[sm].settled++;
+    _cmTaskEvents(c).forEach(function(e){var mk=_cmMonthKey(e.date); if(rows[mk])rows[mk].tasks++;});
+  });
+  var maxTasks=Math.max(1,Math.max.apply(null,months.map(function(m){return rows[m].tasks;})));
+  var h='<div class="table-card"><div class="table-header"><h3>Month-to-Month Trend</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Month</th><th style="text-align:center">New Cases</th><th style="text-align:center">Settled / Closed</th><th style="text-align:center">Tasks Completed</th><th style="width:34%">Task volume</th></tr></thead><tbody>';
+  months.forEach(function(m){var r=rows[m];var pct=Math.round(r.tasks/maxTasks*100);
+    h+='<tr><td style="font-weight:600;color:var(--navy)">'+_cmMonthLabel(m)+'</td><td style="text-align:center">'+r.created+'</td><td style="text-align:center">'+r.settled+'</td><td style="text-align:center;font-weight:700;color:var(--teal)">'+r.tasks+'</td>'
+      +'<td><div style="background:#eee;border-radius:5px;height:14px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:var(--teal)"></div></div></td></tr>';
+  });
+  h+='</tbody></table></div><div style="padding:8px 18px;font-size:10px;color:var(--gray-400)">Tasks = adjuster/PIP resolutions, intro & settlement emails, records/billing sent, no-appt checks, and status updates, counted in the month completed.</div></div>';
+  return h;
+}
+function renderCmPerformers(fromD,toD){
+  var inR=function(d){if(!d)return false;var x=String(d).substring(0,10);if(fromD&&x<fromD)return false;if(toD&&x>toD)return false;return true;};
+  var TT=['Claim Info Obtained','Adjuster Resolved','PIP Resolved','Intro Email Sent','Settlement Email','Records/Billing Sent','No-Appt Check','Status Updated'];
+  var perCm={};
+  var ensure=function(name){ if(!name)return null; if(!perCm[name]){perCm[name]={total:0,active:0,settled:0,by:{}};TT.forEach(function(t){perCm[name].by[t]=0;});} return perCm[name]; };
+  CM_STAFF.forEach(ensure);
+  (cases||[]).forEach(function(c){
+    var a=ensure(c.assigned);
+    if(a&&c.status==='Active')a.active++;
+    if(a&&c.status==='Settled/Closed'&&inR(c.settledDate))a.settled++;
+    _cmTaskEvents(c).forEach(function(e){
+      if(!inR(e.date))return;
+      var who=ensure(e.by||c.assigned); if(!who)return;   // attribute to actual completer, else assigned
+      who.total++; if(who.by[e.task]!==undefined)who.by[e.task]++;
+    });
+  });
+  var ranked=Object.keys(perCm).sort(function(a,b){return perCm[b].total-perCm[a].total;});
+  var rangeNote=(fromD||toD)?((fromD||'start')+' to '+(toD||'today')):'all time';
+  var maxT=Math.max(1,Math.max.apply(null,CM_STAFF.map(function(s){return perCm[s].total;})));
+  var h='<div class="table-card"><div class="table-header"><h3>Top Performers \u2014 Tasks Completed</h3><span style="font-size:11px;color:var(--gray-400)">'+esc(rangeNote)+'</span></div><div class="table-scroll"><table class="tbl"><thead><tr><th>#</th><th>Case Manager</th><th style="text-align:center">Tasks Completed</th>';
+  TT.forEach(function(t){h+='<th style="text-align:center;font-size:10px">'+t.replace(' Sent','').replace(' Resolved','')+'</th>';});
+  h+='<th style="text-align:center">Active Load</th><th style="text-align:center">Settled (range)</th></tr></thead><tbody>';
+  ranked.forEach(function(s,i){var p=perCm[s];var pct=Math.round(p.total/maxT*100);
+    h+='<tr><td style="font-weight:700;color:var(--gray-400)">'+(i+1)+'</td><td style="font-weight:700;color:var(--navy)">'+esc(s)+'</td>'
+      +'<td style="text-align:center"><div style="font-weight:700;color:var(--teal);font-size:15px">'+p.total+'</div><div style="background:#eee;border-radius:4px;height:6px;margin-top:3px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:var(--teal)"></div></div></td>';
+    TT.forEach(function(t){h+='<td style="text-align:center;color:'+(p.by[t]?'var(--navy)':'#ccc')+'">'+p.by[t]+'</td>';});
+    h+='<td style="text-align:center">'+p.active+'</td><td style="text-align:center">'+p.settled+'</td></tr>';
+  });
+  h+='</tbody></table></div><div style="padding:8px 18px;font-size:10px;color:var(--gray-400)">Ranked by total tasks completed in the selected date range. Attributed to each case\u2019s assigned manager. Use the Date Range above to focus the window.</div></div>';
+  return h;
+}
 
 function renderCmDashboard(el) {
   try {
@@ -3867,7 +3992,10 @@ function renderCmDashboard(el) {
   h+='<div class="table-card"><div class="table-header"><h3>Cases by Location</h3></div><div style="padding:8px 18px">'+renderBarChart(Object.entries(locData).sort(function(a,b){return b[1]-a[1]}).map(function(e,i){return{label:e[0],value:e[1],color:CHART_COLORS[i%CHART_COLORS.length]}}))+'</div></div>';
 
   // ═══ ENHANCED STAFF SCORECARDS (manager only) ═══
+  h+=renderCmMonthlyTrend(cases);
+  h+=renderCmClaimResolution(cases);
   if(showMgr){
+  h+=renderCmPerformers(cmMgrDateFrom,cmMgrDateTo);
   h+='<div style="margin-top:20px"><div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:4px">📊 Case Manager Score Cards</div><div style="font-size:11px;color:var(--gray-500);margin-bottom:16px">Individual performance summary — case metrics, alert handling, and compliance</div></div>';
   CM_STAFF.forEach(function(s){
     var sc=fc.filter(function(c){return c.assigned===s});
@@ -4001,7 +4129,7 @@ function submitIntroEmail(){
   const dateStr=document.getElementById('introEmailDate').value;
   if(!dateStr){alert('Please enter the date the email was sent.');return;}
   const c=cases.find(x=>x.id===introEmailCaseId);if(!c)return;
-  c.introEmailSentDate=dateStr;
+  _logCmTask(c,'Intro Email Sent');c.introEmailSentDate=dateStr;
   _markModified(c.id);
   if(_useNewTables)_dbPatch('cases',c.id,{intro_email_sent_date:dateStr});
   else _legacySave('cp11_cases',cases);
@@ -4036,6 +4164,7 @@ function submitMissingInfo(){
   const notes=document.getElementById('miNotes').value.trim();
 
   if(outcome==='resolved'){
+    if(c.missingInfo&&c.missingInfo.indexOf('Missing Claim Info')!==-1)_logCmTask(c,'Claim Info Obtained');
     c.missingInfo='';
     c.followUpDate=dateStr;
     c.missingInfoResolvedDate=dateStr;
@@ -4081,7 +4210,7 @@ function submitRecordsBilling(){
   const c=cases.find(x=>x.id===rbCaseId);if(!c)return;
   const dateStr=document.getElementById('rbDate').value;
   if(!dateStr){alert('Please enter the date records were sent.');return;}
-  c.recordsSent=dateStr;
+  _logCmTask(c,'Records/Billing Sent');c.recordsSent=dateStr;
   // Update appt date if provided
   const nextAppt=document.getElementById('rbNextAppt').value;
   if(nextAppt) c.apptDate=nextAppt;
@@ -4113,7 +4242,7 @@ function submitAdjusterResolve(){
   var dateStr=document.getElementById('adjDate').value;
   if(!dateStr){alert('Please enter a date.');return;}
   var patchFields={updated_at:new Date().toISOString()};
-  if(outcome==='resolved'){c.adjusterResolved=true;c.adjusterResolvedDate=dateStr;patchFields.adjuster_resolved=true;patchFields.adjuster_resolved_date=dateStr;}
+  if(outcome==='resolved'){_logCmTask(c,'Adjuster Resolved');c.adjusterResolved=true;c.adjusterResolvedDate=dateStr;patchFields.adjuster_resolved=true;patchFields.adjuster_resolved_date=dateStr;}
   else{c.adjusterLastFollowUp=dateStr;c.adjusterResolved=false;patchFields.adjuster_last_follow_up=dateStr;patchFields.adjuster_resolved=false;}
   _markModified(c.id);if(_useNewTables)_dbPatch('cases',c.id,patchFields);else _legacySave('cp11_cases',cases);
   document.getElementById('adjusterResolveModal').classList.remove('show');renderActiveModule();
@@ -4137,7 +4266,7 @@ function submitNoAppt(){
   var dateStr=document.getElementById('naDate').value||today();
   var nextAppt=document.getElementById('naNextAppt').value;
   var notes=document.getElementById('naNotes').value.trim();
-  c.noApptLastCheck=dateStr;
+  _logCmTask(c,'No-Appt Check');c.noApptLastCheck=dateStr;
   var patchFields={no_appt_last_check:dateStr,updated_at:new Date().toISOString()};
   if(nextAppt){c.apptDate=nextAppt;patchFields.appt_date=nextAppt;}
   var logLine='['+dateStr+'] No-appt check: '+action+(nextAppt?(' - next appt '+fmtDate(nextAppt)):'')+(notes?(' - '+notes):'');
@@ -4169,7 +4298,7 @@ function submitPipResolve(){
   var dateStr=document.getElementById('pipDate').value;
   if(!dateStr){alert('Please enter a date.');return;}
   var pf={updated_at:new Date().toISOString()};
-  if(outcome==='resolved'||outcome==='exhausted'){c.pipResolved=true;c.pipResolvedDate=dateStr;c.pipExhausted=(outcome==='exhausted');pf.pip_resolved=true;pf.pip_resolved_date=dateStr;pf.pip_exhausted=(outcome==='exhausted');}
+  if(outcome==='resolved'||outcome==='exhausted'){_logCmTask(c,'PIP Resolved');c.pipResolved=true;c.pipResolvedDate=dateStr;c.pipExhausted=(outcome==='exhausted');pf.pip_resolved=true;pf.pip_resolved_date=dateStr;pf.pip_exhausted=(outcome==='exhausted');}
   else{c.pipLastFollowUp=dateStr;c.pipResolved=false;pf.pip_last_follow_up=dateStr;pf.pip_resolved=false;}
   _markModified(c.id);if(_useNewTables)_dbPatch('cases',c.id,pf);else _legacySave('cp11_cases',cases);
   document.getElementById('pipResolveModal').classList.remove('show');renderActiveModule();
@@ -4201,7 +4330,7 @@ function submitCaseStatus(caseId){
   if(!dateStr){alert('Please enter a date.');return;}
   var oldStatus=c.status;
   c.status=newStatus;
-  c.statusChangeDate=dateStr;
+  _logCmTask(c,'Status Updated');c.statusChangeDate=dateStr;
   if(newStatus==='Settled/Closed'||newStatus==='Dropped'){
     c.settledDate=dateStr;
     c.settlementEmailSent=false;
@@ -4228,7 +4357,7 @@ function markSettlementEmailSent(caseId){
   if(_isExecRO()){showReadOnly();return;}
   var c=cases.find(function(x){return x.id===caseId});if(!c)return;
   if(confirm('Confirm that the settlement update email has been sent?')){
-    c.settlementEmailSent=true;
+    _logCmTask(c,'Settlement Email');c.settlementEmailSent=true;
     c.settlementEmailDate=today();
     _markModified(c.id);if(_useNewTables)_dbPatch('cases',c.id,{settlement_email_sent:true,settlement_email_date:today()});else _legacySave('cp11_cases',cases);
     renderActiveModule();showCmDetail(caseId);
