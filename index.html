@@ -1749,6 +1749,63 @@ function exportAllMetrics(){
   var label=crmMgrDateFrom||crmMgrDateTo?'-'+crmMgrDateFrom+'-to-'+crmMgrDateTo:'';
   downloadCSV('carepath-referrals'+label+'-'+today()+'.csv',rHeaders,rRows);
 }
+// Export the CM analytics (per-manager performance, trend, claim resolution, auto-tracked) as a CSV
+function exportCmAnalytics(){
+  var from=cmMgrDateFrom, to=cmMgrDateTo;
+  var inR=function(d){if(!d)return false;var x=String(d).substring(0,10);if(from&&x<from)return false;if(to&&x>to)return false;return true;};
+  var rangeLbl=(from||to)?((from||'start')+' to '+(to||'today')):'all time';
+  var Q=function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';};
+  var line=function(arr){return arr.map(Q).join(',');};
+  var out=[];
+  out.push(line(['CarePath Case Management — Analytics Export']));
+  out.push(line(['Range', rangeLbl, 'Generated', new Date().toLocaleString()]));
+  out.push('');
+
+  // Top performers
+  var TT=['Claim Info Obtained','Adjuster Resolved','PIP Resolved','Intro Email Sent','Settlement Email','Records/Billing Sent','No-Appt Check','Status Updated'];
+  var perCm={}, ensure=function(n){if(!n)return null;if(!perCm[n]){perCm[n]={total:0,by:{}};TT.forEach(function(t){perCm[n].by[t]=0;});}return perCm[n];};
+  CM_STAFF.forEach(ensure);
+  (cases||[]).forEach(function(c){_cmTaskEvents(c).forEach(function(e){if(!inR(e.date))return;var w=ensure(e.by||c.assigned);if(!w)return;w.total++;if(w.by[e.task]!==undefined)w.by[e.task]++;});});
+  var ranked=Object.keys(perCm).sort(function(a,b){return perCm[b].total-perCm[a].total;});
+  out.push(line(['TOP PERFORMERS — TASKS COMPLETED']));
+  out.push(line(['Rank','Case Manager','Total'].concat(TT)));
+  ranked.forEach(function(s,i){var p=perCm[s];out.push(line([i+1,s,p.total].concat(TT.map(function(t){return p.by[t];}))));});
+  out.push('');
+
+  // Monthly trend
+  var months=_cmRecentMonths(6), mr={};months.forEach(function(m){mr[m]={created:0,settled:0,tasks:0};});
+  (cases||[]).forEach(function(c){var cm=_cmMonthKey(c.createdDate);if(mr[cm])mr[cm].created++;var sm=_cmMonthKey(c.settledDate);if(mr[sm])mr[sm].settled++;_cmTaskEvents(c).forEach(function(e){var mk=_cmMonthKey(e.date);if(mr[mk])mr[mk].tasks++;});});
+  out.push(line(['MONTH-TO-MONTH TREND']));
+  out.push(line(['Month','New Cases','Settled/Closed','Tasks Completed']));
+  months.forEach(function(m){var r=mr[m];out.push(line([_cmMonthLabel(m),r.created,r.settled,r.tasks]));});
+  out.push('');
+
+  // Claim resolution
+  var data=cases.slice();
+  if(from)data=data.filter(function(c){return(c.createdDate||'')>=from});
+  if(to)data=data.filter(function(c){return(c.createdDate||'')<=to});
+  var cr={};months.forEach(function(m){cr[m]={cohort:0,obtained:0};});
+  var outstandingNow=0,obtainedAll=0;
+  data.forEach(function(c){var hasFlag=c.missingInfo&&c.missingInfo.indexOf('Missing Claim Info')!==-1;var obt=(c.taskLog||[]).filter(function(e){return e.task==='Claim Info Obtained';});if(hasFlag)outstandingNow++;if(obt.length)obtainedAll++;if(hasFlag||obt.length){var cm=_cmMonthKey(c.createdDate);if(cr[cm]){cr[cm].cohort++;if(obt.length)cr[cm].obtained++;}}});
+  var denom=obtainedAll+outstandingNow;
+  out.push(line(['MISSING CLAIM INFO — RESOLUTION RATE']));
+  out.push(line(['Obtained (tracked)',obtainedAll,'Still Outstanding',outstandingNow,'Overall Rate',(denom>0?Math.round(obtainedAll/denom*100)+'%':'0%')]));
+  out.push(line(['Intake Month','Needed Claim Info','Obtained','Still Missing','Resolve Rate']));
+  months.forEach(function(m){var r=cr[m];var still=r.cohort-r.obtained;var pct=r.cohort>0?Math.round(r.obtained/r.cohort*100)+'%':'—';out.push(line([_cmMonthLabel(m),r.cohort,r.obtained,still,pct]));});
+  out.push('');
+
+  // Auto-tracked totals per manager
+  var dates=(from||to)?(function(){var o=[],d=new Date((from||to)+'T12:00:00'),e=new Date((to||today())+'T12:00:00'),g=0;while(d<=e&&g<420){o.push(d.toISOString().substring(0,10));d.setDate(d.getDate()+1);g++;}return o;})():getWeekDates(0);
+  out.push(line(['AUTO-TRACKED TOTALS BY MANAGER']));
+  out.push(line(['Metric'].concat(CM_STAFF).concat(['Total'])));
+  Object.keys(CM_AUTO_LABELS).forEach(function(k){if(k==='activeCases')return;var tot=0;var row=[CM_AUTO_LABELS[k]];CM_STAFF.forEach(function(s){var d=cmCombinedMetrics(s,dates);var v=d.auto[k]||0;tot+=v;row.push(v);});row.push(tot);out.push(line(row));});
+
+  var csv=out.join('\n');
+  var label=(from||to)?('-'+(from||'start')+'-to-'+(to||'today')):'';
+  var blob=new Blob([csv],{type:'text/csv'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='carepath-cm-analytics'+label+'-'+today()+'.csv';a.click();
+}
+
 function exportCases(){
   var data=cases;
   if(cmMgrDateFrom)data=data.filter(function(c){return(c.createdDate||'')>=cmMgrDateFrom});
@@ -1757,6 +1814,68 @@ function exportCases(){
   var rows=data.map(function(c){var days=c.createdDate?daysBtw(c.createdDate,c.settledDate||today()):0;return[c.patientName,c.dob||'',c.caseType,c.location,c.assigned,c.status,days,c.missingInfo||'',c.introEmailSentDate||'',c.apptDate||'',c.createdDate,c.settledDate||'']});
   var label=cmMgrDateFrom||cmMgrDateTo?'-'+cmMgrDateFrom+'-to-'+cmMgrDateTo:'';
   downloadCSV('carepath-cases'+label+'-'+today()+'.csv',h,rows);
+}
+
+// Print-safe analytics HTML for the CM report (explicit hex colors; no CSS vars)
+function _cmPrintAnalytics(data, from, to){
+  var TEAL='#1a7f7a', NAVY='#1a2332', GOLD='#c8973a', RED='#c0392b', GREEN='#2e7d5b', MUTE='#666', LINE='#e4e8e6';
+  var inR=function(d){if(!d)return false;var x=String(d).substring(0,10);if(from&&x<from)return false;if(to&&x>to)return false;return true;};
+  var rangeLbl=(from||to)?((from||'start')+' to '+(to||'today')):'all time';
+  var th='background:'+NAVY+';color:#fff;padding:8px 10px;text-align:left;font-size:11px';
+  var td='padding:6px 10px;border-bottom:1px solid '+LINE+';font-size:12px';
+  var html='';
+
+  // ── Top Performers — Tasks Completed (per manager, per type, attributed to actual completer) ──
+  var TT=['Claim Info Obtained','Adjuster Resolved','PIP Resolved','Intro Email Sent','Settlement Email','Records/Billing Sent','No-Appt Check','Status Updated'];
+  var perCm={};
+  var ensure=function(n){if(!n)return null;if(!perCm[n]){perCm[n]={total:0,by:{}};TT.forEach(function(t){perCm[n].by[t]=0;});}return perCm[n];};
+  CM_STAFF.forEach(ensure);
+  (cases||[]).forEach(function(c){
+    _cmTaskEvents(c).forEach(function(e){ if(!inR(e.date))return; var who=ensure(e.by||c.assigned); if(!who)return; who.total++; if(who.by[e.task]!==undefined)who.by[e.task]++; });
+  });
+  var ranked=Object.keys(perCm).sort(function(a,b){return perCm[b].total-perCm[a].total;});
+  html+='<h2>Top Performers — Tasks Completed <span style="font-size:11px;color:'+MUTE+';font-weight:normal">('+rangeLbl+')</span></h2>';
+  html+='<table><tr><th style="'+th+'">#</th><th style="'+th+'">Case Manager</th><th style="'+th+'">Total</th>';
+  TT.forEach(function(t){html+='<th style="'+th+'">'+t.replace(' Sent','').replace(' Resolved','')+'</th>';});
+  html+='</tr>';
+  ranked.forEach(function(s,i){var p=perCm[s];html+='<tr><td style="'+td+'">'+(i+1)+'</td><td style="'+td+';font-weight:700;color:'+NAVY+'">'+s+'</td><td style="'+td+';font-weight:700;color:'+TEAL+'">'+p.total+'</td>';TT.forEach(function(t){html+='<td style="'+td+'">'+p.by[t]+'</td>';});html+='</tr>';});
+  html+='</table>';
+
+  // ── Month-to-Month Trend ──
+  var months=_cmRecentMonths(6), mr={};
+  months.forEach(function(m){mr[m]={created:0,settled:0,tasks:0};});
+  (cases||[]).forEach(function(c){
+    var cm=_cmMonthKey(c.createdDate); if(mr[cm])mr[cm].created++;
+    var sm=_cmMonthKey(c.settledDate); if(mr[sm])mr[sm].settled++;
+    _cmTaskEvents(c).forEach(function(e){var mk=_cmMonthKey(e.date);if(mr[mk])mr[mk].tasks++;});
+  });
+  html+='<h2>Month-to-Month Trend</h2><table><tr><th style="'+th+'">Month</th><th style="'+th+'">New Cases</th><th style="'+th+'">Settled / Closed</th><th style="'+th+'">Tasks Completed</th></tr>';
+  months.forEach(function(m){var r=mr[m];html+='<tr><td style="'+td+';font-weight:700;color:'+NAVY+'">'+_cmMonthLabel(m)+'</td><td style="'+td+'">'+r.created+'</td><td style="'+td+'">'+r.settled+'</td><td style="'+td+';font-weight:700;color:'+TEAL+'">'+r.tasks+'</td></tr>';});
+  html+='</table>';
+
+  // ── Missing Claim Info — Resolution Rate (intake cohorts) ──
+  var cr={}; months.forEach(function(m){cr[m]={cohort:0,obtained:0};});
+  var outstandingNow=0, obtainedAll=0;
+  (data||[]).forEach(function(c){
+    var hasFlag=c.missingInfo&&c.missingInfo.indexOf('Missing Claim Info')!==-1;
+    var obt=(c.taskLog||[]).filter(function(e){return e.task==='Claim Info Obtained';});
+    if(hasFlag)outstandingNow++; if(obt.length)obtainedAll++;
+    if(hasFlag||obt.length){var cm=_cmMonthKey(c.createdDate);if(cr[cm]){cr[cm].cohort++;if(obt.length)cr[cm].obtained++;}}
+  });
+  var denom=obtainedAll+outstandingNow, overallPct=denom>0?Math.round(obtainedAll/denom*100):0;
+  html+='<h2>Missing Claim Info — Resolution Rate <span style="font-size:11px;color:'+MUTE+';font-weight:normal">(obtained '+obtainedAll+' / outstanding '+outstandingNow+' — '+overallPct+'%)</span></h2>';
+  html+='<table><tr><th style="'+th+'">Intake Month</th><th style="'+th+'">Needed Claim Info</th><th style="'+th+'">Obtained</th><th style="'+th+'">Still Missing</th><th style="'+th+'">Resolve Rate</th></tr>';
+  months.forEach(function(m){var r=cr[m];var still=r.cohort-r.obtained;var pct=r.cohort>0?Math.round(r.obtained/r.cohort*100):0;var col=pct>=80?GREEN:pct>=50?GOLD:RED;html+='<tr><td style="'+td+';font-weight:700;color:'+NAVY+'">'+_cmMonthLabel(m)+'</td><td style="'+td+'">'+r.cohort+'</td><td style="'+td+';color:'+TEAL+';font-weight:700">'+r.obtained+'</td><td style="'+td+'">'+still+'</td><td style="'+td+';font-weight:700;color:'+(r.cohort>0?col:MUTE)+'">'+(r.cohort>0?pct+'%':'—')+'</td></tr>';});
+  html+='</table>';
+
+  // ── Auto-Tracked totals per manager across the range ──
+  var dates=(from||to)?(function(){var out=[],d=new Date((from||to)+'T12:00:00'),e=new Date((to||today())+'T12:00:00'),g=0;while(d<=e&&g<420){out.push(d.toISOString().substring(0,10));d.setDate(d.getDate()+1);g++;}return out;})():getWeekDates(0);
+  html+='<h2>Auto-Tracked Totals by Manager <span style="font-size:11px;color:'+MUTE+';font-weight:normal">('+rangeLbl+')</span></h2>';
+  html+='<table><tr><th style="'+th+'">Metric</th>';CM_STAFF.forEach(function(s){html+='<th style="'+th+'">'+s+'</th>';});html+='<th style="'+th+'">Total</th></tr>';
+  Object.keys(CM_AUTO_LABELS).forEach(function(k){if(k==='activeCases')return;var tot=0;html+='<tr><td style="'+td+';font-weight:600">'+CM_AUTO_LABELS[k]+'</td>';CM_STAFF.forEach(function(s){var d=cmCombinedMetrics(s,dates);var v=d.auto[k]||0;tot+=v;html+='<td style="'+td+'">'+v+'</td>';});html+='<td style="'+td+';font-weight:700">'+tot+'</td></tr>';});
+  html+='</table>';
+
+  return html;
 }
 
 function downloadCmVisualReport(){
@@ -1778,6 +1897,7 @@ function downloadCmVisualReport(){
   CM_STAFF.forEach(function(s){var sc=data.filter(function(c){return c.assigned===s});var sa=sc.filter(function(c){return c.status==='Active'}).length;var ss=sc.filter(function(c){return c.status==='Settled/Closed'}).length;var sd=sc.filter(function(c){return c.status==='Dropped'}).length;var smi=sc.filter(function(c){return c.missingInfo&&c.missingInfo.indexOf('Missing Claim Info')!==-1}).length;var sDays=0;var sS=sc.filter(function(c){return c.settledDate&&c.createdDate});if(sS.length>0){var td=0;sS.forEach(function(c){td+=daysBtw(c.createdDate,c.settledDate)});sDays=Math.round(td/sS.length);}
     html+='<tr><td><strong>'+s+'</strong></td><td>'+sa+'</td><td>'+ss+'</td><td>'+sd+'</td><td>'+smi+'</td><td>'+sDays+'</td></tr>';});
   html+='</table>';
+  try{html+=_cmPrintAnalytics(data,cmMgrDateFrom,cmMgrDateTo);}catch(e){console.error('print analytics',e);}
   html+='<hr style="margin-top:28px"><p style="font-size:10px;color:#999;text-align:center">CarePath Injury Centers — Confidential</p></body></html>';
   w.document.write(html);w.document.close();w.print();
 }
@@ -4826,7 +4946,7 @@ function renderCmMgrDash(el){
   const _perLbl=_rangeOn?'Selected Range':'Current Week';
   let h=renderManagerExecSummary();
   h+='<div class="page-title">Case Management — Manager Analytics</div><div class="page-subtitle">Team metrics &amp; performance. Use the date range to focus the analytics below.</div>';
-  h+='<div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap">'+downloadBtn('Export Cases CSV','exportCases()')+downloadBtn('Print CM Report','downloadCmVisualReport()')+'</div>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap">'+downloadBtn('Export Cases CSV','exportCases()')+downloadBtn('Export Analytics CSV','exportCmAnalytics()')+downloadBtn('Print Full Report','downloadCmVisualReport()')+'</div>';
   h+='<div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap"><span style="font-size:11px;font-weight:600;color:var(--navy)">Date Range:</span><input type="date" class="search-input" id="cmMgrFrom" value="'+cmMgrDateFrom+'" style="width:140px"><span style="font-size:11px;color:var(--gray-400)">to</span><input type="date" class="search-input" id="cmMgrTo" value="'+cmMgrDateTo+'" style="width:140px"><button class="btn-primary" onclick="applyCmDateFilter()" style="font-size:11px;padding:7px 14px">Apply</button>'+((cmMgrDateFrom||cmMgrDateTo)?'<button class="btn-resolve" onclick="clearCmDateFilter()" style="font-size:10px">Clear</button>':'')+'</div>';
   h+='<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('Active Cases',active.length,'teal')+stat('Alerts',alerts.length,'red')+stat('Settled',settled.length,'')+stat('Total',fc.length,'gold')+'</div>';
   var _inLit=fc.filter(function(c){return c.status==='In Litigation'}).length;
