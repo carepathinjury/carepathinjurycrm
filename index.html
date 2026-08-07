@@ -3153,6 +3153,8 @@ function renderCrmMgrDash(el) {
   let filteredRefs=refs;
   if(crmMgrDateFrom)filteredRefs=filteredRefs.filter(r=>(r.createdDate||'')>=crmMgrDateFrom);
   if(crmMgrDateTo)filteredRefs=filteredRefs.filter(r=>(r.createdDate||'')<=crmMgrDateTo);
+  // appointment outcomes are counted by APPOINTMENT date in range (not referral-created date)
+  var _apptIn=function(r){if(!r.apptDate)return false;if(!crmMgrDateFrom&&!crmMgrDateTo)return true;var x=String(r.apptDate).substring(0,10);if(crmMgrDateFrom&&x<crmMgrDateFrom)return false;if(crmMgrDateTo&&x>crmMgrDateTo)return false;return true;};
   const total=filteredRefs.length, pending=filteredRefs.filter(r=>!r.apptDate&&r.status!=='Completed'&&r.status!=='Patient Lost').length;
   const lostCount=filteredRefs.filter(r=>r.status==='Patient Lost').length;
   const alerts=crmAlerts().length;
@@ -3169,10 +3171,10 @@ function renderCrmMgrDash(el) {
   // Summary stats
   var ctSummary=Object.entries(caseTypes).map(function(e){return e[0]+': '+e[1]}).join(' · ');
   var leakageRate=total>0?Math.round(lostCount/total*100):0;
-  var scheduledCount=filteredRefs.filter(function(r){return r.apptDate}).length;
-  var completedCount=filteredRefs.filter(function(r){return r.apptOutcome==='completed'}).length;
-  var noShowCount=filteredRefs.filter(function(r){return r.apptOutcome==='no_show'}).length;
-  var pendingApptCount=filteredRefs.filter(function(r){return r.apptDate&&!r.apptOutcome}).length;
+  var scheduledCount=refs.filter(_apptIn).length;
+  var completedCount=refs.filter(function(r){return _apptIn(r)&&r.apptOutcome==='completed'}).length;
+  var noShowCount=refs.filter(function(r){return _apptIn(r)&&r.apptOutcome==='no_show'}).length;
+  var pendingApptCount=refs.filter(function(r){return _apptIn(r)&&!r.apptOutcome}).length;
   var completedPct=scheduledCount>0?Math.round(completedCount/scheduledCount*100):0;
   var noShowPct=scheduledCount>0?Math.round(noShowCount/scheduledCount*100):0;
   var pendingApptPct=scheduledCount>0?Math.round(pendingApptCount/scheduledCount*100):0;
@@ -3195,7 +3197,7 @@ function renderCrmMgrDash(el) {
   
   // No-show drilldown (hidden by default)
   h+='<div id="noShowDrilldown" style="display:none"><div class="table-card" style="border-left:4px solid var(--red);margin-bottom:16px"><div class="table-header"><h3>No-Show Patients — '+noShowCount+' total, '+recoveredCount+' rescheduled/recovered</h3><button class="btn-resolve" onclick="document.getElementById(\'noShowDrilldown\').style.display=\'none\'" style="font-size:10px">Close ✕</button></div>';
-  var noShows=filteredRefs.filter(function(r){return r.apptOutcome==='no_show'});
+  var noShows=refs.filter(function(r){return _apptIn(r)&&r.apptOutcome==='no_show'});
   if(noShows.length===0)h+='<div style="padding:16px;text-align:center;color:var(--gray-400)">No no-shows in this date range</div>';
   else{
     h+='<div class="table-scroll"><table class="tbl"><thead><tr><th>Patient</th><th>Case Type</th><th>Location</th><th>Appt Date</th><th>Attorney/Firm</th><th>Scheduler</th><th>Status</th><th>Recovered?</th></tr></thead><tbody>';
@@ -3226,16 +3228,21 @@ function renderCrmMgrDash(el) {
   // Location bar chart
   // Location completion rate table
   h+='<div class="table-card"><div class="table-header"><h3>Appointment Completion Rate by Location</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Location</th><th>Referrals</th><th>Scheduled</th><th>Completed</th><th>Completion %</th><th>No-Shows</th><th>No-Show %</th><th>Pending</th><th>Lost</th></tr></thead><tbody>';
-  var locDetails={};filteredRefs.forEach(function(r){
+  var locDetails={};
+  var _cIn=function(r){if(!crmMgrDateFrom&&!crmMgrDateTo)return true;var c=(r.createdDate||'');if(crmMgrDateFrom&&c<crmMgrDateFrom)return false;if(crmMgrDateTo&&c>crmMgrDateTo)return false;return true;};
+  refs.forEach(function(r){
     var l=r.location||'Unknown';
     if(!locDetails[l])locDetails[l]={total:0,sched:0,comp:0,noshow:0,pending:0,lost:0};
-    locDetails[l].total++;
-    if(r.apptDate)locDetails[l].sched++;
-    if(r.apptOutcome==='completed')locDetails[l].comp++;
-    if(r.apptOutcome==='no_show')locDetails[l].noshow++;
-    if(r.apptDate&&!r.apptOutcome)locDetails[l].pending++;
-    if(r.status==='Patient Lost')locDetails[l].lost++;
+    if(_cIn(r)){locDetails[l].total++; if(r.status==='Patient Lost')locDetails[l].lost++;}
+    if(_apptIn(r)){
+      locDetails[l].sched++;
+      if(r.apptOutcome==='completed')locDetails[l].comp++;
+      else if(r.apptOutcome==='no_show')locDetails[l].noshow++;
+      else locDetails[l].pending++;
+    }
   });
+  // drop locations with nothing in the period
+  Object.keys(locDetails).forEach(function(l){var d=locDetails[l];if(!d.total&&!d.sched&&!d.lost)delete locDetails[l];});
   Object.entries(locDetails).sort(function(a,b){return b[1].total-a[1].total}).forEach(function(e){
     var loc=e[0],d=e[1];
     var compPct=d.sched>0?Math.round(d.comp/d.sched*100):0;
@@ -3246,7 +3253,7 @@ function renderCrmMgrDash(el) {
     h+='<td style="color:'+(d.noshow>0?'var(--red)':'')+'">'+d.noshow+'</td><td style="color:'+(nsPct>10?'var(--red)':'')+'">'+nsPct+'%</td>';
     h+='<td>'+d.pending+'</td><td style="color:'+(d.lost>0?'var(--red)':'')+'">'+d.lost+'</td></tr>';
   });
-  h+='</tbody></table></div></div>';
+  h+='</tbody></table></div><div style="padding:6px 18px 10px;font-size:10px;color:var(--gray-400)">Referrals & Lost count intake in the selected period; Scheduled, Completed, No-Show & Pending count appointments <em>dated</em> in the period.</div></div>';
 
   // Patients by Law Firm
   var firmCounts={};filteredRefs.forEach(function(r){var f=r.lawFirm||'No Firm';firmCounts[f]=(firmCounts[f]||0)+1;});
