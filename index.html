@@ -1698,10 +1698,10 @@ function showEodReminderModal(){
 
 function exportAllMetrics(){
   var data=getFilteredRefs();
-  var scheduled=data.filter(function(r){return r.apptDate}).length;
-  var completed=data.filter(function(r){return r.apptOutcome==='completed'}).length;
-  var noShows=data.filter(function(r){return r.apptOutcome==='no_show'}).length;
-  var pendingOutcome=data.filter(function(r){return r.apptDate&&!r.apptOutcome}).length;
+  var scheduled=refs.filter(_apptInRange).length;
+  var completed=refs.filter(function(r){return _apptInRange(r)&&r.apptOutcome==='completed'}).length;
+  var noShows=refs.filter(function(r){return _apptInRange(r)&&r.apptOutcome==='no_show'}).length;
+  var pendingOutcome=refs.filter(function(r){return _apptInRange(r)&&!r.apptOutcome}).length;
   var lost=data.filter(function(r){return r.status==='Patient Lost'}).length;
   // Timing metrics
   var refsWithSchedDays=data.filter(function(r){return r.daysToSchedule!=null&&r.daysToSchedule>=0});
@@ -1969,8 +1969,8 @@ function downloadVisualReport(){
   var dateLabel=crmMgrDateFrom||crmMgrDateTo?(crmMgrDateFrom||'Start')+' to '+(crmMgrDateTo||'Present'):'All Time';
   var total=data.length,pending=data.filter(function(r){return!r.apptDate&&r.status!=='Completed'&&r.status!=='Patient Lost'}).length;
   var lost=data.filter(function(r){return r.status==='Patient Lost'}).length;
-  var scheduled=data.filter(function(r){return r.apptDate}).length;
-  var completed=data.filter(function(r){return r.apptOutcome==='completed'}).length;
+  var scheduled=refs.filter(_apptInRange).length;
+  var completed=refs.filter(function(r){return _apptInRange(r)&&r.apptOutcome==='completed'}).length;
 
   var caseTypes={};data.forEach(function(r){var t=r.caseType||'Unknown';caseTypes[t]=(caseTypes[t]||0)+1;});
   var locCounts={};data.forEach(function(r){var l=r.location||'Unknown';locCounts[l]=(locCounts[l]||0)+1;});
@@ -2015,10 +2015,10 @@ function downloadVisualReport(){
   html+='</div>';
 
   // Appointment outcome stats
-  var apptScheduled=data.filter(function(r){return r.apptDate}).length;
-  var apptCompleted=data.filter(function(r){return r.apptOutcome==='completed'}).length;
-  var apptNoShow=data.filter(function(r){return r.apptOutcome==='no_show'}).length;
-  var apptPending=data.filter(function(r){return r.apptDate&&!r.apptOutcome}).length;
+  var apptScheduled=refs.filter(_apptInRange).length;
+  var apptCompleted=refs.filter(function(r){return _apptInRange(r)&&r.apptOutcome==='completed'}).length;
+  var apptNoShow=refs.filter(function(r){return _apptInRange(r)&&r.apptOutcome==='no_show'}).length;
+  var apptPending=refs.filter(function(r){return _apptInRange(r)&&!r.apptOutcome}).length;
   html+='<div style="text-align:center;margin:8px 0 16px">';
   html+='<div class="stat"><div class="stat-val">'+apptScheduled+'</div><div class="stat-lbl">Scheduled</div></div>';
   html+='<div class="stat"><div class="stat-val">'+apptCompleted+(apptScheduled>0?' ('+Math.round(apptCompleted/apptScheduled*100)+'%)':'')+'</div><div class="stat-lbl">Appt Completed</div></div>';
@@ -2053,11 +2053,15 @@ function downloadVisualReport(){
 
   // By location
   html+='<h2>Appointment Completion Rate by Location</h2><table><tr><th>Location</th><th>Referrals</th><th>Scheduled</th><th>Completed</th><th>Completion %</th><th>No-Shows</th><th>No-Show %</th><th>Lost</th></tr>';
-  var vrLocDetails={};data.forEach(function(r){
+  var vrLocDetails={};
+  var _cInR=function(r){if(!crmMgrDateFrom&&!crmMgrDateTo)return true;var c=(r.createdDate||'');if(crmMgrDateFrom&&c<crmMgrDateFrom)return false;if(crmMgrDateTo&&c>crmMgrDateTo)return false;return true;};
+  refs.forEach(function(r){
     var l=r.location||'Unknown';
     if(!vrLocDetails[l])vrLocDetails[l]={total:0,sched:0,comp:0,noshow:0,lost:0};
-    vrLocDetails[l].total++;if(r.apptDate)vrLocDetails[l].sched++;if(r.apptOutcome==='completed')vrLocDetails[l].comp++;if(r.apptOutcome==='no_show')vrLocDetails[l].noshow++;if(r.status==='Patient Lost')vrLocDetails[l].lost++;
+    if(_cInR(r)){vrLocDetails[l].total++;if(r.status==='Patient Lost')vrLocDetails[l].lost++;}
+    if(_apptInRange(r)){vrLocDetails[l].sched++;if(r.apptOutcome==='completed')vrLocDetails[l].comp++;else if(r.apptOutcome==='no_show')vrLocDetails[l].noshow++;}
   });
+  Object.keys(vrLocDetails).forEach(function(l){var d=vrLocDetails[l];if(!d.total&&!d.sched&&!d.lost)delete vrLocDetails[l];});
   Object.entries(vrLocDetails).sort(function(a,b){return b[1].total-a[1].total}).forEach(function(e){
     var d=e[1];var compPct=d.sched>0?Math.round(d.comp/d.sched*100):0;var nsPct=d.sched>0?Math.round(d.noshow/d.sched*100):0;
     html+='<tr><td><strong>'+e[0]+'</strong></td><td>'+d.total+'</td><td>'+d.sched+'</td><td style="color:#1a7f7a;font-weight:700">'+d.comp+'</td><td style="font-weight:700;color:'+(compPct>=75?'#1a7f7a':compPct>=50?'#c8973a':'#c0392b')+'">'+compPct+'%</td><td style="color:'+(d.noshow>0?'#c0392b':'')+'">'+d.noshow+'</td><td>'+nsPct+'%</td><td>'+d.lost+'</td></tr>';
@@ -3136,6 +3140,7 @@ function clearMgrDateFilter(){
   crmMgrDateFrom='';crmMgrDateTo='';
   renderCrmMgrDash(document.getElementById('sec-crm-mgr-dash'));
 }
+function _apptInRange(r){if(!r.apptDate)return false;if(!crmMgrDateFrom&&!crmMgrDateTo)return true;var x=String(r.apptDate).substring(0,10);if(crmMgrDateFrom&&x<crmMgrDateFrom)return false;if(crmMgrDateTo&&x>crmMgrDateTo)return false;return true;}
 function getFilteredRefs(){
   var data=refs;
   if(crmMgrDateFrom)data=data.filter(function(r){return(r.createdDate||'')>=crmMgrDateFrom});
