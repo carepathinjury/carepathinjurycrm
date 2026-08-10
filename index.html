@@ -6235,184 +6235,248 @@ function deleteMktContact(){
 // ══════════════════════════════════════════════════════════════════════
 // CALL LOG SYSTEM (shared across CRM, CM, PSR)
 // ══════════════════════════════════════════════════════════════════════
+// ════════════ MARKETING MANAGER ANALYTICS (range-driven) ════════════
+var mktAnFrom='', mktAnTo='';
+(function(){var d=new Date();mktAnFrom=new Date(d.getFullYear(),d.getMonth(),1).toISOString().substring(0,10);mktAnTo=today();})();
+
+function mktAnApply(){var f=document.getElementById('mktAnFrom'),t=document.getElementById('mktAnTo');mktAnFrom=(f&&f.value)||'';mktAnTo=(t&&t.value)||'';renderMktAnalytics(document.getElementById('sec-mkt-analytics'));}
+function mktAnClear(){var d=new Date();mktAnFrom=new Date(d.getFullYear(),d.getMonth(),1).toISOString().substring(0,10);mktAnTo=today();renderMktAnalytics(document.getElementById('sec-mkt-analytics'));}
+function mktAnPreset(kind){var d=new Date(),y=d.getFullYear(),mo=d.getMonth();
+  if(kind==='month'){mktAnFrom=new Date(y,mo,1).toISOString().substring(0,10);mktAnTo=today();}
+  else if(kind==='last30'){var s=new Date();s.setDate(s.getDate()-29);mktAnFrom=s.toISOString().substring(0,10);mktAnTo=today();}
+  else if(kind==='quarter'){var q=Math.floor(mo/3);mktAnFrom=new Date(y,q*3,1).toISOString().substring(0,10);mktAnTo=today();}
+  else if(kind==='all'){mktAnFrom='';mktAnTo='';}
+  renderMktAnalytics(document.getElementById('sec-mkt-analytics'));}
+
+function _mktIn(d,from,to){if(!d)return false;var x=String(d).substring(0,10);if(from&&x<from)return false;if(to&&x>to)return false;return true;}
+function mktRefsInRange(m,from,to){return mktSourceRefs(m).filter(function(r){return _mktIn(r.createdDate,from,to);});}
+function mktActsInRange(m,from,to){return (m.activityLog||[]).filter(function(a){return _mktIn(a.date,from,to);});}
+function mktLastActivity(m){var d=m.lastActivityDate||'';(m.activityLog||[]).forEach(function(a){if(a.date&&a.date>d)d=a.date;});return d;}
+function mktDaysSinceActivity(m){var la=mktLastActivity(m);return la?daysBtw(la,today()):9999;}
+
+// One primary status per initiative for the selected range (priority order)
+function mktStatus(m,from,to){
+  var initiated=_mktIn(m.dateInitiated||m.createdDate,from,to);
+  var refsN=mktRefsInRange(m,from,to).length;
+  var actsN=mktActsInRange(m,from,to).length;
+  var daysIdle=mktDaysSinceActivity(m);
+  if(initiated)return 'New';
+  if(refsN>0)return 'Actively Referring';
+  if(m.stage==='Meeting Scheduled')return 'Meeting Scheduled';
+  if(actsN>0)return 'Engaged';
+  if(m.stage==='Inactive'||daysIdle>90)return 'Disengaged';
+  return 'Nurture';
+}
+var MKT_STATUS_ORDER=['New','Actively Referring','Meeting Scheduled','Engaged','Nurture','Disengaged'];
+var MKT_STATUS_COLOR={'New':'#1a7f7a','Actively Referring':'#2e7d5b','Meeting Scheduled':'#c8973a','Engaged':'#3498db','Nurture':'#8a7fb0','Disengaged':'#c0392b'};
+var MKT_STATUS_DESC={'New':'Started this period','Actively Referring':'Sent \u22651 referral this period','Meeting Scheduled':'Meeting on the calendar','Engaged':'Had a touchpoint this period','Nurture':'Maintaining \u2014 no touch this period','Disengaged':'Inactive or 90+ days idle'};
+
 function renderMktAnalytics(el){
-  var now=today();
-  var thisWeekStart=new Date();thisWeekStart.setDate(thisWeekStart.getDate()-thisWeekStart.getDay());var weekStart=thisWeekStart.toISOString().split('T')[0];
-  var thisMonth=now.substring(0,7);
-  var thisQ=Math.floor((new Date().getMonth())/3);var qStart=new Date(new Date().getFullYear(),thisQ*3,1).toISOString().split('T')[0];
+  var from=mktAnFrom,to=mktAnTo;
+  var rangeLbl=(from||to)?((from||'start')+' \u2192 '+(to||'today')):'All time';
+  var V=function(c){return 'var('+c+')';};
 
-  // Pipeline summary
-  var stages={};mktList.forEach(function(m){var s=m.stage||'Unknown';stages[s]=(stages[s]||0)+1;});
-  var totalInitiatives=mktList.length;
-  var activeRels=stages['Active Relationship']||0;
-  var contacted=stages['Contacted']||0;
-  var meetingSched=stages['Meeting Scheduled']||0;
-
-  // Time-based counts
-  var weekNew=mktList.filter(function(m){return (m.dateInitiated||'')>=weekStart}).length;
-  var monthNew=mktList.filter(function(m){return (m.dateInitiated||'').startsWith(thisMonth)}).length;
-  var qNew=mktList.filter(function(m){return (m.dateInitiated||'')>=qStart}).length;
-
-  // Referral conversion from marketing
-  var totalMktRefs=0,mktConversions=[];
+  // ---- classify every initiative ----
+  var buckets={};MKT_STATUS_ORDER.forEach(function(s){buckets[s]=[];});
+  var totalRefsRange=0, activelyReferring=0, newCount=0, actedCount=0;
   mktList.forEach(function(m){
-    var refCount=mktSourceRefs(m).length;
-    totalMktRefs+=refCount;
-    mktConversions.push({name:m.name,stage:m.stage,effort:m.effort||'Low',volume:m.volume||'—',refs:refCount,roi:mktRoi(m)});
+    var st=mktStatus(m,from,to);buckets[st].push(m);
+    var rN=mktRefsInRange(m,from,to).length;totalRefsRange+=rN;if(rN>0)activelyReferring++;
+    if(_mktIn(m.dateInitiated||m.createdDate,from,to))newCount++;
+    if(mktActsInRange(m,from,to).length>0)actedCount++;
   });
-  mktConversions.sort(function(a,b){return b.refs-a.refs});
+  var totalInit=mktList.length;
 
-  var h='<div class="page-title">Marketing Analytics</div><div class="page-subtitle">Campaign performance, pipeline health, and referral conversion.</div>';
-  h+='<div style="margin-bottom:8px">'+downloadBtn('Export Marketing Data','exportMktData()')+'</div>';
+  var h='<div class="page-title">Marketing \u2014 Manager Analytics</div><div class="page-subtitle">Pipeline health, initiative ROI, and activity \u2014 for the selected date range.</div>';
 
-  // ═══ MONTHLY KPI DASHBOARD ═══
-  // Targets by month (M1-M6, then M6 ongoing)
-  var MKT_TARGETS=[
-    {calls:10,visits:5,meetings:2,contacts:125,followups:0,partnerEmails:0,newsletters:0,events:0},
-    {calls:15,visits:10,meetings:4,contacts:50,followups:20,partnerEmails:1,newsletters:0,events:0},
-    {calls:15,visits:10,meetings:6,contacts:45,followups:20,partnerEmails:1,newsletters:1,events:0},
-    {calls:22,visits:12,meetings:6,contacts:45,followups:30,partnerEmails:1,newsletters:1,events:1},
-    {calls:30,visits:12,meetings:7,contacts:45,followups:30,partnerEmails:1,newsletters:1,events:0},
-    {calls:30,visits:12,meetings:7,contacts:40,followups:30,partnerEmails:1,newsletters:1,events:1}
-  ];
-  // Determine current month index (from first marketing activity or account creation)
-  var mktStartDate=null;mktList.forEach(function(m){if(m.createdDate&&(!mktStartDate||m.createdDate<mktStartDate))mktStartDate=m.createdDate;});
-  if(!mktStartDate)mktStartDate=today();
-  var monthsActive=Math.max(0,Math.floor(daysBtw(mktStartDate,now)/30));
-  var targetIdx=Math.min(monthsActive,5);
-  var targets=MKT_TARGETS[targetIdx];
-  var monthLabel='Month '+(monthsActive+1);
+  // ---- date range controls ----
+  h+='<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">';
+  h+='<span style="font-size:11px;font-weight:700;color:var(--navy)">Date Range:</span>';
+  h+='<input type="date" class="search-input" id="mktAnFrom" value="'+from+'" style="width:150px">';
+  h+='<span style="font-size:11px;color:var(--gray-400)">to</span>';
+  h+='<input type="date" class="search-input" id="mktAnTo" value="'+to+'" style="width:150px">';
+  h+='<button class="btn-primary" onclick="mktAnApply()" style="font-size:11px;padding:7px 14px">Apply</button>';
+  h+='<button class="filter-btn" onclick="mktAnPreset(\'month\')">This Month</button>';
+  h+='<button class="filter-btn" onclick="mktAnPreset(\'last30\')">Last 30 Days</button>';
+  h+='<button class="filter-btn" onclick="mktAnPreset(\'quarter\')">This Quarter</button>';
+  h+='<button class="filter-btn" onclick="mktAnPreset(\'all\')">All Time</button>';
+  h+='</div>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap">'+downloadBtn('\u2b07 Download PDF Report','downloadMktAnalyticsReport()')+downloadBtn('\u2b07 Export CSV','exportMktAnalytics()')+'<span style="font-size:11px;color:var(--gray-500)">Showing: <strong>'+esc(rangeLbl)+'</strong></span></div>';
 
-  // Count actuals for current month
-  var monthActivities=[];
-  mktList.forEach(function(m){(m.activityLog||[]).forEach(function(a){if((a.date||'').startsWith(thisMonth))monthActivities.push(a);});});
-  var actCalls=monthActivities.filter(function(a){return a.type==='Phone Call'}).length;
-  var actVisits=monthActivities.filter(function(a){return a.type==='Office Visit/Drop-off'||a.type==='Lunch/Dinner'}).length;
-  var actMeetings=monthActivities.filter(function(a){return a.type==='In-Person Meeting'||a.type==='Presentation'}).length;
-  var actFollowups=monthActivities.filter(function(a){return a.type==='Follow-Up'||a.type==='Email Outreach'}).length;
-  var actPartnerEmails=monthActivities.filter(function(a){return a.type==='Email Campaign'}).length;
-  var actNewsletters=monthActivities.filter(function(a){return(a.note||'').toLowerCase().indexOf('newsletter')!==-1}).length;
-  var actEvents=monthActivities.filter(function(a){return a.type==='Event/Seminar'}).length;
-  var actContacts=mktContacts.filter(function(c){return(c.createdDate||'').startsWith(thisMonth)}).length;
+  // ---- KPI cards ----
+  function kpi(val,label,color){return '<div style="flex:1;min-width:150px;background:#fff;border:1px solid var(--gray-200);border-radius:10px;padding:14px 16px"><div style="font-size:30px;font-weight:800;color:'+color+'">'+val+'</div><div style="font-size:11px;color:var(--gray-500);margin-top:2px">'+label+'</div></div>';}
+  h+='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">';
+  h+=kpi(totalInit,'Total Initiatives',V('--navy'));
+  h+=kpi(newCount,'New This Period',V('--teal'));
+  h+=kpi(activelyReferring,'Actively Referring',V('--green'));
+  h+=kpi(totalRefsRange,'Referrals Generated',V('--teal'));
+  h+=kpi(buckets['Meeting Scheduled'].length,'Meetings on Calendar',V('--gold'));
+  h+=kpi(buckets['Disengaged'].length,'Disengaged',V('--red'));
+  h+='</div>';
 
-  function kpiBar(label,actual,target,unit){
-    if(target===0)return'';
-    var pct=target>0?Math.min(100,Math.round(actual/target*100)):0;
-    var color=pct>=100?'#1a7f7a':pct>=60?'#c8973a':'#c0392b';
-    return'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><div style="width:200px;font-size:12px;color:var(--navy)">'+label+'</div><div style="flex:1;background:#eee;height:10px;border-radius:5px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:'+color+';border-radius:5px;transition:width 0.3s"></div></div><div style="width:70px;text-align:right;font-size:12px;font-weight:700;color:'+color+'">'+actual+(unit||'')+' /'+target+'</div></div>';
+  // ---- pipeline status grid ----
+  h+='<div class="table-card"><div class="table-header"><h3>Pipeline Status \u2014 Where Every Account Stands</h3></div><div style="padding:16px 18px"><div style="display:flex;gap:10px;flex-wrap:wrap">';
+  MKT_STATUS_ORDER.forEach(function(st){
+    var n=buckets[st].length,pct=totalInit?Math.round(n/totalInit*100):0,col=MKT_STATUS_COLOR[st];
+    h+='<div style="flex:1;min-width:160px;background:#fff;border:1px solid var(--gray-200);border-left:4px solid '+col+';border-radius:8px;padding:12px 14px">'
+      +'<div style="font-size:26px;font-weight:800;color:'+col+'">'+n+'</div>'
+      +'<div style="font-size:12px;font-weight:700;color:var(--navy)">'+st+'</div>'
+      +'<div style="font-size:10px;color:var(--gray-400);margin:3px 0 6px;min-height:26px">'+MKT_STATUS_DESC[st]+'</div>'
+      +'<div style="background:var(--gray-100,#eee);border-radius:4px;height:6px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:'+col+'"></div></div>'
+      +'<div style="font-size:9px;color:var(--gray-400);margin-top:3px">'+pct+'% of pipeline</div></div>';
+  });
+  h+='</div></div></div>';
+
+  // ---- referral-producing initiatives / ROI ----
+  var producers=mktList.map(function(m){return {m:m,rangeRefs:mktRefsInRange(m,from,to).length,totalRefs:mktSourceRefs(m).length,roi:mktRoi(m)};})
+    .filter(function(x){return x.rangeRefs>0||x.totalRefs>0;}).sort(function(a,b){return b.rangeRefs-a.rangeRefs||b.totalRefs-a.totalRefs;});
+  h+='<div class="table-card"><div class="table-header"><h3>Initiative ROI \u2014 Referrals Generated</h3><span style="font-size:11px;color:var(--gray-400)">'+esc(rangeLbl)+'</span></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Initiative</th><th>Type</th><th>Stage</th><th style="text-align:center">Referrals (range)</th><th style="text-align:center">Referrals (all-time)</th><th>Effort</th><th>ROI Potential</th></tr></thead><tbody>';
+  if(!producers.length)h+='<tr><td colspan="7" style="color:var(--gray-400);text-align:center;padding:14px">No referral-linked initiatives yet.</td></tr>';
+  producers.slice(0,40).forEach(function(x){var m=x.m;
+    h+='<tr><td style="font-weight:600;color:var(--navy)">'+esc(m.name)+'</td><td style="font-size:11px">'+esc(m.type||'')+'</td><td style="font-size:11px">'+esc(m.stage||'')+'</td>'
+      +'<td style="text-align:center;font-weight:700;color:var(--teal)">'+x.rangeRefs+'</td>'
+      +'<td style="text-align:center">'+x.totalRefs+'</td>'
+      +'<td style="font-size:11px">'+esc(m.effort||'Low')+'</td>'
+      +'<td style="font-weight:600;color:'+x.roi.color+'">'+esc(x.roi.label)+'</td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+
+  // ---- full pipeline breakdown table ----
+  h+='<div class="table-card"><div class="table-header"><h3>All Accounts \u2014 Status Detail</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Account</th><th>Stage</th><th>Status (range)</th><th style="text-align:center">Refs (range)</th><th style="text-align:center">Activities (range)</th><th>Last Activity</th><th>Offices</th></tr></thead><tbody>';
+  var sorted=mktList.slice().sort(function(a,b){return MKT_STATUS_ORDER.indexOf(mktStatus(a,from,to))-MKT_STATUS_ORDER.indexOf(mktStatus(b,from,to));});
+  sorted.forEach(function(m){var st=mktStatus(m,from,to),la=mktLastActivity(m);
+    h+='<tr><td style="font-weight:600;color:var(--navy)">'+esc(m.name)+'</td><td style="font-size:11px">'+esc(m.stage||'')+'</td>'
+      +'<td><span style="font-size:10px;font-weight:700;color:#fff;background:'+MKT_STATUS_COLOR[st]+';padding:2px 8px;border-radius:10px">'+st+'</span></td>'
+      +'<td style="text-align:center">'+mktRefsInRange(m,from,to).length+'</td>'
+      +'<td style="text-align:center">'+mktActsInRange(m,from,to).length+'</td>'
+      +'<td style="font-size:11px;color:'+(la?'var(--ink,#333)':'var(--gray-400)')+'">'+(la||'\u2014')+'</td>'
+      +'<td style="font-size:10px;color:var(--gray-500)">'+esc((m.targetLocations||[]).join(', ')||'\u2014')+'</td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+
+  // ---- new initiatives this period ----
+  var newOnes=mktList.filter(function(m){return _mktIn(m.dateInitiated||m.createdDate,from,to);}).sort(function(a,b){return (b.dateInitiated||'').localeCompare(a.dateInitiated||'');});
+  h+='<div class="table-card"><div class="table-header"><h3>New Initiatives This Period</h3><span style="font-size:11px;color:var(--gray-400)">'+newOnes.length+' new</span></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Initiative</th><th>Type</th><th>Contact</th><th>Date Initiated</th><th>Offices</th></tr></thead><tbody>';
+  if(!newOnes.length)h+='<tr><td colspan="5" style="color:var(--gray-400);text-align:center;padding:14px">No new initiatives in this range.</td></tr>';
+  newOnes.forEach(function(m){h+='<tr><td style="font-weight:600;color:var(--navy)">'+esc(m.name)+'</td><td style="font-size:11px">'+esc(m.type||'')+'</td><td style="font-size:11px">'+esc(m.contact||'')+'</td><td style="font-size:11px">'+esc(m.dateInitiated||m.createdDate||'')+'</td><td style="font-size:10px;color:var(--gray-500)">'+esc((m.targetLocations||[]).join(', ')||'\u2014')+'</td></tr>';});
+  h+='</tbody></table></div></div>';
+
+  // ---- activity breakdown (by type + by rep) ----
+  var actTypes={},actByRep={},totalActs=0;
+  mktList.forEach(function(m){mktActsInRange(m,from,to).forEach(function(a){var t=a.type||'Other';actTypes[t]=(actTypes[t]||0)+1;var by=a.by||'Unknown';actByRep[by]=(actByRep[by]||0)+1;totalActs++;});});
+  h+='<div class="table-card"><div class="table-header"><h3>Activity Breakdown</h3><span style="font-size:11px;color:var(--gray-400)">'+totalActs+' activities</span></div><div style="padding:14px 18px">';
+  if(!totalActs)h+='<div style="color:var(--gray-400);font-size:12px">No logged activity in this range.</div>';
+  else{
+    var maxA=Math.max.apply(null,Object.values(actTypes));
+    h+='<div style="font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin-bottom:8px">By Type</div>';
+    Object.entries(actTypes).sort(function(a,b){return b[1]-a[1];}).forEach(function(e){var pct=Math.round(e[1]/maxA*100);
+      h+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:5px"><div style="width:150px;font-size:12px;color:var(--navy)">'+esc(e[0])+'</div><div style="flex:1;background:var(--gray-100,#eee);border-radius:5px;height:14px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:var(--teal)"></div></div><div style="width:36px;text-align:right;font-size:12px;font-weight:700;color:var(--teal)">'+e[1]+'</div></div>';});
+    h+='<div style="font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin:14px 0 8px">By Team Member</div>';
+    Object.entries(actByRep).sort(function(a,b){return b[1]-a[1];}).forEach(function(e){h+='<div style="font-size:12px;color:var(--navy);margin-bottom:3px">'+esc(e[0])+': <strong>'+e[1]+'</strong></div>';});
   }
-
-  h+='<div class="table-card" style="border-left:4px solid var(--teal);margin-bottom:16px"><div style="padding:18px 20px">';
-  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div><div style="font-size:16px;font-weight:700;color:var(--navy)">📊 Monthly KPI Dashboard</div><div style="font-size:11px;color:var(--gray-500)">'+monthLabel+' targets — '+new Date().toLocaleString("default",{month:"long",year:"numeric"})+'</div></div>';
-  var totalKpis=8,metKpis=0;
-  if(actCalls>=targets.calls)metKpis++;if(actVisits>=targets.visits)metKpis++;if(actMeetings>=targets.meetings)metKpis++;if(actContacts>=targets.contacts)metKpis++;
-  if(targets.followups>0&&actFollowups>=targets.followups)metKpis++;else if(targets.followups===0)totalKpis--;
-  if(targets.partnerEmails>0&&actPartnerEmails>=targets.partnerEmails)metKpis++;else if(targets.partnerEmails===0)totalKpis--;
-  if(targets.newsletters>0&&actNewsletters>=targets.newsletters)metKpis++;else if(targets.newsletters===0)totalKpis--;
-  if(targets.events>0&&actEvents>=targets.events)metKpis++;else if(targets.events===0)totalKpis--;
-  var overallPct=totalKpis>0?Math.round(metKpis/totalKpis*100):0;
-  var overallColor=overallPct>=80?'var(--teal)':overallPct>=50?'var(--gold)':'var(--red)';
-  h+='<div style="text-align:center"><div style="font-size:28px;font-weight:800;color:'+overallColor+'">'+metKpis+'/'+totalKpis+'</div><div style="font-size:10px;color:var(--gray-500)">KPIs Met</div></div></div>';
-
-  h+=kpiBar('Phone Calls (Connected)',actCalls,targets.calls);
-  h+=kpiBar('Drop-offs / Visits',actVisits,targets.visits);
-  h+=kpiBar('Intro Meetings Held',actMeetings,targets.meetings);
-  h+=kpiBar('Net-New CRM Contacts',actContacts,targets.contacts);
-  if(targets.followups>0)h+=kpiBar('Follow-Up Touches',actFollowups,targets.followups);
-  if(targets.partnerEmails>0)h+=kpiBar('Partner Update Emails',actPartnerEmails,targets.partnerEmails);
-  if(targets.newsletters>0)h+=kpiBar('Patient Newsletters',actNewsletters,targets.newsletters);
-  if(targets.events>0)h+=kpiBar('Events Held',actEvents,targets.events);
-
-  h+='<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--gray-200);font-size:10px;color:var(--gray-500)">Targets scale up over 6 months. Currently on '+monthLabel+' targets. Activities are counted from activity logs by type.</div>';
   h+='</div></div>';
 
-  // ═══ 6-MONTH TARGET ROADMAP ═══
-  h+='<div class="table-card"><div class="table-header"><h3>6-Month Target Roadmap</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Metric</th><th>M1</th><th>M2</th><th>M3</th><th>M4</th><th>M5</th><th>M6</th></tr></thead><tbody>';
-  var roadmapRows=[
-    ['Phone Calls (Connected)','10','10-20','10-20','15-30','15-45','15-45'],
-    ['Drop-offs / Visits','5','10','10','10-15','10-15','10-15'],
-    ['Intro Meetings (w/ Dr. Qu)','2','4','5-7','5-7','5-10','5-10'],
-    ['Net-New CRM Contacts','100-150','50','40-50','40-50','40-50','30-50'],
-    ['Follow-Up Touches','—','20','20','30','30','30'],
-    ['Partner Update Emails','—','1','1','1','1','1'],
-    ['Patient Newsletters','—','—','1','1','1','1'],
-    ['Events Held','—','—','—','1','—','1']
-  ];
-  roadmapRows.forEach(function(row){
-    h+='<tr><td style="font-weight:600;font-size:11px">'+row[0]+'</td>';
-    for(var mi=1;mi<=6;mi++){
-      var isCurrent=mi===(monthsActive+1);
-      h+='<td style="text-align:center;font-size:11px;'+(isCurrent?'background:rgba(26,127,122,0.1);font-weight:700;color:var(--teal)':'')+'">'+row[mi]+'</td>';
-    }
-    h+='</tr>';
-  });
-  h+='</tbody></table></div><div style="padding:8px 18px;font-size:10px;color:var(--gray-500);border-top:1px solid var(--gray-200)">Current month highlighted in green</div></div>';
-
-  // Summary stats
-  h+='<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('Total Accounts',totalInitiatives,'teal')+stat('Active Relationships',activeRels,'teal')+stat('Referrals from Marketing',totalMktRefs,'gold')+stat('Conversion Rate',totalInitiatives>0?Math.round(mktConversions.filter(function(m){return m.refs>0}).length/totalInitiatives*100)+'%':'—','')+'</div>';
-
-  // Pipeline Status Summary
-  h+='<div class="table-card"><div class="table-header"><h3>Pipeline Status Summary</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Period</th><th>New Accounts</th><th>Active Relationships</th><th>Total Pipeline</th></tr></thead><tbody>';
-  h+='<tr><td style="font-weight:600">This Week</td><td>'+weekNew+'</td><td>'+activeRels+'</td><td>'+totalInitiatives+'</td></tr>';
-  h+='<tr><td style="font-weight:600">This Month</td><td>'+monthNew+'</td><td>'+activeRels+'</td><td>'+totalInitiatives+'</td></tr>';
-  h+='<tr><td style="font-weight:600">This Quarter</td><td>'+qNew+'</td><td>'+activeRels+'</td><td>'+totalInitiatives+'</td></tr>';
-  h+='</tbody></table></div></div>';
-
-  // Pipeline by Stage
-  h+='<div class="table-card"><div class="table-header"><h3>Pipeline by Stage</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Stage</th><th>Count</th><th>%</th></tr></thead><tbody>';
-  var stageOrder=['Contacted','Meeting Scheduled','Active Relationship','Inactive'];
-  stageOrder.forEach(function(s){
-    var c=stages[s]||0;
-    if(c>0)h+='<tr><td style="font-weight:600">'+esc(s)+'</td><td>'+c+'</td><td>'+(totalInitiatives>0?Math.round(c/totalInitiatives*100):0)+'%</td></tr>';
-  });
-  h+='</tbody></table></div></div>';
-
-  // NP Referral Source to Marketing Conversion
-  h+='<div class="table-card"><div class="table-header"><h3>Marketing → Patient Referral Conversion</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Organization / Source</th><th>Stage</th><th>Effort</th><th>Expected Volume</th><th>Actual Referrals</th><th>ROI</th></tr></thead><tbody>';
-  mktConversions.forEach(function(m){
-    h+='<tr><td style="font-weight:600">'+esc(m.name)+'</td><td><span class="status-badge '+(m.stage==='Active Relationship'?'status-active':m.stage==='Inactive'?'status-settled':'status-pending')+'">'+esc(m.stage)+'</span></td><td>'+esc(m.effort)+'</td><td>'+esc(m.volume)+'</td><td style="font-weight:700">'+m.refs+'</td><td><span style="color:'+m.roi.color+';font-weight:700">'+m.roi.icon+' '+m.roi.label+'</span></td></tr>';
-  });
-  h+='</tbody></table></div></div>';
-
-  // Upcoming Initiatives / Follow-ups
-  var upcoming=mktList.filter(function(m){return m.nextFollowUp&&m.stage!=='Inactive'}).sort(function(a,b){return (a.nextFollowUp||'').localeCompare(b.nextFollowUp||'')});
-  h+='<div class="table-card"><div class="table-header"><h3>Upcoming Follow-ups & Initiatives</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Initiative</th><th>Contact</th><th>Stage</th><th>Next Follow-up</th><th>Status</th></tr></thead><tbody>';
-  if(upcoming.length===0)h+='<tr><td colspan="5" style="text-align:center;color:var(--gray-400);padding:20px">No upcoming follow-ups scheduled.</td></tr>';
-  upcoming.slice(0,20).forEach(function(m){
-    var daysUntil=daysBtw(now,m.nextFollowUp);
-    var statusColor=daysUntil<0?'var(--red)':daysUntil<=3?'var(--gold)':'var(--teal)';
-    var statusText=daysUntil<0?'Overdue ('+Math.abs(daysUntil)+'d)':daysUntil===0?'Today':'In '+daysUntil+' days';
-    h+='<tr><td style="font-weight:600">'+esc(m.name)+'</td><td>'+esc(m.contact||'—')+'</td><td>'+esc(m.stage)+'</td><td>'+fmtDate(m.nextFollowUp)+'</td><td><span style="color:'+statusColor+';font-weight:700">'+statusText+'</span></td></tr>';
-  });
-  h+='</tbody></table></div></div>';
-
-  // Activity by team member (this month) — attribution (hidden from exec/analytics-only roles)
-  if(!_isExec()){
-  var byPerson={};
-  monthActivities.forEach(function(a){var who=a.by||'Unattributed';if(!byPerson[who])byPerson[who]={total:0,calls:0,visits:0,meetings:0};byPerson[who].total++;if(a.type==='Phone Call')byPerson[who].calls++;if(a.type==='Office Visit/Drop-off'||a.type==='Lunch/Dinner')byPerson[who].visits++;if(a.type==='In-Person Meeting'||a.type==='Presentation')byPerson[who].meetings++;});
-  var people=Object.keys(byPerson).sort(function(a,b){return byPerson[b].total-byPerson[a].total});
-  h+='<div class="table-card"><div class="table-header"><h3>Activity by Team Member — '+new Date().toLocaleString("default",{month:"long"})+'</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Team Member</th><th>Total</th><th>Phone Calls</th><th>Visits</th><th>Meetings</th></tr></thead><tbody>';
-  people.forEach(function(p){var d=byPerson[p];h+='<tr><td style="font-weight:600;color:var(--navy)">'+esc(p)+'</td><td style="font-weight:700">'+d.total+'</td><td>'+d.calls+'</td><td>'+d.visits+'</td><td>'+d.meetings+'</td></tr>';});
-  if(people.length===0)h+='<tr><td colspan="5" style="text-align:center;color:var(--gray-400);padding:20px">No activity logged this month yet.</td></tr>';
-  h+='</tbody></table></div><div style="padding:8px 18px;font-size:10px;color:var(--gray-400)">"Unattributed" = activities logged before per-person tracking was enabled.</div></div>';
-  }
-
-  // Activity Summary
-  var totalActivities=0;var actByType={};
-  mktList.forEach(function(m){
-    (m.activityLog||[]).forEach(function(a){
-      totalActivities++;
-      actByType[a.type]=(actByType[a.type]||0)+1;
-    });
-  });
-  h+='<div class="table-card"><div class="table-header"><h3>Activity Summary</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Activity Type</th><th>Count</th><th>%</th></tr></thead><tbody>';
-  Object.entries(actByType).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
-    h+='<tr><td style="font-weight:600">'+esc(e[0])+'</td><td>'+e[1]+'</td><td>'+(totalActivities>0?Math.round(e[1]/totalActivities*100):0)+'%</td></tr>';
-  });
-  if(totalActivities===0)h+='<tr><td colspan="3" style="text-align:center;color:var(--gray-400);padding:20px">No activities logged yet.</td></tr>';
-  h+='</tbody></table></div></div>';
-
   el.innerHTML=h;
+}
+// ──────── Marketing analytics: print report + CSV (range-aware) ────────
+function downloadMktAnalyticsReport(){
+  var from=mktAnFrom,to=mktAnTo;
+  var rangeLbl=(from||to)?((from||'start')+' to '+(to||'today')):'All time';
+  var NAVY='#14342f',TEAL='#1a7f7a',GOLD='#c8973a',RED='#c0392b',GREEN='#2e7d5b',MUTE='#666',LINE='#e4e8e6';
+  var th='background:'+NAVY+';color:#fff;padding:7px 9px;text-align:left;font-size:10px';
+  var td='padding:5px 9px;border-bottom:1px solid '+LINE+';font-size:11px';
+
+  var buckets={};MKT_STATUS_ORDER.forEach(function(s){buckets[s]=[];});
+  var totalRefsRange=0,activelyReferring=0,newCount=0;
+  mktList.forEach(function(m){buckets[mktStatus(m,from,to)].push(m);var rN=mktRefsInRange(m,from,to).length;totalRefsRange+=rN;if(rN>0)activelyReferring++;if(_mktIn(m.dateInitiated||m.createdDate,from,to))newCount++;});
+
+  var w=window.open('','_blank');
+  var html='<html><head><title>CarePath Marketing Analytics</title><style>body{font-family:Georgia,serif;color:#1f2a28;margin:32px}h1{color:'+NAVY+';font-size:22px;margin:0 0 2px}h2{color:'+NAVY+';font-size:15px;border-bottom:2px solid '+GOLD+';padding-bottom:4px;margin:22px 0 8px}table{width:100%;border-collapse:collapse;margin:6px 0 12px}.sub{color:'+MUTE+';font-size:12px;margin-bottom:4px}.cards{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.card{flex:1;min-width:120px;border:1px solid '+LINE+';border-radius:8px;padding:10px 12px}.card .n{font-size:24px;font-weight:800}.card .l{font-size:10px;color:'+MUTE+'}@media print{.card{break-inside:avoid}table{break-inside:auto}tr{break-inside:avoid}}</style></head><body>';
+  html+='<h1>Marketing \u2014 Manager Analytics</h1><div class="sub">Range: '+rangeLbl+' &nbsp;|&nbsp; Generated: '+new Date().toLocaleString()+'</div>';
+
+  // KPI cards
+  html+='<div class="cards">';
+  html+='<div class="card"><div class="n" style="color:'+NAVY+'">'+mktList.length+'</div><div class="l">Total Initiatives</div></div>';
+  html+='<div class="card"><div class="n" style="color:'+TEAL+'">'+newCount+'</div><div class="l">New This Period</div></div>';
+  html+='<div class="card"><div class="n" style="color:'+GREEN+'">'+activelyReferring+'</div><div class="l">Actively Referring</div></div>';
+  html+='<div class="card"><div class="n" style="color:'+TEAL+'">'+totalRefsRange+'</div><div class="l">Referrals Generated</div></div>';
+  html+='<div class="card"><div class="n" style="color:'+GOLD+'">'+buckets['Meeting Scheduled'].length+'</div><div class="l">Meetings on Calendar</div></div>';
+  html+='<div class="card"><div class="n" style="color:'+RED+'">'+buckets['Disengaged'].length+'</div><div class="l">Disengaged</div></div>';
+  html+='</div>';
+
+  // pipeline status
+  html+='<h2>Pipeline Status</h2><table><tr><th style="'+th+'">Status</th><th style="'+th+'">Count</th><th style="'+th+'">% of Pipeline</th><th style="'+th+'">Meaning</th></tr>';
+  MKT_STATUS_ORDER.forEach(function(st){var n=buckets[st].length,pct=mktList.length?Math.round(n/mktList.length*100):0;html+='<tr><td style="'+td+';font-weight:700;color:'+MKT_STATUS_COLOR[st]+'">'+st+'</td><td style="'+td+'">'+n+'</td><td style="'+td+'">'+pct+'%</td><td style="'+td+';color:'+MUTE+'">'+MKT_STATUS_DESC[st]+'</td></tr>';});
+  html+='</table>';
+
+  // ROI producers
+  var producers=mktList.map(function(m){return {m:m,rangeRefs:mktRefsInRange(m,from,to).length,totalRefs:mktSourceRefs(m).length,roi:mktRoi(m)};}).filter(function(x){return x.totalRefs>0;}).sort(function(a,b){return b.rangeRefs-a.rangeRefs||b.totalRefs-a.totalRefs;});
+  html+='<h2>Initiative ROI \u2014 Referrals Generated</h2><table><tr><th style="'+th+'">Initiative</th><th style="'+th+'">Type</th><th style="'+th+'">Stage</th><th style="'+th+'">Refs (range)</th><th style="'+th+'">Refs (all-time)</th><th style="'+th+'">Effort</th><th style="'+th+'">ROI</th></tr>';
+  if(!producers.length)html+='<tr><td style="'+td+'" colspan="7">No referral-linked initiatives yet.</td></tr>';
+  producers.forEach(function(x){var m=x.m;html+='<tr><td style="'+td+';font-weight:700;color:'+NAVY+'">'+esc(m.name)+'</td><td style="'+td+'">'+esc(m.type||'')+'</td><td style="'+td+'">'+esc(m.stage||'')+'</td><td style="'+td+';font-weight:700;color:'+TEAL+'">'+x.rangeRefs+'</td><td style="'+td+'">'+x.totalRefs+'</td><td style="'+td+'">'+esc(m.effort||'Low')+'</td><td style="'+td+';font-weight:700">'+esc(x.roi.label)+'</td></tr>';});
+  html+='</table>';
+
+  // new initiatives
+  var newOnes=mktList.filter(function(m){return _mktIn(m.dateInitiated||m.createdDate,from,to);}).sort(function(a,b){return (b.dateInitiated||'').localeCompare(a.dateInitiated||'');});
+  html+='<h2>New Initiatives This Period ('+newOnes.length+')</h2><table><tr><th style="'+th+'">Initiative</th><th style="'+th+'">Type</th><th style="'+th+'">Contact</th><th style="'+th+'">Date Initiated</th><th style="'+th+'">Offices</th></tr>';
+  if(!newOnes.length)html+='<tr><td style="'+td+'" colspan="5">None.</td></tr>';
+  newOnes.forEach(function(m){html+='<tr><td style="'+td+';font-weight:700;color:'+NAVY+'">'+esc(m.name)+'</td><td style="'+td+'">'+esc(m.type||'')+'</td><td style="'+td+'">'+esc(m.contact||'')+'</td><td style="'+td+'">'+esc(m.dateInitiated||m.createdDate||'')+'</td><td style="'+td+'">'+esc((m.targetLocations||[]).join(', '))+'</td></tr>';});
+  html+='</table>';
+
+  // all accounts status detail
+  html+='<h2>All Accounts \u2014 Status Detail</h2><table><tr><th style="'+th+'">Account</th><th style="'+th+'">Stage</th><th style="'+th+'">Status</th><th style="'+th+'">Refs (range)</th><th style="'+th+'">Activities (range)</th><th style="'+th+'">Last Activity</th></tr>';
+  mktList.slice().sort(function(a,b){return MKT_STATUS_ORDER.indexOf(mktStatus(a,from,to))-MKT_STATUS_ORDER.indexOf(mktStatus(b,from,to));}).forEach(function(m){var st=mktStatus(m,from,to);html+='<tr><td style="'+td+';font-weight:700;color:'+NAVY+'">'+esc(m.name)+'</td><td style="'+td+'">'+esc(m.stage||'')+'</td><td style="'+td+';font-weight:700;color:'+MKT_STATUS_COLOR[st]+'">'+st+'</td><td style="'+td+'">'+mktRefsInRange(m,from,to).length+'</td><td style="'+td+'">'+mktActsInRange(m,from,to).length+'</td><td style="'+td+'">'+(mktLastActivity(m)||'\u2014')+'</td></tr>';});
+  html+='</table>';
+
+  // activity breakdown
+  var actTypes={};mktList.forEach(function(m){mktActsInRange(m,from,to).forEach(function(a){var t=a.type||'Other';actTypes[t]=(actTypes[t]||0)+1;});});
+  html+='<h2>Activity Breakdown by Type</h2><table><tr><th style="'+th+'">Activity Type</th><th style="'+th+'">Count</th></tr>';
+  var atEntries=Object.entries(actTypes).sort(function(a,b){return b[1]-a[1];});
+  if(!atEntries.length)html+='<tr><td style="'+td+'" colspan="2">No logged activity in this range.</td></tr>';
+  atEntries.forEach(function(e){html+='<tr><td style="'+td+'">'+esc(e[0])+'</td><td style="'+td+';font-weight:700;color:'+TEAL+'">'+e[1]+'</td></tr>';});
+  html+='</table>';
+
+  html+='<hr style="margin-top:28px;border:none;border-top:1px solid '+LINE+'"><p style="font-size:10px;color:#999;text-align:center">CarePath Injury Centers \u2014 Marketing Analytics \u2014 Confidential</p></body></html>';
+  w.document.write(html);w.document.close();setTimeout(function(){w.print();},300);
+}
+
+function exportMktAnalytics(){
+  var from=mktAnFrom,to=mktAnTo;
+  var rangeLbl=(from||to)?((from||'start')+' to '+(to||'today')):'All time';
+  var Q=function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';};
+  var line=function(a){return a.map(Q).join(',');};
+  var out=[];
+  out.push(line(['CarePath Marketing \u2014 Manager Analytics']));
+  out.push(line(['Range',rangeLbl,'Generated',new Date().toLocaleString()]));
+  out.push('');
+
+  var buckets={};MKT_STATUS_ORDER.forEach(function(s){buckets[s]=0;});
+  mktList.forEach(function(m){buckets[mktStatus(m,from,to)]++;});
+  out.push(line(['PIPELINE STATUS SUMMARY']));
+  out.push(line(['Status','Count','% of Pipeline','Meaning']));
+  MKT_STATUS_ORDER.forEach(function(st){var n=buckets[st],pct=mktList.length?Math.round(n/mktList.length*100):0;out.push(line([st,n,pct+'%',MKT_STATUS_DESC[st]]));});
+  out.push('');
+
+  out.push(line(['ALL ACCOUNTS \u2014 STATUS DETAIL']));
+  out.push(line(['Account','Type','Stage','Status (range)','Referrals (range)','Referrals (all-time)','Activities (range)','Last Activity','ROI Potential','Target Offices']));
+  mktList.slice().sort(function(a,b){return MKT_STATUS_ORDER.indexOf(mktStatus(a,from,to))-MKT_STATUS_ORDER.indexOf(mktStatus(b,from,to));}).forEach(function(m){
+    out.push(line([m.name,m.type||'',m.stage||'',mktStatus(m,from,to),mktRefsInRange(m,from,to).length,mktSourceRefs(m).length,mktActsInRange(m,from,to).length,mktLastActivity(m)||'',mktRoi(m).label,(m.targetLocations||[]).join('; ')]));
+  });
+  out.push('');
+
+  out.push(line(['NEW INITIATIVES THIS PERIOD']));
+  out.push(line(['Initiative','Type','Contact','Date Initiated','Target Offices']));
+  mktList.filter(function(m){return _mktIn(m.dateInitiated||m.createdDate,from,to);}).sort(function(a,b){return (b.dateInitiated||'').localeCompare(a.dateInitiated||'');}).forEach(function(m){out.push(line([m.name,m.type||'',m.contact||'',m.dateInitiated||m.createdDate||'',(m.targetLocations||[]).join('; ')]));});
+  out.push('');
+
+  out.push(line(['ACTIVITY BREAKDOWN BY TYPE']));
+  out.push(line(['Activity Type','Count']));
+  var actTypes={};mktList.forEach(function(m){mktActsInRange(m,from,to).forEach(function(a){var t=a.type||'Other';actTypes[t]=(actTypes[t]||0)+1;});});
+  Object.entries(actTypes).sort(function(a,b){return b[1]-a[1];}).forEach(function(e){out.push(line([e[0],e[1]]));});
+
+  var lbl=(from||to)?('-'+(from||'start')+'-to-'+(to||'today')):'-all-time';
+  var blob=new Blob([out.join('\n')],{type:'text/csv'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='carepath-marketing-analytics'+lbl+'.csv';a.click();
 }
 
 let callLogRefId=null, callLogCaseId=null;
