@@ -6279,16 +6279,27 @@ function mktDaysSinceActivity(m){var la=mktLastActivity(m);return la?daysBtw(la,
 
 // One primary status per initiative for the selected range (priority order)
 function mktStatus(m,from,to){
-  var initiated=_mktIn(m.dateInitiated||m.createdDate,from,to);
-  var refsN=mktRefsInRange(m,from,to).length;
-  var actsN=mktActsInRange(m,from,to).length;
-  var daysIdle=mktDaysSinceActivity(m);
-  if(initiated)return 'New';
-  if(refsN>0)return 'Actively Referring';
+  // priority: surface the most actionable signal first (referring > meeting > new > engaged > ...)
+  if(mktRefsInRange(m,from,to).length>0)return 'Actively Referring';
   if(m.stage==='Meeting Scheduled')return 'Meeting Scheduled';
-  if(actsN>0)return 'Engaged';
-  if(m.stage==='Inactive'||daysIdle>90)return 'Disengaged';
+  if(_mktIn(m.dateInitiated||m.createdDate,from,to))return 'New';
+  if(mktActsInRange(m,from,to).length>0)return 'Engaged';
+  if(m.stage==='Inactive'||mktDaysSinceActivity(m)>90)return 'Disengaged';
   return 'Nurture';
+}
+// independent (overlapping) signal counts — an account can be New AND Actively Referring
+function mktSignalCounts(from,to){
+  var c={'New':0,'Actively Referring':0,'Had Activity':0,'Meeting Scheduled':0,'Nurture':0,'Disengaged':0};
+  (mktList||[]).forEach(function(m){
+    if(_mktIn(m.dateInitiated||m.createdDate,from,to))c['New']++;
+    if(mktRefsInRange(m,from,to).length>0)c['Actively Referring']++;
+    if(mktActsInRange(m,from,to).length>0)c['Had Activity']++;
+    if(m.stage==='Meeting Scheduled')c['Meeting Scheduled']++;
+    var st=mktStatus(m,from,to);
+    if(st==='Nurture')c['Nurture']++;
+    if(st==='Disengaged')c['Disengaged']++;
+  });
+  return c;
 }
 var MKT_STATUS_ORDER=['New','Actively Referring','Meeting Scheduled','Engaged','Nurture','Disengaged'];
 var MKT_STATUS_COLOR={'New':'#1a7f7a','Actively Referring':'#2e7d5b','Meeting Scheduled':'#c8973a','Engaged':'#3498db','Nurture':'#8a7fb0','Disengaged':'#c0392b'};
@@ -6354,18 +6365,21 @@ function renderMktAnalytics(el){
     h+='<tr><td style="font-weight:600;color:var(--navy)">Net-new CRM contacts</td><td style="text-align:center;font-weight:800;color:'+col+';font-size:15px">'+act+'</td><td style="text-align:center;color:var(--gray-500)">'+t+'</td><td style="text-align:center;font-weight:700;color:'+col+'">'+pct+'%</td><td><div style="background:var(--gray-100,#eee);border-radius:5px;height:12px;overflow:hidden"><div style="width:'+barPct+'%;height:100%;background:'+col+'"></div></div></td></tr>';})();
   h+='</tbody></table></div><div style="padding:8px 18px;font-size:10px;color:var(--gray-400)">Actuals pulled from logged marketing activities in the selected range. Targets are the Month '+(ri+1)+' roadmap goals (set the program month in the Weekly Snapshot page).</div></div>';
 
-  // ---- pipeline status grid ----
-  h+='<div class="table-card"><div class="table-header"><h3>Pipeline Status \u2014 Where Every Account Stands</h3></div><div style="padding:16px 18px"><div style="display:flex;gap:10px;flex-wrap:wrap">';
-  MKT_STATUS_ORDER.forEach(function(st){
-    var n=buckets[st].length,pct=totalInit?Math.round(n/totalInit*100):0,col=MKT_STATUS_COLOR[st];
+  // ---- pipeline status grid (independent, overlapping signals) ----
+  var sig=mktSignalCounts(from,to);
+  var SIG_ORDER=['New','Actively Referring','Had Activity','Meeting Scheduled','Nurture','Disengaged'];
+  var SIG_DESC={'New':'Started this period','Actively Referring':'Sent \u22651 referral this period','Had Activity':'Logged a touchpoint this period','Meeting Scheduled':'Meeting on the calendar','Nurture':'Maintaining \u2014 no touch this period','Disengaged':'Inactive or 90+ days idle'};
+  h+='<div class="table-card"><div class="table-header"><h3>Pipeline Signals \u2014 '+esc(rangeLbl)+'</h3></div><div style="padding:16px 18px"><div style="display:flex;gap:10px;flex-wrap:wrap">';
+  SIG_ORDER.forEach(function(st){
+    var n=sig[st],pct=totalInit?Math.round(n/totalInit*100):0,col=MKT_STATUS_COLOR[st]||'#3498db';
     h+='<div style="flex:1;min-width:160px;background:#fff;border:1px solid var(--gray-200);border-left:4px solid '+col+';border-radius:8px;padding:12px 14px">'
       +'<div style="font-size:26px;font-weight:800;color:'+col+'">'+n+'</div>'
       +'<div style="font-size:12px;font-weight:700;color:var(--navy)">'+st+'</div>'
-      +'<div style="font-size:10px;color:var(--gray-400);margin:3px 0 6px;min-height:26px">'+MKT_STATUS_DESC[st]+'</div>'
+      +'<div style="font-size:10px;color:var(--gray-400);margin:3px 0 6px;min-height:26px">'+SIG_DESC[st]+'</div>'
       +'<div style="background:var(--gray-100,#eee);border-radius:4px;height:6px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:'+col+'"></div></div>'
-      +'<div style="font-size:9px;color:var(--gray-400);margin-top:3px">'+pct+'% of pipeline</div></div>';
+      +'<div style="font-size:9px;color:var(--gray-400);margin-top:3px">'+pct+'% of '+totalInit+' accounts</div></div>';
   });
-  h+='</div></div></div>';
+  h+='</div><div style="font-size:10px;color:var(--gray-400);margin-top:8px">These overlap \u2014 an account can be both New and Actively Referring, so they don\u2019t sum to the total.</div></div></div>';
 
   // ---- referral-producing initiatives / ROI ----
   var producers=mktList.map(function(m){return {m:m,rangeRefs:mktRefsInRange(m,from,to).length,totalRefs:mktSourceRefs(m).length,roi:mktRoi(m)};})
@@ -6384,9 +6398,9 @@ function renderMktAnalytics(el){
   // ---- full pipeline breakdown table ----
   h+='<div class="table-card"><div class="table-header"><h3>All Accounts \u2014 Status Detail</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Account</th><th>Stage</th><th>Status (range)</th><th style="text-align:center">Refs (range)</th><th style="text-align:center">Activities (range)</th><th>Last Activity</th><th>Offices</th></tr></thead><tbody>';
   var sorted=mktList.slice().sort(function(a,b){return MKT_STATUS_ORDER.indexOf(mktStatus(a,from,to))-MKT_STATUS_ORDER.indexOf(mktStatus(b,from,to));});
-  sorted.forEach(function(m){var st=mktStatus(m,from,to),la=mktLastActivity(m);
+  sorted.forEach(function(m){var st=mktStatus(m,from,to),la=mktLastActivity(m);var isNew=_mktIn(m.dateInitiated||m.createdDate,from,to);
     h+='<tr><td style="font-weight:600;color:var(--navy)">'+esc(m.name)+'</td><td style="font-size:11px">'+esc(m.stage||'')+'</td>'
-      +'<td><span style="font-size:10px;font-weight:700;color:#fff;background:'+MKT_STATUS_COLOR[st]+';padding:2px 8px;border-radius:10px">'+st+'</span></td>'
+      +'<td><span style="font-size:10px;font-weight:700;color:#fff;background:'+MKT_STATUS_COLOR[st]+';padding:2px 8px;border-radius:10px">'+st+'</span>'+((isNew&&st!=='New')?' <span style="font-size:9px;font-weight:700;color:#fff;background:#1a7f7a;padding:1px 6px;border-radius:9px">NEW</span>':'')+'</td>'
       +'<td style="text-align:center">'+mktRefsInRange(m,from,to).length+'</td>'
       +'<td style="text-align:center">'+mktActsInRange(m,from,to).length+'</td>'
       +'<td style="font-size:11px;color:'+(la?'var(--ink,#333)':'var(--gray-400)')+'">'+(la||'\u2014')+'</td>'
@@ -6456,10 +6470,13 @@ function downloadMktAnalyticsReport(){
   (function(){var act=am.contacts||0,t=tgt.contacts||0,pct=t>0?Math.round(act/t*100):(act>0?100:0);html+='<tr><td style="'+td+';font-weight:700;color:'+NAVY+'">Net-new CRM contacts</td><td style="'+td+';font-weight:700">'+act+'</td><td style="'+td+'">'+t+'</td><td style="'+td+'">'+pct+'%</td></tr>';})();
   html+='</table>';
 
-  // pipeline status
-  html+='<h2>Pipeline Status</h2><table><tr><th style="'+th+'">Status</th><th style="'+th+'">Count</th><th style="'+th+'">% of Pipeline</th><th style="'+th+'">Meaning</th></tr>';
-  MKT_STATUS_ORDER.forEach(function(st){var n=buckets[st].length,pct=mktList.length?Math.round(n/mktList.length*100):0;html+='<tr><td style="'+td+';font-weight:700;color:'+MKT_STATUS_COLOR[st]+'">'+st+'</td><td style="'+td+'">'+n+'</td><td style="'+td+'">'+pct+'%</td><td style="'+td+';color:'+MUTE+'">'+MKT_STATUS_DESC[st]+'</td></tr>';});
-  html+='</table>';
+  // pipeline signals (overlapping)
+  var sig=mktSignalCounts(from,to);
+  var SIG_ORDER=['New','Actively Referring','Had Activity','Meeting Scheduled','Nurture','Disengaged'];
+  var SIG_DESC={'New':'Started this period','Actively Referring':'Sent \u22651 referral this period','Had Activity':'Logged a touchpoint this period','Meeting Scheduled':'Meeting on the calendar','Nurture':'Maintaining \u2014 no touch this period','Disengaged':'Inactive or 90+ days idle'};
+  html+='<h2>Pipeline Signals</h2><table><tr><th style="'+th+'">Signal</th><th style="'+th+'">Count</th><th style="'+th+'">% of Accounts</th><th style="'+th+'">Meaning</th></tr>';
+  SIG_ORDER.forEach(function(st){var n=sig[st],pct=mktList.length?Math.round(n/mktList.length*100):0;html+='<tr><td style="'+td+';font-weight:700;color:'+(MKT_STATUS_COLOR[st]||'#3498db')+'">'+st+'</td><td style="'+td+'">'+n+'</td><td style="'+td+'">'+pct+'%</td><td style="'+td+';color:'+MUTE+'">'+SIG_DESC[st]+'</td></tr>';});
+  html+='</table><div style="font-size:10px;color:'+MUTE+'">Signals overlap \u2014 an account can be both New and Actively Referring, so they don\u2019t sum to the total.</div>';
 
   // ROI producers
   var producers=mktList.map(function(m){return {m:m,rangeRefs:mktRefsInRange(m,from,to).length,totalRefs:mktSourceRefs(m).length,roi:mktRoi(m)};}).filter(function(x){return x.totalRefs>0;}).sort(function(a,b){return b.rangeRefs-a.rangeRefs||b.totalRefs-a.totalRefs;});
@@ -6509,11 +6526,12 @@ function exportMktAnalytics(){
   (function(){var act=am.contacts||0,t=tgt.contacts||0,pct=t>0?Math.round(act/t*100):(act>0?100:0);out.push(line(['Net-new CRM contacts',act,t,pct+'%']));})();
   out.push('');
 
-  var buckets={};MKT_STATUS_ORDER.forEach(function(s){buckets[s]=0;});
-  mktList.forEach(function(m){buckets[mktStatus(m,from,to)]++;});
-  out.push(line(['PIPELINE STATUS SUMMARY']));
-  out.push(line(['Status','Count','% of Pipeline','Meaning']));
-  MKT_STATUS_ORDER.forEach(function(st){var n=buckets[st],pct=mktList.length?Math.round(n/mktList.length*100):0;out.push(line([st,n,pct+'%',MKT_STATUS_DESC[st]]));});
+  var sig=mktSignalCounts(from,to);
+  var SIG_ORDER=['New','Actively Referring','Had Activity','Meeting Scheduled','Nurture','Disengaged'];
+  var SIG_DESC={'New':'Started this period','Actively Referring':'Sent >=1 referral this period','Had Activity':'Logged a touchpoint this period','Meeting Scheduled':'Meeting on the calendar','Nurture':'Maintaining - no touch this period','Disengaged':'Inactive or 90+ days idle'};
+  out.push(line(['PIPELINE SIGNALS (overlapping \u2014 do not sum to total)']));
+  out.push(line(['Signal','Count','% of Accounts','Meaning']));
+  SIG_ORDER.forEach(function(st){var n=sig[st],pct=mktList.length?Math.round(n/mktList.length*100):0;out.push(line([st,n,pct+'%',SIG_DESC[st]]));});
   out.push('');
 
   out.push(line(['ALL ACCOUNTS \u2014 STATUS DETAIL']));
