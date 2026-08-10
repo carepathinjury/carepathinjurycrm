@@ -6236,6 +6236,29 @@ function deleteMktContact(){
 // CALL LOG SYSTEM (shared across CRM, CM, PSR)
 // ══════════════════════════════════════════════════════════════════════
 // ════════════ MARKETING MANAGER ANALYTICS (range-driven) ════════════
+// Numeric roadmap targets per ramp month (M1..M6), aligned to MKT_REPORT_RAMP
+var MKT_KPI_TARGETS=[
+  {calls:10,visits:5, meetings:2,contacts:125,followups:0},
+  {calls:15,visits:10,meetings:4,contacts:50, followups:20},
+  {calls:15,visits:10,meetings:6,contacts:45, followups:20},
+  {calls:22,visits:12,meetings:6,contacts:45, followups:30},
+  {calls:30,visits:12,meetings:7,contacts:45, followups:30},
+  {calls:30,visits:12,meetings:7,contacts:40, followups:30}
+];
+var MKT_KPI_ROWS=[
+  ['calls','Phone Calls (connected)',function(a){return a.type==='Phone Call';}],
+  ['visits','Drop-offs / Office Visits',function(a){return a.type==='Office Visit/Drop-off'||a.type==='Lunch/Dinner';}],
+  ['meetings','Meetings (intro / in-person)',function(a){return a.type==='Intro Meeting'||a.type==='In-Person Meeting'||a.type==='Presentation';}],
+  ['followups','Follow-up touches',function(a){return a.type==='Follow-Up'||a.type==='Email Outreach';}]
+];
+// count Matt's logged activities (all initiatives) by category within a range
+function mktActivityMetrics(from,to){
+  var acts=[];(mktList||[]).forEach(function(m){(m.activityLog||[]).forEach(function(a){if(_mktIn(a.date,from,to))acts.push(a);});});
+  var out={_acts:acts.length};
+  MKT_KPI_ROWS.forEach(function(row){out[row[0]]=acts.filter(row[2]).length;});
+  out.contacts=(mktContacts||[]).filter(function(c){return _mktIn(c.createdDate,from,to);}).length;
+  return out;
+}
 var mktAnFrom='', mktAnTo='';
 (function(){var d=new Date();mktAnFrom=new Date(d.getFullYear(),d.getMonth(),1).toISOString().substring(0,10);mktAnTo=today();})();
 
@@ -6314,6 +6337,23 @@ function renderMktAnalytics(el){
   h+=kpi(buckets['Disengaged'].length,'Disengaged',V('--red'));
   h+='</div>';
 
+  // ---- roadmap KPIs: Matt's actuals vs ramp target ----
+  var ri=(typeof mktRampIndex==='function')?mktRampIndex():1;
+  var tgt=MKT_KPI_TARGETS[Math.max(0,Math.min(5,ri))];
+  var am=mktActivityMetrics(from,to);
+  h+='<div class="table-card"><div class="table-header"><h3>Marketing Roadmap \u2014 Activity vs Target</h3><span style="font-size:11px;color:var(--gray-400)">Month '+(ri+1)+' targets \u00b7 '+esc(rangeLbl)+'</span></div><div class="table-scroll"><table class="tbl"><thead><tr><th>KPI</th><th style="text-align:center">Actual</th><th style="text-align:center">Target (M'+(ri+1)+')</th><th style="text-align:center">Progress</th><th style="width:32%">&nbsp;</th></tr></thead><tbody>';
+  MKT_KPI_ROWS.forEach(function(row){var key=row[0];var act=am[key]||0;var t=tgt[key]||0;var pct=t>0?Math.round(act/t*100):(act>0?100:0);var barPct=Math.min(100,pct);var col=pct>=100?'#2e7d5b':pct>=60?'#c8973a':'#c0392b';
+    h+='<tr><td style="font-weight:600;color:var(--navy)">'+row[1]+'</td>'
+      +'<td style="text-align:center;font-weight:800;color:'+col+';font-size:15px">'+act+'</td>'
+      +'<td style="text-align:center;color:var(--gray-500)">'+t+'</td>'
+      +'<td style="text-align:center;font-weight:700;color:'+col+'">'+pct+'%</td>'
+      +'<td><div style="background:var(--gray-100,#eee);border-radius:5px;height:12px;overflow:hidden"><div style="width:'+barPct+'%;height:100%;background:'+col+'"></div></div></td></tr>';
+  });
+  // net-new contacts row
+  (function(){var act=am.contacts||0,t=tgt.contacts||0,pct=t>0?Math.round(act/t*100):(act>0?100:0),barPct=Math.min(100,pct),col=pct>=100?'#2e7d5b':pct>=60?'#c8973a':'#c0392b';
+    h+='<tr><td style="font-weight:600;color:var(--navy)">Net-new CRM contacts</td><td style="text-align:center;font-weight:800;color:'+col+';font-size:15px">'+act+'</td><td style="text-align:center;color:var(--gray-500)">'+t+'</td><td style="text-align:center;font-weight:700;color:'+col+'">'+pct+'%</td><td><div style="background:var(--gray-100,#eee);border-radius:5px;height:12px;overflow:hidden"><div style="width:'+barPct+'%;height:100%;background:'+col+'"></div></div></td></tr>';})();
+  h+='</tbody></table></div><div style="padding:8px 18px;font-size:10px;color:var(--gray-400)">Actuals pulled from logged marketing activities in the selected range. Targets are the Month '+(ri+1)+' roadmap goals (set the program month in the Weekly Snapshot page).</div></div>';
+
   // ---- pipeline status grid ----
   h+='<div class="table-card"><div class="table-header"><h3>Pipeline Status \u2014 Where Every Account Stands</h3></div><div style="padding:16px 18px"><div style="display:flex;gap:10px;flex-wrap:wrap">';
   MKT_STATUS_ORDER.forEach(function(st){
@@ -6361,11 +6401,16 @@ function renderMktAnalytics(el){
   newOnes.forEach(function(m){h+='<tr><td style="font-weight:600;color:var(--navy)">'+esc(m.name)+'</td><td style="font-size:11px">'+esc(m.type||'')+'</td><td style="font-size:11px">'+esc(m.contact||'')+'</td><td style="font-size:11px">'+esc(m.dateInitiated||m.createdDate||'')+'</td><td style="font-size:10px;color:var(--gray-500)">'+esc((m.targetLocations||[]).join(', ')||'\u2014')+'</td></tr>';});
   h+='</tbody></table></div></div>';
 
-  // ---- activity breakdown (by type + by rep) ----
+  // ---- activity breakdown (categorized rollup + raw type + by rep) ----
   var actTypes={},actByRep={},totalActs=0;
   mktList.forEach(function(m){mktActsInRange(m,from,to).forEach(function(a){var t=a.type||'Other';actTypes[t]=(actTypes[t]||0)+1;var by=a.by||'Unknown';actByRep[by]=(actByRep[by]||0)+1;totalActs++;});});
-  h+='<div class="table-card"><div class="table-header"><h3>Activity Breakdown</h3><span style="font-size:11px;color:var(--gray-400)">'+totalActs+' activities</span></div><div style="padding:14px 18px">';
-  if(!totalActs)h+='<div style="color:var(--gray-400);font-size:12px">No logged activity in this range.</div>';
+  h+='<div class="table-card"><div class="table-header"><h3>Activity Breakdown</h3><span style="font-size:11px;color:var(--gray-400)">'+totalActs+' activities \u00b7 '+esc(rangeLbl)+'</span></div><div style="padding:14px 18px">';
+  // categorized rollup cards (Calls / Drop-offs / Meetings / Follow-ups / New Contacts)
+  h+='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">';
+  MKT_KPI_ROWS.forEach(function(row){var v=am[row[0]]||0;h+='<div style="flex:1;min-width:130px;background:#fff;border:1px solid var(--gray-200);border-radius:8px;padding:10px 12px"><div style="font-size:22px;font-weight:800;color:var(--teal)">'+v+'</div><div style="font-size:10px;color:var(--gray-500)">'+row[1]+'</div></div>';});
+  h+='<div style="flex:1;min-width:130px;background:#fff;border:1px solid var(--gray-200);border-radius:8px;padding:10px 12px"><div style="font-size:22px;font-weight:800;color:var(--teal)">'+(am.contacts||0)+'</div><div style="font-size:10px;color:var(--gray-500)">New CRM Contacts</div></div>';
+  h+='</div>';
+  if(!totalActs)h+='<div style="color:var(--gray-400);font-size:12px">No logged activity in this range. (Activities are logged per initiative \u2014 open an account and use \u201cLog Activity\u201d.)</div>';
   else{
     var maxA=Math.max.apply(null,Object.values(actTypes));
     h+='<div style="font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin-bottom:8px">By Type</div>';
@@ -6403,6 +6448,13 @@ function downloadMktAnalyticsReport(){
   html+='<div class="card"><div class="n" style="color:'+GOLD+'">'+buckets['Meeting Scheduled'].length+'</div><div class="l">Meetings on Calendar</div></div>';
   html+='<div class="card"><div class="n" style="color:'+RED+'">'+buckets['Disengaged'].length+'</div><div class="l">Disengaged</div></div>';
   html+='</div>';
+
+  // roadmap KPIs
+  var ri=(typeof mktRampIndex==='function')?mktRampIndex():1;var tgt=MKT_KPI_TARGETS[Math.max(0,Math.min(5,ri))];var am=mktActivityMetrics(from,to);
+  html+='<h2>Marketing Roadmap \u2014 Activity vs Target (Month '+(ri+1)+')</h2><table><tr><th style="'+th+'">KPI</th><th style="'+th+'">Actual</th><th style="'+th+'">Target</th><th style="'+th+'">Progress</th></tr>';
+  MKT_KPI_ROWS.forEach(function(row){var act=am[row[0]]||0,t=tgt[row[0]]||0,pct=t>0?Math.round(act/t*100):(act>0?100:0);html+='<tr><td style="'+td+';font-weight:700;color:'+NAVY+'">'+row[1]+'</td><td style="'+td+';font-weight:700">'+act+'</td><td style="'+td+'">'+t+'</td><td style="'+td+'">'+pct+'%</td></tr>';});
+  (function(){var act=am.contacts||0,t=tgt.contacts||0,pct=t>0?Math.round(act/t*100):(act>0?100:0);html+='<tr><td style="'+td+';font-weight:700;color:'+NAVY+'">Net-new CRM contacts</td><td style="'+td+';font-weight:700">'+act+'</td><td style="'+td+'">'+t+'</td><td style="'+td+'">'+pct+'%</td></tr>';})();
+  html+='</table>';
 
   // pipeline status
   html+='<h2>Pipeline Status</h2><table><tr><th style="'+th+'">Status</th><th style="'+th+'">Count</th><th style="'+th+'">% of Pipeline</th><th style="'+th+'">Meaning</th></tr>';
@@ -6448,6 +6500,13 @@ function exportMktAnalytics(){
   var out=[];
   out.push(line(['CarePath Marketing \u2014 Manager Analytics']));
   out.push(line(['Range',rangeLbl,'Generated',new Date().toLocaleString()]));
+  out.push('');
+
+  var ri=(typeof mktRampIndex==='function')?mktRampIndex():1;var tgt=MKT_KPI_TARGETS[Math.max(0,Math.min(5,ri))];var am=mktActivityMetrics(from,to);
+  out.push(line(['MARKETING ROADMAP \u2014 ACTIVITY VS TARGET','Month '+(ri+1)]));
+  out.push(line(['KPI','Actual','Target','Progress']));
+  MKT_KPI_ROWS.forEach(function(row){var act=am[row[0]]||0,t=tgt[row[0]]||0,pct=t>0?Math.round(act/t*100):(act>0?100:0);out.push(line([row[1],act,t,pct+'%']));});
+  (function(){var act=am.contacts||0,t=tgt.contacts||0,pct=t>0?Math.round(act/t*100):(act>0?100:0);out.push(line(['Net-new CRM contacts',act,t,pct+'%']));})();
   out.push('');
 
   var buckets={};MKT_STATUS_ORDER.forEach(function(s){buckets[s]=0;});
