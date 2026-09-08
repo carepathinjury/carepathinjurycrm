@@ -1706,8 +1706,8 @@ function exportAllMetrics(){
   // Timing metrics
   var refsWithSchedDays=data.filter(function(r){return r.daysToSchedule!=null&&r.daysToSchedule>=0});
   var avgDaysToSched=refsWithSchedDays.length>0?(refsWithSchedDays.reduce(function(s,r){return s+r.daysToSchedule},0)/refsWithSchedDays.length).toFixed(1):0;
-  var completedWithDates=data.filter(function(r){return r.apptOutcome==='completed'&&r.createdDate&&r.apptDate});
-  var avgDaysToCompleted=completedWithDates.length>0?(completedWithDates.reduce(function(s,r){return s+daysBtw(r.createdDate,r.apptDate)},0)/completedWithDates.length).toFixed(1):0;
+  var _cd1=data.filter(function(r){return r.apptOutcome==='completed'&&r.createdDate&&r.apptDate}).map(function(r){return daysBtw(r.createdDate,r.apptDate)}).filter(function(d){return d>=0&&d<=730});
+  var avgDaysToCompleted=_cd1.length>0?(_cd1.reduce(function(s,d){return s+d},0)/_cd1.length).toFixed(1):'\u2014';
   var rHeaders=['Patient','DOB','Case Type','Location','Law Firm','Attorney','Source','Status','Registered','Appt Date','Outcome','Days to Schedule','Days to Completed Appt','Lost Reason'];
   var rRows=data.map(function(r){
     var daysToComp=(r.apptOutcome==='completed'&&r.createdDate&&r.apptDate)?daysBtw(r.createdDate,r.apptDate):'';
@@ -2029,13 +2029,12 @@ function downloadVisualReport(){
   // Timing metrics
   var vrRefsWithSchedDays=data.filter(function(r){return r.daysToSchedule!=null&&r.daysToSchedule>=0});
   var vrAvgDaysToSched=vrRefsWithSchedDays.length>0?(vrRefsWithSchedDays.reduce(function(s,r){return s+r.daysToSchedule},0)/vrRefsWithSchedDays.length).toFixed(1):'0';
-  var vrCompletedWithDates=data.filter(function(r){return r.apptOutcome==='completed'&&r.createdDate&&r.apptDate});
-  var vrAvgDaysToCompleted=vrCompletedWithDates.length>0?(vrCompletedWithDates.reduce(function(s,r){return s+daysBtw(r.createdDate,r.apptDate)},0)/vrCompletedWithDates.length).toFixed(1):'0';
+  var _vcd=data.filter(function(r){return r.apptOutcome==='completed'&&r.createdDate&&r.apptDate}).map(function(r){return daysBtw(r.createdDate,r.apptDate)}).filter(function(d){return d>=0&&d<=730});
+  var vrAvgDaysToCompleted=_vcd.length>0?(_vcd.reduce(function(s,d){return s+d},0)/_vcd.length).toFixed(1):'\u2014';
   var vrMedian=0;if(vrRefsWithSchedDays.length>0){var vrSorted=vrRefsWithSchedDays.map(function(r){return r.daysToSchedule}).sort(function(a,b){return a-b});vrMedian=vrSorted[Math.floor(vrSorted.length/2)];}
   html+='<h2>Scheduling Speed</h2>';
   html+='<div style="text-align:center;margin:8px 0 16px">';
   html+='<div class="stat"><div class="stat-val">'+vrAvgDaysToSched+'</div><div class="stat-lbl">Avg Days: Referral → Scheduled</div></div>';
-  html+='<div class="stat"><div class="stat-val">'+vrMedian+'</div><div class="stat-lbl">Median Days to Schedule</div></div>';
   html+='<div class="stat"><div class="stat-val">'+vrAvgDaysToCompleted+'</div><div class="stat-lbl">Avg Days: Referral → Completed 1st Appt</div></div>';
   html+='</div>';
 
@@ -3190,12 +3189,12 @@ function renderCrmMgrDash(el) {
   // Avg time to schedule and avg time to completed first appt
   var refsWithSchedDays=filteredRefs.filter(function(r){return r.daysToSchedule!=null&&r.daysToSchedule>=0});
   var avgDaysToSched=refsWithSchedDays.length>0?Math.round(refsWithSchedDays.reduce(function(s,r){return s+r.daysToSchedule},0)/refsWithSchedDays.length*10)/10:0;
-  var completedWithDates=filteredRefs.filter(function(r){return r.apptOutcome==='completed'&&r.createdDate&&r.apptDate});
-  var avgDaysToCompleted=completedWithDates.length>0?Math.round(completedWithDates.reduce(function(s,r){return s+daysBtw(r.createdDate,r.apptDate)},0)/completedWithDates.length*10)/10:0;
-  var medianDaysToSched=0;
-  if(refsWithSchedDays.length>0){var sorted=refsWithSchedDays.map(function(r){return r.daysToSchedule}).sort(function(a,b){return a-b});medianDaysToSched=sorted[Math.floor(sorted.length/2)];}
+  // referral-entry -> completed-appointment duration; only sane forward-flow values
+  // (excludes records whose appt date precedes CRM entry — e.g. backfilled/imported referrals — and >2yr outliers)
+  var _compDurs=filteredRefs.filter(function(r){return r.apptOutcome==='completed'&&r.createdDate&&r.apptDate}).map(function(r){return daysBtw(r.createdDate,r.apptDate)}).filter(function(d){return d>=0&&d<=730});
+  var avgDaysToCompleted=_compDurs.length>0?Math.round(_compDurs.reduce(function(s,d){return s+d},0)/_compDurs.length*10)/10:0;
   
-  h += '<div class="stats-row" style="grid-template-columns:repeat(3,1fr)">'+stat('Avg Days to Schedule',avgDaysToSched+' days','teal')+stat('Median Days to Schedule',medianDaysToSched+' days','')+stat('Avg Referral → Completed 1st Appt',avgDaysToCompleted+' days','teal')+'</div>';
+  h += '<div class="stats-row" style="grid-template-columns:repeat(2,1fr)">'+stat('Avg Days to Schedule',avgDaysToSched+' days','teal')+stat('Avg Referral → Completed 1st Appt',(_compDurs.length?avgDaysToCompleted+' days':'\u2014'),'teal')+'</div>';
 
   var noShowRefs=filteredRefs.filter(function(r){return r.apptOutcome==='no_show'});
   var recoveredCount=noShowRefs.filter(function(r){return r.status!=='Patient Lost'&&(r.apptDate&&daysBtw(r.apptDate,today())>0)}).length;
