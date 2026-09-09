@@ -2101,11 +2101,20 @@ function downloadVisualReport(){
   });
   html+='</table>';
 
-  // Referral source conversion
-  html+='<h2>Referral Source Conversion</h2><table><tr><th>Source</th><th>Total</th><th>Scheduled</th><th>Completed</th><th>Lost</th></tr>';
-  var srcConv={};data.forEach(function(r){var s=r.referralSource||'Unknown';if(!srcConv[s])srcConv[s]={t:0,sc:0,co:0,lo:0};srcConv[s].t++;if(r.apptDate)srcConv[s].sc++;if(r.apptOutcome==='completed')srcConv[s].co++;if(r.status==='Patient Lost')srcConv[s].lo++;});
+  // Appointments by case type
+  (function(){var CT=['WC','MVA','PI','NJ MVA'];var ct={};
+    data.forEach(function(r){var k=r.caseType||'Other';if(!ct[k])ct[k]={refs:0,sched:0,comp:0,noshow:0};ct[k].refs++;if(r.apptDate)ct[k].sched++;if(_apptInRange(r)){if(r.apptOutcome==='completed')ct[k].comp++;else if(r.apptOutcome==='no_show')ct[k].noshow++;}});
+    var keys=CT.filter(function(k){return ct[k];}).concat(Object.keys(ct).filter(function(k){return CT.indexOf(k)===-1;}));
+    html+='<h2>Appointments by Case Type</h2><table><tr><th>Case Type</th><th>Referrals</th><th>Scheduled</th><th>Completed</th><th>Completion %</th><th>No-Show</th></tr>';
+    keys.forEach(function(k){var d=ct[k];var cpct=d.sched>0?Math.round(d.comp/d.sched*100):0;html+='<tr><td><strong>'+k+'</strong></td><td>'+d.refs+'</td><td>'+d.sched+'</td><td>'+d.comp+'</td><td>'+(d.sched>0?cpct+'%':'\u2014')+'</td><td>'+d.noshow+'</td></tr>';});
+    html+='</table>';})();
+
+  // Referral source conversion (with case mix)
+  html+='<h2>Referral Source Conversion</h2><table><tr><th>Source</th><th>Total</th><th>Scheduled</th><th>Completed</th><th>Lost</th><th>Case Mix</th></tr>';
+  var srcConv={};data.forEach(function(r){var s=r.referralSource||'Unknown';if(!srcConv[s])srcConv[s]={t:0,sc:0,co:0,lo:0,mix:{}};srcConv[s].t++;var _ct=r.caseType||'Other';srcConv[s].mix[_ct]=(srcConv[s].mix[_ct]||0)+1;if(r.apptDate)srcConv[s].sc++;if(r.apptOutcome==='completed')srcConv[s].co++;if(r.status==='Patient Lost')srcConv[s].lo++;});
   Object.entries(srcConv).sort(function(a,b){return b[1].t-a[1].t}).forEach(function(e){
-    html+='<tr><td><strong>'+e[0]+'</strong></td><td>'+e[1].t+'</td><td>'+e[1].sc+'</td><td>'+e[1].co+'</td><td style="color:#c0392b">'+(e[1].lo||0)+'</td></tr>';
+    var _mo=['WC','MVA','PI','NJ MVA'];var _mk=_mo.filter(function(k){return e[1].mix[k];}).concat(Object.keys(e[1].mix).filter(function(k){return _mo.indexOf(k)===-1;}));var _ms=_mk.map(function(k){return k+' '+e[1].mix[k];}).join(' \u00b7 ')||'\u2014';
+    html+='<tr><td><strong>'+e[0]+'</strong></td><td>'+e[1].t+'</td><td>'+e[1].sc+'</td><td>'+e[1].co+'</td><td style="color:#c0392b">'+(e[1].lo||0)+'</td><td style="font-size:10px;color:#666">'+_ms+'</td></tr>';
   });
   html+='</table>';
 
@@ -3202,7 +3211,18 @@ function renderCrmMgrDash(el) {
   h += '<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">'+stat('Scheduled',scheduledCount,'teal')+stat('Appt Completed',completedCount+' ('+completedPct+'%)','teal')+stat('Pending Outcome',pendingApptCount+' ('+pendingApptPct+'%)','gold')+'<div class="stat-card" style="cursor:pointer;border:2px solid transparent" onclick="toggleNoShowDrilldown()" onmouseover="this.style.borderColor=\'var(--red)\'" onmouseout="this.style.borderColor=\'transparent\'"><div class="stat-label">No-Shows</div><div class="stat-value red">'+noShowCount+' ('+noShowPct+'%)</div><div class="stat-sub" style="color:var(--teal)">'+recoveredCount+' recovered ('+recoveredPct+'%) · click to view</div></div></div>';
   
   // No-show drilldown (hidden by default)
-  h+='<div id="noShowDrilldown" style="display:none"><div class="table-card" style="border-left:4px solid var(--red);margin-bottom:16px"><div class="table-header"><h3>No-Show Patients — '+noShowCount+' total, '+recoveredCount+' rescheduled/recovered</h3><button class="btn-resolve" onclick="document.getElementById(\'noShowDrilldown\').style.display=\'none\'" style="font-size:10px">Close ✕</button></div>';
+  // ---- Appointments by Case Type (cohort model: scheduled=referral in range w/ appt; completed/no-show=appt in range) ----
+  (function(){
+    var CT_ORDER=['WC','MVA','PI','NJ MVA'];
+    var ct={};
+    filteredRefs.forEach(function(r){var k=r.caseType||'Other';if(!ct[k])ct[k]={refs:0,sched:0,comp:0,noshow:0};ct[k].refs++;if(r.apptDate)ct[k].sched++;if(_apptIn(r)){if(r.apptOutcome==='completed')ct[k].comp++;else if(r.apptOutcome==='no_show')ct[k].noshow++;}});
+    var keys=CT_ORDER.filter(function(k){return ct[k];}).concat(Object.keys(ct).filter(function(k){return CT_ORDER.indexOf(k)===-1;}));
+    h+='<div class="table-card"><div class="table-header"><h3>Appointments by Case Type</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Case Type</th><th style="text-align:center">Referrals</th><th style="text-align:center">Scheduled</th><th style="text-align:center">Completed</th><th style="text-align:center">Completion %</th><th style="text-align:center">No-Show</th></tr></thead><tbody>';
+    keys.forEach(function(k){var d=ct[k];var cpct=d.sched>0?Math.round(d.comp/d.sched*100):0;
+      h+='<tr><td style="font-weight:600;color:var(--navy)">'+esc(k)+'</td><td style="text-align:center">'+d.refs+'</td><td style="text-align:center;font-weight:600;color:var(--teal)">'+d.sched+'</td><td style="text-align:center;font-weight:700;color:var(--green,#2e7d5b)">'+d.comp+'</td><td style="text-align:center;font-weight:700;color:'+(cpct>=50?'var(--green,#2e7d5b)':cpct>=25?'var(--gold)':'var(--red)')+'">'+(d.sched>0?cpct+'%':'\u2014')+'</td><td style="text-align:center;color:'+(d.noshow?'var(--red)':'var(--gray-400)')+'">'+d.noshow+'</td></tr>';});
+    h+='</tbody></table></div><div style="padding:6px 18px;font-size:10px;color:var(--gray-400)">Scheduled = referrals from the period with an appointment booked; Completed / No-Show = appointments that fell within the period. Completion % = completed \u00f7 scheduled.</div></div>';
+  })();
+    h+='<div id="noShowDrilldown" style="display:none"><div class="table-card" style="border-left:4px solid var(--red);margin-bottom:16px"><div class="table-header"><h3>No-Show Patients — '+noShowCount+' total, '+recoveredCount+' rescheduled/recovered</h3><button class="btn-resolve" onclick="document.getElementById(\'noShowDrilldown\').style.display=\'none\'" style="font-size:10px">Close ✕</button></div>';
   var noShows=refs.filter(function(r){return _apptIn(r)&&r.apptOutcome==='no_show'});
   if(noShows.length===0)h+='<div style="padding:16px;text-align:center;color:var(--gray-400)">No no-shows in this date range</div>';
   else{
@@ -3323,20 +3343,23 @@ function renderCrmMgrDash(el) {
   // Attorney Referral Source Conversion
   var srcConv={};filteredRefs.forEach(function(r){
     var s=r.referralSource||'Unknown';
-    if(!srcConv[s])srcConv[s]={total:0,scheduled:0,completed:0,active:0,noShow:0,lost:0};
+    if(!srcConv[s])srcConv[s]={total:0,scheduled:0,completed:0,active:0,noShow:0,lost:0,mix:{}};
     srcConv[s].total++;
+    var _ct=r.caseType||'Other';srcConv[s].mix[_ct]=(srcConv[s].mix[_ct]||0)+1;
     if(r.apptDate)srcConv[s].scheduled++;
     if(r.apptOutcome==='completed')srcConv[s].completed++;
     if(r.status==='Active Treatment')srcConv[s].active++;
     if(r.apptOutcome==='no_show')srcConv[s].noShow++;
     if(r.status==='Patient Lost')srcConv[s].lost++;
   });
-  h += '<div class="table-card"><div class="table-header"><h3>Referral Source Conversion</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Source</th><th>Total Refs</th><th>Scheduled</th><th>Sched %</th><th>Completed</th><th>Conv %</th><th>Active Tx</th><th>No Shows</th><th>Lost</th></tr></thead><tbody>';
+  h += '<div class="table-card"><div class="table-header"><h3>Referral Source Conversion</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Source</th><th>Total Refs</th><th>Scheduled</th><th>Sched %</th><th>Completed</th><th>Conv %</th><th>Active Tx</th><th>No Shows</th><th>Lost</th><th>Case Mix</th></tr></thead><tbody>';
   Object.entries(srcConv).sort(function(a,b){return b[1].total-a[1].total}).forEach(function(e){
     var s=e[0],d=e[1];
     var schedPct=d.total>0?Math.round(d.scheduled/d.total*100):0;
     var convPct=d.total>0?Math.round(d.completed/d.total*100):0;
-    h+='<tr><td style="font-weight:600">'+esc(s)+'</td><td>'+d.total+'</td><td>'+d.scheduled+'</td><td>'+schedPct+'%</td><td>'+d.completed+'</td><td>'+convPct+'%</td><td>'+d.active+'</td><td>'+(d.noShow>0?'<span style="color:var(--red)">'+d.noShow+'</span>':'0')+'</td><td>'+(d.lost>0?'<span style="color:var(--red)">'+d.lost+'</span>':'0')+'</td></tr>';
+    var _mixOrder=['WC','MVA','PI','NJ MVA'];var _mixKeys=_mixOrder.filter(function(k){return d.mix[k];}).concat(Object.keys(d.mix).filter(function(k){return _mixOrder.indexOf(k)===-1;}));
+    var _mixStr=_mixKeys.map(function(k){return k+' '+d.mix[k];}).join(' \u00b7 ')||'\u2014';
+    h+='<tr><td style="font-weight:600">'+esc(s)+'</td><td>'+d.total+'</td><td>'+d.scheduled+'</td><td>'+schedPct+'%</td><td>'+d.completed+'</td><td>'+convPct+'%</td><td>'+d.active+'</td><td>'+(d.noShow>0?'<span style="color:var(--red)">'+d.noShow+'</span>':'0')+'</td><td>'+(d.lost>0?'<span style="color:var(--red)">'+d.lost+'</span>':'0')+'</td><td style="font-size:10px;color:var(--gray-500)">'+esc(_mixStr)+'</td></tr>';
   });
   h += '</tbody></table></div></div>';
 
