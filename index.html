@@ -375,7 +375,7 @@
     <div class="nav-item" id="crmNavMgrDash" data-page="crm-mgr-dash" onclick="promptPIN('crm-mgr-dash')" style="display:none"><div class="nav-icon">🔒</div> Manager Analytics</div>
     <div class="nav-item" id="crmNavMgrMetrics" data-page="crm-mgr-metrics" onclick="promptPIN('crm-mgr-metrics')" style="display:none"><div class="nav-icon">🔒</div> Team Metrics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Internal CRM · Confidential<br>build 2026-09-25-cm-roster-uro</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Internal CRM · Confidential<br>build 2026-09-25-pagination-fix</p></div>
 </nav>
 <div class="main-content" id="crmMain">
   <div class="section active" id="sec-crm-dashboard"></div>
@@ -420,7 +420,7 @@
     <div class="nav-item" id="cmNavMyMetrics" data-page="cm-my-metrics" onclick="cmNav('cm-my-metrics')"><div class="nav-icon">📈</div> My Metrics</div>
     <div class="nav-item" id="cmNavMgrDash" data-page="cm-mgr-dash" onclick="promptPIN('cm-mgr-dash')" style="display:none"><div class="nav-icon">🔒</div> Manager View</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Case Management · Confidential<br>build 2026-09-25-cm-roster-uro</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Case Management · Confidential<br>build 2026-09-25-pagination-fix</p></div>
 </nav>
 <div class="main-content" id="cmMain">
   <div class="section active" id="sec-cm-dashboard"></div>
@@ -451,7 +451,7 @@
     <div class="nav-item" data-page="mkt-contacts" onclick="mktNav('mkt-contacts')"><div class="nav-icon">📇</div> Contacts</div>
     <div class="nav-item" data-page="mkt-analytics" onclick="mktNav('mkt-analytics')"><div class="nav-icon">📊</div> Analytics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential<br>build 2026-09-25-cm-roster-uro</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential<br>build 2026-09-25-pagination-fix</p></div>
 </nav>
 <div class="main-content" id="mktMain">
   <div class="section active" id="sec-mkt-pipeline"></div>
@@ -487,7 +487,7 @@
     <div class="nav-item" id="psrNavMyMetrics" data-page="psr-my-metrics" onclick="psrNav('psr-my-metrics')"><div class="nav-icon">📈</div> My Metrics</div>
     <div class="nav-item" id="psrNavMgrDash" data-page="psr-mgr-dash" onclick="promptPIN('psr-mgr-dash')" style="display:none"><div class="nav-icon">🔒</div> Manager View</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Patient Services · Confidential<br>build 2026-09-25-cm-roster-uro</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Patient Services · Confidential<br>build 2026-09-25-pagination-fix</p></div>
 </nav>
 <div class="main-content" id="psrMain">
   <div class="section active" id="sec-psr-dashboard"></div>
@@ -527,7 +527,7 @@
     <div class="nav-section-label">Metrics</div>
     <div class="nav-item" id="njmvaNavMgrDash" data-page="njmva-analytics" onclick="if(currentUser==='Manager'||userRole==='nj_mva'){njmvaNav('njmva-analytics')}else{promptPIN('njmva-analytics')}" style="display:none"><div class="nav-icon">📊</div> Analytics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential<br>build 2026-09-25-cm-roster-uro</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential<br>build 2026-09-25-pagination-fix</p></div>
 </nav>
 <div class="main-content" id="njmvaMain">
   <div class="section active" id="sec-njmva-dashboard"></div>
@@ -1049,7 +1049,7 @@
 </div>
 
 <script>
-console.log('CarePath CRM build: 2026-09-25-cm-roster-uro');
+console.log('CarePath CRM build: 2026-09-25-pagination-fix');
 // ══════════════════════════════════════════════════════════════════════
 // CORE DATA
 // ══════════════════════════════════════════════════════════════════════
@@ -1145,11 +1145,21 @@ function _fromDb(row, fieldMap){
 
 // ─── Generic DB operations ─────────────────────────────────────────
 async function _dbFetchAll(table){
+  // Paginate past PostgREST's ~1000-row cap: fetch 1000 at a time until a short page.
   try{
     var orderCol=(table==='system_config'||table==='daily_metrics')?'':'&order=id';
-    var resp=await fetch(SUPABASE_URL+'/rest/v1/'+table+'?select=*'+orderCol,{headers:_sbRead});
-    if(!resp.ok){console.error('Fetch failed:',table,resp.status);return [];}
-    return await resp.json();
+    var all=[], offset=0, pageSize=1000, guard=0;
+    while(guard<1000){
+      guard++;
+      var resp=await fetch(SUPABASE_URL+'/rest/v1/'+table+'?select=*'+orderCol+'&limit='+pageSize+'&offset='+offset,{headers:_sbRead});
+      if(!resp.ok){console.error('Fetch failed:',table,resp.status,'offset',offset);break;}
+      var batch=await resp.json();
+      if(!Array.isArray(batch))break;
+      all=all.concat(batch);
+      if(batch.length<pageSize)break;   // last page reached
+      offset+=pageSize;
+    }
+    return all;
   }catch(e){console.error('Fetch error:',table,e);return [];}
 }
 
