@@ -376,7 +376,7 @@
     <div class="nav-item" id="crmNavMgrDash" data-page="crm-mgr-dash" onclick="openCrmMgrDash()" style="display:none"><div class="nav-icon">🔒</div> Manager Analytics</div>
     <div class="nav-item" id="crmNavMgrMetrics" data-page="crm-mgr-metrics" onclick="promptPIN('crm-mgr-metrics')" style="display:none"><div class="nav-icon">🔒</div> Team Metrics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Internal CRM · Confidential<br>build 2026-10-27c-newsources</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Internal CRM · Confidential<br>build 2026-10-27d-newsources</p></div>
 </nav>
 <div class="main-content" id="crmMain">
   <div class="section active" id="sec-crm-dashboard"></div>
@@ -421,7 +421,7 @@
     <div class="nav-item" id="cmNavMyMetrics" data-page="cm-my-metrics" onclick="cmNav('cm-my-metrics')"><div class="nav-icon">📈</div> My Metrics</div>
     <div class="nav-item" id="cmNavMgrDash" data-page="cm-mgr-dash" onclick="promptPIN('cm-mgr-dash')" style="display:none"><div class="nav-icon">🔒</div> Manager View</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Case Management · Confidential<br>build 2026-10-27c-newsources</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Case Management · Confidential<br>build 2026-10-27d-newsources</p></div>
 </nav>
 <div class="main-content" id="cmMain">
   <div class="section active" id="sec-cm-dashboard"></div>
@@ -454,7 +454,7 @@
     <div class="nav-item" data-page="mkt-report" onclick="mktNav('mkt-report')"><div class="nav-icon">📄</div> Weekly Snapshot</div>
     <div class="nav-item" data-page="mkt-analytics" onclick="mktNav('mkt-analytics')"><div class="nav-icon">📊</div> Analytics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential<br>build 2026-10-27c-newsources</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential<br>build 2026-10-27d-newsources</p></div>
 </nav>
 <div class="main-content" id="mktMain">
   <div class="section active" id="sec-mkt-pipeline"></div>
@@ -492,7 +492,7 @@
     <div class="nav-item" id="psrNavMyMetrics" data-page="psr-my-metrics" onclick="psrNav('psr-my-metrics')"><div class="nav-icon">📈</div> My Metrics</div>
     <div class="nav-item" id="psrNavMgrDash" data-page="psr-mgr-dash" onclick="promptPIN('psr-mgr-dash')" style="display:none"><div class="nav-icon">🔒</div> Manager View</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Patient Services · Confidential<br>build 2026-10-27c-newsources</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Patient Services · Confidential<br>build 2026-10-27d-newsources</p></div>
 </nav>
 <div class="main-content" id="psrMain">
   <div class="section active" id="sec-psr-dashboard"></div>
@@ -532,7 +532,7 @@
     <div class="nav-section-label">Metrics</div>
     <div class="nav-item" id="njmvaNavMgrDash" data-page="njmva-analytics" onclick="if(currentUser==='Manager'||userRole==='nj_mva'||_isExec()){njmvaNav('njmva-analytics')}else{promptPIN('njmva-analytics')}" style="display:none"><div class="nav-icon">📊</div> Analytics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential<br>build 2026-10-27c-newsources</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential<br>build 2026-10-27d-newsources</p></div>
 </nav>
 <div class="main-content" id="njmvaMain">
   <div class="section active" id="sec-njmva-dashboard"></div>
@@ -1077,7 +1077,7 @@
 </div>
 
 <script>
-console.log('CarePath CRM build: 2026-10-27c-newsources');
+console.log('CarePath CRM build: 2026-10-27d-newsources');
 // ══════════════════════════════════════════════════════════════════════
 // CORE DATA
 // ══════════════════════════════════════════════════════════════════════
@@ -6705,6 +6705,11 @@ function srcMergeAll(){
 // ══════════════════════════════════════════════════════════════════════
 
 
+var _mktAnTab='newsources';
+var MKT_AN_TABS=[['newsources','\uD83C\uDD95 New Sources'],['overview','\uD83D\uDCCA Overview'],['roadmap','\uD83D\uDCC8 Roadmap & Activity'],['accounts','\uD83C\uDFE2 Accounts']];
+function _mktPaneOpen(g){return '<div class="mkt-an-pane" data-pane="'+g+'" style="display:'+(_mktAnTab===g?'block':'none')+'">';}
+function mktAnTabBar(){var h='<div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 14px;border-bottom:1px solid var(--gray-200);padding-bottom:10px">';MKT_AN_TABS.forEach(function(t){var on=_mktAnTab===t[0];h+='<button class="filter-btn mkt-an-tabbtn" data-tab="'+t[0]+'" onclick="mktAnShowTab(\''+t[0]+'\')" style="'+(on?'background:var(--navy);color:#fff':'')+'">'+t[1]+'</button>';});h+='</div>';return h;}
+function mktAnShowTab(g){_mktAnTab=g;var sec=document.getElementById('sec-mkt-analytics');if(!sec)return;sec.querySelectorAll('.mkt-an-pane').forEach(function(p){p.style.display=(p.getAttribute('data-pane')===g)?'block':'none';});sec.querySelectorAll('.mkt-an-tabbtn').forEach(function(b){var on=b.getAttribute('data-tab')===g;b.style.background=on?'var(--navy)':'';b.style.color=on?'#fff':'';});}
 function renderMktAnalytics(el){
   var from=mktAnFrom,to=mktAnTo;
   var rangeLbl=(from||to)?((from||'start')+' \u2192 '+(to||'today')):'All time';
@@ -6737,7 +6742,9 @@ function renderMktAnalytics(el){
   h+='</div>';
   h+='<div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap">'+downloadBtn('\u2b07 Download PDF Report','downloadMktAnalyticsReport()')+downloadBtn('\u2b07 Export CSV','exportMktAnalytics()')+'<span style="font-size:11px;color:var(--gray-500)">Showing: <strong>'+esc(rangeLbl)+'</strong></span></div>';
 
+  h+=mktAnTabBar();h+=_mktPaneOpen('newsources');
   try{h+=renderNewRefSourcesCard(from,to);}catch(_e){console.error('New Sources card error:',_e);}
+  h+='</div>';h+=_mktPaneOpen('overview');
   // ---- KPI cards ----
   function kpi(val,label,color){return '<div style="flex:1;min-width:150px;background:#fff;border:1px solid var(--gray-200);border-radius:10px;padding:14px 16px"><div style="font-size:30px;font-weight:800;color:'+color+'">'+val+'</div><div style="font-size:11px;color:var(--gray-500);margin-top:2px">'+label+'</div></div>';}
   h+='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">';
@@ -6749,6 +6756,7 @@ function renderMktAnalytics(el){
   h+=kpi(buckets['Disengaged'].length,'Disengaged',V('--red'));
   h+='</div>';
 
+  h+='</div>';h+=_mktPaneOpen('roadmap');
   // ---- roadmap KPIs: Matt's actuals vs ramp target ----
   var ri=(typeof mktRampIndex==='function')?mktRampIndex():1;
   var tgt=MKT_KPI_TARGETS[Math.max(0,Math.min(5,ri))];
@@ -6766,6 +6774,7 @@ function renderMktAnalytics(el){
     h+='<tr><td style="font-weight:600;color:var(--navy)">Net-new CRM contacts</td><td style="text-align:center;font-weight:800;color:'+col+';font-size:15px">'+act+'</td><td style="text-align:center;color:var(--gray-500)">'+t+'</td><td style="text-align:center;font-weight:700;color:'+col+'">'+pct+'%</td><td><div style="background:var(--gray-100,#eee);border-radius:5px;height:12px;overflow:hidden"><div style="width:'+barPct+'%;height:100%;background:'+col+'"></div></div></td></tr>';})();
   h+='</tbody></table></div><div style="padding:8px 18px;font-size:10px;color:var(--gray-400)">Actuals pulled from logged marketing activities in the selected range. Targets are the Month '+(ri+1)+' roadmap goals (set the program month in the Weekly Snapshot page).</div></div>';
 
+  h+='</div>';h+=_mktPaneOpen('overview');
   // ---- pipeline status grid (independent, overlapping signals) ----
   var sig=mktSignalCounts(from,to);
   var SIG_ORDER=['New','Actively Referring','Had Activity','Meeting Scheduled','Nurture','Disengaged'];
@@ -6782,6 +6791,7 @@ function renderMktAnalytics(el){
   });
   h+='</div><div style="font-size:10px;color:var(--gray-400);margin-top:8px">These overlap \u2014 an account can be both New and Actively Referring, so they don\u2019t sum to the total.</div></div></div>';
 
+  h+='</div>';h+=_mktPaneOpen('accounts');
   // ---- referral-producing initiatives / ROI ----
   var producers=mktList.map(function(m){return {m:m,rangeRefs:mktRefsInRange(m,from,to).length,totalRefs:mktSourceRefs(m).length,roi:mktRoi(m)};})
     .filter(function(x){return x.rangeRefs>0||x.totalRefs>0;}).sort(function(a,b){return b.rangeRefs-a.rangeRefs||b.totalRefs-a.totalRefs;});
@@ -6816,6 +6826,7 @@ function renderMktAnalytics(el){
   newOnes.forEach(function(m){h+='<tr><td style="font-weight:600;color:var(--navy)">'+esc(m.name)+'</td><td style="font-size:11px">'+esc(m.type||'')+'</td><td style="font-size:11px">'+esc(m.contact||'')+'</td><td style="font-size:11px">'+esc(m.dateInitiated||m.createdDate||'')+'</td><td style="font-size:10px;color:var(--gray-500)">'+esc((m.targetLocations||[]).join(', ')||'\u2014')+'</td></tr>';});
   h+='</tbody></table></div></div>';
 
+  h+='</div>';h+=_mktPaneOpen('roadmap');
   // ---- activity breakdown (categorized rollup + raw type + by rep) ----
   var actTypes={},actByRep={},totalActs=0;
   mktList.forEach(function(m){mktActsInRange(m,from,to).forEach(function(a){var t=a.type||'Other';actTypes[t]=(actTypes[t]||0)+1;var by=a.by||'Unknown';actByRep[by]=(actByRep[by]||0)+1;totalActs++;});});
@@ -6835,6 +6846,7 @@ function renderMktAnalytics(el){
     Object.entries(actByRep).sort(function(a,b){return b[1]-a[1];}).forEach(function(e){h+='<div style="font-size:12px;color:var(--navy);margin-bottom:3px">'+esc(e[0])+': <strong>'+e[1]+'</strong></div>';});
   }
   h+='</div></div>';
+  h+='</div>';
 
   el.innerHTML=h;
 }
