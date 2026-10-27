@@ -376,7 +376,7 @@
     <div class="nav-item" id="crmNavMgrDash" data-page="crm-mgr-dash" onclick="openCrmMgrDash()" style="display:none"><div class="nav-icon">🔒</div> Manager Analytics</div>
     <div class="nav-item" id="crmNavMgrMetrics" data-page="crm-mgr-metrics" onclick="promptPIN('crm-mgr-metrics')" style="display:none"><div class="nav-icon">🔒</div> Team Metrics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Internal CRM · Confidential<br>build 2026-10-27b-newsources</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Internal CRM · Confidential<br>build 2026-10-27c-newsources</p></div>
 </nav>
 <div class="main-content" id="crmMain">
   <div class="section active" id="sec-crm-dashboard"></div>
@@ -421,7 +421,7 @@
     <div class="nav-item" id="cmNavMyMetrics" data-page="cm-my-metrics" onclick="cmNav('cm-my-metrics')"><div class="nav-icon">📈</div> My Metrics</div>
     <div class="nav-item" id="cmNavMgrDash" data-page="cm-mgr-dash" onclick="promptPIN('cm-mgr-dash')" style="display:none"><div class="nav-icon">🔒</div> Manager View</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Case Management · Confidential<br>build 2026-10-27b-newsources</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Case Management · Confidential<br>build 2026-10-27c-newsources</p></div>
 </nav>
 <div class="main-content" id="cmMain">
   <div class="section active" id="sec-cm-dashboard"></div>
@@ -454,7 +454,7 @@
     <div class="nav-item" data-page="mkt-report" onclick="mktNav('mkt-report')"><div class="nav-icon">📄</div> Weekly Snapshot</div>
     <div class="nav-item" data-page="mkt-analytics" onclick="mktNav('mkt-analytics')"><div class="nav-icon">📊</div> Analytics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential<br>build 2026-10-27b-newsources</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential<br>build 2026-10-27c-newsources</p></div>
 </nav>
 <div class="main-content" id="mktMain">
   <div class="section active" id="sec-mkt-pipeline"></div>
@@ -492,7 +492,7 @@
     <div class="nav-item" id="psrNavMyMetrics" data-page="psr-my-metrics" onclick="psrNav('psr-my-metrics')"><div class="nav-icon">📈</div> My Metrics</div>
     <div class="nav-item" id="psrNavMgrDash" data-page="psr-mgr-dash" onclick="promptPIN('psr-mgr-dash')" style="display:none"><div class="nav-icon">🔒</div> Manager View</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Patient Services · Confidential<br>build 2026-10-27b-newsources</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Patient Services · Confidential<br>build 2026-10-27c-newsources</p></div>
 </nav>
 <div class="main-content" id="psrMain">
   <div class="section active" id="sec-psr-dashboard"></div>
@@ -532,7 +532,7 @@
     <div class="nav-section-label">Metrics</div>
     <div class="nav-item" id="njmvaNavMgrDash" data-page="njmva-analytics" onclick="if(currentUser==='Manager'||userRole==='nj_mva'||_isExec()){njmvaNav('njmva-analytics')}else{promptPIN('njmva-analytics')}" style="display:none"><div class="nav-icon">📊</div> Analytics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential<br>build 2026-10-27b-newsources</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential<br>build 2026-10-27c-newsources</p></div>
 </nav>
 <div class="main-content" id="njmvaMain">
   <div class="section active" id="sec-njmva-dashboard"></div>
@@ -1077,7 +1077,7 @@
 </div>
 
 <script>
-console.log('CarePath CRM build: 2026-10-27b-newsources');
+console.log('CarePath CRM build: 2026-10-27c-newsources');
 // ══════════════════════════════════════════════════════════════════════
 // CORE DATA
 // ══════════════════════════════════════════════════════════════════════
@@ -1407,6 +1407,7 @@ async function _loadFromSupabase(){
         else if(x.key==='mkt_ramp_override'){var _rv=parseInt(x.value);mktRampOverride=isNaN(_rv)?null:_rv;}
         else if(x.key==='custom_law_firms')try{customLawFirms=Array.isArray(x.value)?x.value:JSON.parse(x.value)}catch(e){customLawFirms=[];}
         else if(x.key==='custom_ref_sources')try{customRefSources=Array.isArray(x.value)?x.value:JSON.parse(x.value)}catch(e){customRefSources=[];}
+        else if(x.key==='dismissed_new_sources')try{dismissedNewSources=Array.isArray(x.value)?x.value:JSON.parse(x.value)}catch(e){dismissedNewSources=[];}
       });
       if(r[9]){crmMetrics={};cmMetrics={};psrMetrics={};r[9].forEach(function(m){var k=m.staff+'_'+m.date;var d={staff:m.staff,date:m.date,phoneCalls:m.phone_calls||0,emailsSent:m.emails_sent||0,faxesSent:m.faxes_sent||0};if(m.module==='crm')crmMetrics[k]=d;else if(m.module==='cm')cmMetrics[k]=d;else if(m.module==='psr'){var psrD={staff:m.staff,date:m.date};if(m.data&&typeof m.data==='object'){for(var pk in m.data)psrD[pk]=m.data[pk];}psrMetrics[k]=psrD;}});}
       console.log('✅ Loaded refs:'+refs.length+' cases:'+cases.length+' contacts:'+contacts.length);
@@ -1434,6 +1435,7 @@ async function _loadFromSupabase(){
       robinIdx=parseInt(c['cp11_robin']||'0')||0;
       try{customLawFirms=JSON.parse(c['cp11_customLawFirms']||'[]')}catch(e){customLawFirms=[];}
       try{customRefSources=JSON.parse(c['cp11_customRefSources']||'[]')}catch(e){customRefSources=[];}
+      try{dismissedNewSources=JSON.parse(c['cp11_dismissed_sources']||'[]')}catch(e){dismissedNewSources=[];}
       console.log('✅ Legacy load — refs:'+refs.length);
     }
   }catch(e){console.warn('⚠️ Load failed:',e);}
@@ -1623,7 +1625,7 @@ var refs=[],mktList=[],cases=[],contacts=[],mktContacts=[];
 var callLog=[],crmMetrics={},cmMetrics={},robinIdx=0;
 var mktRampOverride=1; // Month 2 (0-indexed=1). 0-5 forces M1-M6; null = auto from earliest initiative
 var tickets=[],psrMetrics={},faxLog=[];
-var customLawFirms=[],customRefSources=[];
+var customLawFirms=[],customRefSources=[];var dismissedNewSources=[];
 function genId(){return Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8)+'_'+Math.random().toString(36).slice(2,5)}
 function today(){return new Date().toISOString().split('T')[0]}
 function fmtDate(d){if(!d)return'—';const p=d.split('-');return p[1]+'/'+p[2]+'/'+p[0]}
@@ -6512,7 +6514,7 @@ function srcEffort(canonKey){
 function computeNewSources(from,to){
   var usage=srcUsageMap(), activeIdx=srcActiveIndex(), out=[];
   Object.keys(usage).forEach(function(k){
-    var e=usage[k]; if(!e.first) return;
+    var e=usage[k]; if(!e.first) return; if((typeof dismissedNewSources!=='undefined'?dismissedNewSources:[]).indexOf(k)!==-1) return;
     if(!_mktIn(e.first,from,to)) return;                // first-ever referral must be inside the range
     var eff=srcEffort(k);
     var refsRange=(refs||[]).filter(function(r){return srcCanon(r.referralSource)===k && _mktIn(r.createdDate,from,to);}).length;
@@ -6538,7 +6540,7 @@ function srcQuarterSummary(nQuarters){
     buckets.push({label:'Q'+(q+1)+' '+y,from:fromD,to:toD,attributed:0,after:0,unattached:0,total:0});
   }
   Object.keys(usage).forEach(function(k){
-    var e=usage[k]; if(!e.first) return;
+    var e=usage[k]; if(!e.first) return; if((typeof dismissedNewSources!=='undefined'?dismissedNewSources:[]).indexOf(k)!==-1) return;
     for(var b=0;b<buckets.length;b++){
       if(e.first>=buckets[b].from && e.first<=buckets[b].to){
         var eff=srcEffort(k), cls;
@@ -6577,7 +6579,7 @@ function renderNewRefSourcesCard(from,to){
       var action;
       if(r.cls==='unattached') action='<button class="btn-primary" style="font-size:10px;padding:5px 12px;white-space:nowrap" onclick="srcAddToPipeline('+i+')">+ Add to pipeline</button>';
       else action='<span style="font-size:11px;color:var(--gray-500)">In Matt\u2019s pipeline: '+esc(r.initName||'—')+'</span>';
-      h+='<tr><td style="font-weight:700;color:var(--navy)">'+esc(r.display)+'</td><td style="font-size:11px">'+fmtDate(r.first)+'</td><td style="text-align:center;font-weight:700;color:var(--teal)">'+r.refsRange+'</td><td>'+tag+'</td><td>'+action+'</td></tr>';
+      h+='<tr><td style="font-weight:700;color:var(--navy)">'+esc(r.display)+'</td><td style="font-size:11px">'+fmtDate(r.first)+'</td><td style="text-align:center;font-weight:700;color:var(--teal)">'+r.refsRange+'</td><td>'+tag+'</td><td>'+action+' <button class="filter-btn" style="font-size:10px;padding:4px 8px;margin-left:6px" onclick="srcMarkNotNew('+i+')" title="Remove from new sources">Not new</button></td></tr>';
     });
     h+='</tbody></table></div>';
   }
@@ -6587,10 +6589,15 @@ function renderNewRefSourcesCard(from,to){
   h+='<div class="table-scroll"><table class="tbl"><thead><tr><th>Quarter</th><th style="text-align:center">New Sources</th><th style="text-align:center">Attributed</th><th style="text-align:center">Picked up after</th><th style="text-align:center">Net-new</th></tr></thead><tbody>';
   qs.forEach(function(b){h+='<tr><td style="font-weight:700;color:var(--navy)">'+b.label+'</td><td style="text-align:center;font-weight:700">'+b.total+'</td><td style="text-align:center;color:#2e7d5b;font-weight:600">'+b.attributed+'</td><td style="text-align:center;color:var(--gold);font-weight:600">'+b.after+'</td><td style="text-align:center;color:var(--teal);font-weight:600">'+b.unattached+'</td></tr>';});
   h+='</tbody></table></div></div>';
+  var _hid=(typeof dismissedNewSources!=='undefined'?dismissedNewSources.length:0);
+  if(_hid>0) h+='<div style="margin-top:8px;font-size:11px;color:var(--gray-400)">'+_hid+' source'+(_hid>1?'s':'')+' marked \u201cnot new\u201d \u00b7 <a href="#" onclick="srcRestoreNotNew();return false;" style="color:var(--teal)">restore all</a></div>';
   h+='</div></div>';
   return h;
 }
 function srcAddToPipeline(i){var r=_newSrcList[i]; if(!r) return; openNewMktModalFor(r.display);}
+function srcSaveDismissed(){if(typeof _useNewTables!=='undefined'&&_useNewTables){_dbUpsert('system_config',{key:'dismissed_new_sources',value:dismissedNewSources,updated_at:new Date().toISOString()});}else{_legacySave('cp11_dismissed_sources',dismissedNewSources);}}
+function srcMarkNotNew(i){var r=_newSrcList[i];if(!r)return;if(typeof dismissedNewSources==='undefined')dismissedNewSources=[];if(dismissedNewSources.indexOf(r.canon)===-1)dismissedNewSources.push(r.canon);srcSaveDismissed();var el=document.getElementById('sec-mkt-analytics');if(el&&typeof renderMktAnalytics==='function')renderMktAnalytics(el);}
+function srcRestoreNotNew(){dismissedNewSources=[];srcSaveDismissed();var el=document.getElementById('sec-mkt-analytics');if(el&&typeof renderMktAnalytics==='function')renderMktAnalytics(el);}
 
 // ── Printed PDF report block ──
 function newRefSourcesReportHTML(from,to,C){
