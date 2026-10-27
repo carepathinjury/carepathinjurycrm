@@ -376,7 +376,7 @@
     <div class="nav-item" id="crmNavMgrDash" data-page="crm-mgr-dash" onclick="openCrmMgrDash()" style="display:none"><div class="nav-icon">🔒</div> Manager Analytics</div>
     <div class="nav-item" id="crmNavMgrMetrics" data-page="crm-mgr-metrics" onclick="promptPIN('crm-mgr-metrics')" style="display:none"><div class="nav-icon">🔒</div> Team Metrics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Internal CRM · Confidential<br>build 2026-10-27-newsources</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Internal CRM · Confidential<br>build 2026-10-27b-newsources</p></div>
 </nav>
 <div class="main-content" id="crmMain">
   <div class="section active" id="sec-crm-dashboard"></div>
@@ -421,7 +421,7 @@
     <div class="nav-item" id="cmNavMyMetrics" data-page="cm-my-metrics" onclick="cmNav('cm-my-metrics')"><div class="nav-icon">📈</div> My Metrics</div>
     <div class="nav-item" id="cmNavMgrDash" data-page="cm-mgr-dash" onclick="promptPIN('cm-mgr-dash')" style="display:none"><div class="nav-icon">🔒</div> Manager View</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Case Management · Confidential<br>build 2026-10-27-newsources</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Case Management · Confidential<br>build 2026-10-27b-newsources</p></div>
 </nav>
 <div class="main-content" id="cmMain">
   <div class="section active" id="sec-cm-dashboard"></div>
@@ -454,7 +454,7 @@
     <div class="nav-item" data-page="mkt-report" onclick="mktNav('mkt-report')"><div class="nav-icon">📄</div> Weekly Snapshot</div>
     <div class="nav-item" data-page="mkt-analytics" onclick="mktNav('mkt-analytics')"><div class="nav-icon">📊</div> Analytics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential<br>build 2026-10-27-newsources</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential<br>build 2026-10-27b-newsources</p></div>
 </nav>
 <div class="main-content" id="mktMain">
   <div class="section active" id="sec-mkt-pipeline"></div>
@@ -492,7 +492,7 @@
     <div class="nav-item" id="psrNavMyMetrics" data-page="psr-my-metrics" onclick="psrNav('psr-my-metrics')"><div class="nav-icon">📈</div> My Metrics</div>
     <div class="nav-item" id="psrNavMgrDash" data-page="psr-mgr-dash" onclick="promptPIN('psr-mgr-dash')" style="display:none"><div class="nav-icon">🔒</div> Manager View</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Patient Services · Confidential<br>build 2026-10-27-newsources</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Patient Services · Confidential<br>build 2026-10-27b-newsources</p></div>
 </nav>
 <div class="main-content" id="psrMain">
   <div class="section active" id="sec-psr-dashboard"></div>
@@ -532,7 +532,7 @@
     <div class="nav-section-label">Metrics</div>
     <div class="nav-item" id="njmvaNavMgrDash" data-page="njmva-analytics" onclick="if(currentUser==='Manager'||userRole==='nj_mva'||_isExec()){njmvaNav('njmva-analytics')}else{promptPIN('njmva-analytics')}" style="display:none"><div class="nav-icon">📊</div> Analytics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential<br>build 2026-10-27-newsources</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential<br>build 2026-10-27b-newsources</p></div>
 </nav>
 <div class="main-content" id="njmvaMain">
   <div class="section active" id="sec-njmva-dashboard"></div>
@@ -1077,7 +1077,7 @@
 </div>
 
 <script>
-console.log('CarePath CRM build: 2026-10-27-newsources');
+console.log('CarePath CRM build: 2026-10-27b-newsources');
 // ══════════════════════════════════════════════════════════════════════
 // CORE DATA
 // ══════════════════════════════════════════════════════════════════════
@@ -6552,7 +6552,7 @@ function srcQuarterSummary(nQuarters){
 }
 
 var SRC_CLS_LABEL={attributed:'Attributed to outreach',after:'Picked up after',unattached:'Net-new / unattached'};
-var SRC_CLS_COLOR={attributed:'var(--green)',after:'var(--gold)',unattached:'var(--teal)'};
+var SRC_CLS_COLOR={attributed:'#2e7d5b',after:'var(--gold)',unattached:'var(--teal)'};
 
 // ── Analytics card (live, respects the date filter) ──
 var _newSrcList=[];
@@ -6566,7 +6566,7 @@ function renderNewRefSourcesCard(from,to){
   var h='<div class="table-card" style="border-top:3px solid var(--gold);margin-bottom:18px">';
   h+='<div class="table-header"><h3>🆕 New Referral Sources</h3><span style="font-size:11px;color:var(--gray-400)">First-ever referral in range · '+esc(rangeLbl)+'</span></div>';
   h+='<div style="padding:14px 18px">';
-  h+='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">'+mini(rows.length,'New sources',"var(--navy)")+mini(att,'Attributed to outreach','var(--green)')+mini(aft,'Picked up after','var(--gold)')+mini(un,'Net-new / unattached','var(--teal)')+'</div>';
+  h+='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">'+mini(rows.length,'New sources',"var(--navy)")+mini(att,'Attributed to outreach','#2e7d5b')+mini(aft,'Picked up after','var(--gold)')+mini(un,'Net-new / unattached','var(--teal)')+'</div>';
   h+='<div style="margin-bottom:12px"><button class="filter-btn" onclick="openSourceCleanup()">🧹 Clean up duplicate sources</button></div>';
   if(!rows.length){
     h+='<div style="padding:20px;text-align:center;color:var(--gray-400)">No brand-new referral sources first appeared in this range.</div>';
@@ -6576,7 +6576,7 @@ function renderNewRefSourcesCard(from,to){
       var tag='<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;color:#fff;background:'+SRC_CLS_COLOR[r.cls]+'">'+SRC_CLS_LABEL[r.cls]+'</span>';
       var action;
       if(r.cls==='unattached') action='<button class="btn-primary" style="font-size:10px;padding:5px 12px;white-space:nowrap" onclick="srcAddToPipeline('+i+')">+ Add to pipeline</button>';
-      else action='<span style="font-size:11px;color:var(--gray-500)">Matched: '+esc(r.initName||'—')+'</span>';
+      else action='<span style="font-size:11px;color:var(--gray-500)">In Matt\u2019s pipeline: '+esc(r.initName||'—')+'</span>';
       h+='<tr><td style="font-weight:700;color:var(--navy)">'+esc(r.display)+'</td><td style="font-size:11px">'+fmtDate(r.first)+'</td><td style="text-align:center;font-weight:700;color:var(--teal)">'+r.refsRange+'</td><td>'+tag+'</td><td>'+action+'</td></tr>';
     });
     h+='</tbody></table></div>';
@@ -6585,7 +6585,7 @@ function renderNewRefSourcesCard(from,to){
   var qs=srcQuarterSummary(6);
   h+='<div style="margin-top:16px"><div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:6px">New Sources by Quarter <span style="font-weight:400;color:var(--gray-400)">(all data, last 6 quarters)</span></div>';
   h+='<div class="table-scroll"><table class="tbl"><thead><tr><th>Quarter</th><th style="text-align:center">New Sources</th><th style="text-align:center">Attributed</th><th style="text-align:center">Picked up after</th><th style="text-align:center">Net-new</th></tr></thead><tbody>';
-  qs.forEach(function(b){h+='<tr><td style="font-weight:700;color:var(--navy)">'+b.label+'</td><td style="text-align:center;font-weight:700">'+b.total+'</td><td style="text-align:center;color:var(--green);font-weight:600">'+b.attributed+'</td><td style="text-align:center;color:var(--gold);font-weight:600">'+b.after+'</td><td style="text-align:center;color:var(--teal);font-weight:600">'+b.unattached+'</td></tr>';});
+  qs.forEach(function(b){h+='<tr><td style="font-weight:700;color:var(--navy)">'+b.label+'</td><td style="text-align:center;font-weight:700">'+b.total+'</td><td style="text-align:center;color:#2e7d5b;font-weight:600">'+b.attributed+'</td><td style="text-align:center;color:var(--gold);font-weight:600">'+b.after+'</td><td style="text-align:center;color:var(--teal);font-weight:600">'+b.unattached+'</td></tr>';});
   h+='</tbody></table></div></div>';
   h+='</div></div>';
   return h;
@@ -6598,7 +6598,7 @@ function newRefSourcesReportHTML(from,to,C){
   var th=C.th, td=C.td, NAVY=C.NAVY, TEAL=C.TEAL, GREEN=C.GREEN, GOLD=C.GOLD, MUTE=C.MUTE;
   var h='<h2>New Referral Sources ('+rows.length+')</h2>';
   h+='<div class="sub">Sources whose first-ever referral landed in this range. Attributed = outreach logged before the first referral.</div>';
-  h+='<table><tr><th style="'+th+'">Referral Source</th><th style="'+th+'">First Referral</th><th style="'+th+'">Refs (range)</th><th style="'+th+'">Classification</th><th style="'+th+'">Matched Initiative</th></tr>';
+  h+='<table><tr><th style="'+th+'">Referral Source</th><th style="'+th+'">First Referral</th><th style="'+th+'">Refs (range)</th><th style="'+th+'">Classification</th><th style="'+th+'">Pipeline Account</th></tr>';
   if(!rows.length) h+='<tr><td style="'+td+'" colspan="5">No new sources first appeared in this range.</td></tr>';
   rows.forEach(function(r){var col=r.cls==='attributed'?GREEN:(r.cls==='after'?GOLD:TEAL);h+='<tr><td style="'+td+';font-weight:700;color:'+NAVY+'">'+esc(r.display)+'</td><td style="'+td+'">'+esc(r.first)+'</td><td style="'+td+';font-weight:700;color:'+TEAL+'">'+r.refsRange+'</td><td style="'+td+';font-weight:700;color:'+col+'">'+SRC_CLS_LABEL[r.cls]+'</td><td style="'+td+'">'+esc(r.initName||'—')+'</td></tr>';});
   h+='</table>';
@@ -6655,7 +6655,7 @@ function renderSourceCleanup(){
       h+='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div style="font-size:11px;color:var(--gray-500)">'+cl.spellings.length+' spellings · '+cl.refCount+' referral'+(cl.refCount!==1?'s':'')+'</div>';
       h+='<button class="btn-primary" style="font-size:10px;padding:5px 12px" onclick="srcMergeCluster('+i+')">Merge → keep "'+esc(cl.target)+'"</button></div>';
       h+='<table class="tbl" style="margin-top:8px"><tbody>';
-      cl.spellings.forEach(function(s){var isT=(s===cl.target);h+='<tr><td style="font-weight:'+(isT?'700':'400')+';color:'+(isT?'var(--green)':'var(--navy)')+'">'+esc(s)+(isT?' ✓ active':'')+'</td><td style="text-align:right;font-size:11px;color:var(--gray-500)">'+(cl.counts[s]||0)+'</td></tr>';});
+      cl.spellings.forEach(function(s){var isT=(s===cl.target);h+='<tr><td style="font-weight:'+(isT?'700':'400')+';color:'+(isT?'#2e7d5b':'var(--navy)')+'">'+esc(s)+(isT?' ✓ active':'')+'</td><td style="text-align:right;font-size:11px;color:var(--gray-500)">'+(cl.counts[s]||0)+'</td></tr>';});
       h+='</tbody></table></div>';
     });
   }
@@ -6915,7 +6915,7 @@ function exportMktAnalytics(){
   out.push('');
 
   var ri=(typeof mktRampIndex==='function')?mktRampIndex():1;var tgt=MKT_KPI_TARGETS[Math.max(0,Math.min(5,ri))];var am=mktActivityMetrics(from,to);
-  try{(function(){var _ns=computeNewSources(from,to);out.push(line(['NEW REFERRAL SOURCES']));out.push(line(['Source','First Referral','Refs (range)','Classification','Matched Initiative']));if(!_ns.length)out.push(line(['(none)']));_ns.forEach(function(r){out.push(line([r.display,r.first,r.refsRange,SRC_CLS_LABEL[r.cls],r.initName||'']));});out.push('');var _qs=srcQuarterSummary(6);out.push(line(['NEW SOURCES BY QUARTER']));out.push(line(['Quarter','New','Attributed','Picked up after','Net-new']));_qs.forEach(function(b){out.push(line([b.label,b.total,b.attributed,b.after,b.unattached]));});out.push('');})();}catch(_e){}
+  try{(function(){var _ns=computeNewSources(from,to);out.push(line(['NEW REFERRAL SOURCES']));out.push(line(['Source','First Referral','Refs (range)','Classification','Pipeline Account']));if(!_ns.length)out.push(line(['(none)']));_ns.forEach(function(r){out.push(line([r.display,r.first,r.refsRange,SRC_CLS_LABEL[r.cls],r.initName||'']));});out.push('');var _qs=srcQuarterSummary(6);out.push(line(['NEW SOURCES BY QUARTER']));out.push(line(['Quarter','New','Attributed','Picked up after','Net-new']));_qs.forEach(function(b){out.push(line([b.label,b.total,b.attributed,b.after,b.unattached]));});out.push('');})();}catch(_e){}
   out.push(line(['MARKETING ROADMAP \u2014 ACTIVITY VS TARGET','Month '+(ri+1)]));
   out.push(line(['KPI','Actual','Target','Progress']));
   MKT_KPI_ROWS.forEach(function(row){var act=am[row[0]]||0,t=tgt[row[0]]||0,pct=t>0?Math.round(act/t*100):(act>0?100:0);out.push(line([row[1],act,t,pct+'%']));});
