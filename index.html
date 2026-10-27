@@ -376,7 +376,7 @@
     <div class="nav-item" id="crmNavMgrDash" data-page="crm-mgr-dash" onclick="openCrmMgrDash()" style="display:none"><div class="nav-icon">🔒</div> Manager Analytics</div>
     <div class="nav-item" id="crmNavMgrMetrics" data-page="crm-mgr-metrics" onclick="promptPIN('crm-mgr-metrics')" style="display:none"><div class="nav-icon">🔒</div> Team Metrics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Internal CRM · Confidential<br>build 2026-10-21b-updates</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Internal CRM · Confidential<br>build 2026-10-27-newsources</p></div>
 </nav>
 <div class="main-content" id="crmMain">
   <div class="section active" id="sec-crm-dashboard"></div>
@@ -421,7 +421,7 @@
     <div class="nav-item" id="cmNavMyMetrics" data-page="cm-my-metrics" onclick="cmNav('cm-my-metrics')"><div class="nav-icon">📈</div> My Metrics</div>
     <div class="nav-item" id="cmNavMgrDash" data-page="cm-mgr-dash" onclick="promptPIN('cm-mgr-dash')" style="display:none"><div class="nav-icon">🔒</div> Manager View</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Case Management · Confidential<br>build 2026-10-21b-updates</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Case Management · Confidential<br>build 2026-10-27-newsources</p></div>
 </nav>
 <div class="main-content" id="cmMain">
   <div class="section active" id="sec-cm-dashboard"></div>
@@ -454,7 +454,7 @@
     <div class="nav-item" data-page="mkt-report" onclick="mktNav('mkt-report')"><div class="nav-icon">📄</div> Weekly Snapshot</div>
     <div class="nav-item" data-page="mkt-analytics" onclick="mktNav('mkt-analytics')"><div class="nav-icon">📊</div> Analytics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential<br>build 2026-10-21b-updates</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential<br>build 2026-10-27-newsources</p></div>
 </nav>
 <div class="main-content" id="mktMain">
   <div class="section active" id="sec-mkt-pipeline"></div>
@@ -492,7 +492,7 @@
     <div class="nav-item" id="psrNavMyMetrics" data-page="psr-my-metrics" onclick="psrNav('psr-my-metrics')"><div class="nav-icon">📈</div> My Metrics</div>
     <div class="nav-item" id="psrNavMgrDash" data-page="psr-mgr-dash" onclick="promptPIN('psr-mgr-dash')" style="display:none"><div class="nav-icon">🔒</div> Manager View</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Patient Services · Confidential<br>build 2026-10-21b-updates</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Patient Services · Confidential<br>build 2026-10-27-newsources</p></div>
 </nav>
 <div class="main-content" id="psrMain">
   <div class="section active" id="sec-psr-dashboard"></div>
@@ -532,7 +532,7 @@
     <div class="nav-section-label">Metrics</div>
     <div class="nav-item" id="njmvaNavMgrDash" data-page="njmva-analytics" onclick="if(currentUser==='Manager'||userRole==='nj_mva'||_isExec()){njmvaNav('njmva-analytics')}else{promptPIN('njmva-analytics')}" style="display:none"><div class="nav-icon">📊</div> Analytics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential<br>build 2026-10-21b-updates</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential<br>build 2026-10-27-newsources</p></div>
 </nav>
 <div class="main-content" id="njmvaMain">
   <div class="section active" id="sec-njmva-dashboard"></div>
@@ -1077,7 +1077,7 @@
 </div>
 
 <script>
-console.log('CarePath CRM build: 2026-10-21b-updates');
+console.log('CarePath CRM build: 2026-10-27-newsources');
 // ══════════════════════════════════════════════════════════════════════
 // CORE DATA
 // ══════════════════════════════════════════════════════════════════════
@@ -2191,17 +2191,23 @@ function checkAndAddLawFirm(firm){
 
 function checkAndAddRefSource(source){
   if(!source)return;
-  var allSources=REF_SOURCES.concat(customRefSources).concat(mktList.map(function(m){return m.name}));
-  allSources=allSources.concat(['Walk-in','Physician Referral','Self-Referral','Other']);
-  // Exact match exists
+  // Hard de-dupe: if this normalizes to an existing active source under a different
+  // spelling, force the active spelling — never create a divergent duplicate.
+  var active=(typeof srcActiveFor==='function')?srcActiveFor(source):null;
+  if(active){
+    if(active!==source){
+      alert('\u201c'+source+'\u201d is the same referral source as the existing \u201c'+active+'\u201d.\n\nUsing the active source \u201c'+active+'\u201d to prevent a duplicate.');
+      var _el=document.getElementById('fRefSource'); if(_el)_el.value=active;
+    }
+    return;
+  }
+  var allSources=REF_SOURCES.concat(customRefSources).concat(mktList.map(function(m){return m.name})).concat(['Walk-in','Physician Referral','Self-Referral','Other']);
   var unique=allSources.filter(function(v,i,a){return a.indexOf(v)===i});
-  var _norm=function(s){return (s||'').trim().toLowerCase();};
-  if(unique.some(function(s){return _norm(s)===_norm(source)}))return;
-  // Fuzzy check
   var matches=unique.filter(function(s){return fuzzyMatch(s,source)});
   if(matches.length>0){
-    var useExisting=confirm('Similar referral source found:\n\n"'+matches[0]+'"\n\nDid you mean this? Click OK to use the existing name, or Cancel to add "'+source+'" as new.');
-    if(useExisting){document.getElementById('fRefSource').value=matches[0];return;}
+    alert('\u201c'+source+'\u201d looks like the existing source \u201c'+matches[0]+'\u201d.\n\nUsing \u201c'+matches[0]+'\u201d to avoid a duplicate.');
+    var _el2=document.getElementById('fRefSource'); if(_el2)_el2.value=matches[0];
+    return;
   }
   customRefSources.push(source);
   if(_useNewTables){_dbUpsert('system_config',{key:'custom_ref_sources',value:customRefSources,updated_at:new Date().toISOString()})}else{_legacySave('cp11_customRefSources',customRefSources)}
@@ -6160,13 +6166,16 @@ function openEditMktModal(id){const m=mktList.find(x=>x.id===id);if(!m)return;ed
 function closeMktModal(){document.getElementById('marketingModal').classList.remove('show');editingMktId=null}
 function saveMkt(){
   var name=document.getElementById('mktName').value.trim();if(!name){alert('Enter the organization name.');return;}
-  // Consolidate duplicate / near-duplicate organization names so CRM + Marketing stay in sync
-  var _dupExact=mktList.find(function(m){return m.id!==editingMktId&&mktNorm(m.name)===mktNorm(name)});
-  if(_dupExact){ if(!confirm('An initiative for "'+_dupExact.name+'" already exists. Keep this as a separate one anyway?'))return; }
-  else{
+  // Hard de-dupe: a name matching an existing initiative is blocked; a name matching an
+  // existing CRM source under a different spelling is forced to the active spelling.
+  var _dupInit=mktList.find(function(m){return m.id!==editingMktId&&srcCanon(m.name)===srcCanon(name)});
+  if(_dupInit){ alert('An initiative for \u201c'+_dupInit.name+'\u201d already exists. Opening it instead of creating a duplicate.'); closeMktModal(); openEditMktModal(_dupInit.id); return; }
+  var _active=(typeof srcActiveFor==='function')?srcActiveFor(name):null;
+  if(_active&&_active!==name){ alert('\u201c'+name+'\u201d is the same as the existing referral source \u201c'+_active+'\u201d.\n\nUsing \u201c'+_active+'\u201d so Marketing and the CRM stay in sync.'); name=_active; document.getElementById('mktName').value=name; }
+  else {
     var _cands=mktList.filter(function(m){return m.id!==editingMktId}).map(function(m){return m.name}).concat(REF_SOURCES,(customRefSources||[])).filter(Boolean);
-    var _fz=_cands.filter(function(x){return mktNorm(x)!==mktNorm(name)&&fuzzyMatch(x,name)});
-    if(_fz.length){ if(confirm('A similar referral source already exists: "'+_fz[0]+'".\n\nUse that exact spelling instead of "'+name+'"? (Keeps your CRM + Marketing lists consolidated.)')){name=_fz[0];document.getElementById('mktName').value=name;} }
+    var _fz=_cands.filter(function(x){return srcCanon(x)!==srcCanon(name)&&fuzzyMatch(x,name)});
+    if(_fz.length){ alert('\u201c'+name+'\u201d looks like the existing source \u201c'+_fz[0]+'\u201d. Using that spelling to avoid a duplicate.'); name=_fz[0]; document.getElementById('mktName').value=name; }
   }
   const cName=document.getElementById('mktContactName').value.trim();
   const cTitle=document.getElementById('mktContactTitle').value.trim();
@@ -6427,6 +6436,268 @@ var MKT_STATUS_ORDER=['New','Actively Referring','Meeting Scheduled','Engaged','
 var MKT_STATUS_COLOR={'New':'#1a7f7a','Actively Referring':'#2e7d5b','Meeting Scheduled':'#c8973a','Engaged':'#3498db','Nurture':'#8a7fb0','Disengaged':'#c0392b'};
 var MKT_STATUS_DESC={'New':'Started this period','Actively Referring':'Sent \u22651 referral this period','Meeting Scheduled':'Meeting on the calendar','Engaged':'Had a touchpoint this period','Nurture':'Maintaining \u2014 no touch this period','Disengaged':'Inactive or 90+ days idle'};
 
+// ══════════════════════════════════════════════════════════════════════
+// NEW REFERRAL SOURCES + SOURCE HYGIENE (dedupe)  —  added 2026-10-27
+// ══════════════════════════════════════════════════════════════════════
+
+// Strong canonical key for duplicate detection (beyond mktNorm's trim+lowercase).
+// Folds &/and, strips punctuation and common entity suffixes so "Morgan & Morgan"
+// and "Morgan and Morgan, LLC" collapse to the same key.
+function srcCanon(s){
+  if(!s) return '';
+  var x=String(s).toLowerCase().trim();
+  x=x.replace(/&/g,' and ');
+  x=x.replace(/[^a-z0-9]+/g,' ');
+  x=' '+x.replace(/\s+/g,' ').trim()+' ';
+  [' llc ',' pllc ',' pc ',' pa ',' inc ',' co ',' esq ',' esquire ',' ltd ',' llp ',' pllc '].forEach(function(t){x=x.split(t).join(' ');});
+  return x.replace(/\s+/g,' ').trim();
+}
+// Generic / non-source buckets we never treat as a trackable "new source".
+var SRC_EXCLUDE={'':1,'unknown':1,'walk in':1,'other':1,'self referral':1,'n a':1,'na':1,'none':1,'tbd':1};
+function srcIsTrackable(name){return !SRC_EXCLUDE[srcCanon(name)];}
+
+// Map canonical key -> the established "active" spelling (prefers an initiative name).
+function srcActiveIndex(){
+  var idx={};
+  (typeof getUnifiedRefSources==='function'?getUnifiedRefSources():[]).forEach(function(s){
+    var k=srcCanon(s); if(k && !idx[k]) idx[k]=s;
+  });
+  return idx;
+}
+// Return the existing active spelling whose canon matches input (or null).
+function srcActiveFor(input){var k=srcCanon(input); if(!k) return null; return srcActiveIndex()[k]||null;}
+
+// Earliest + per-canon rollup of referral-source usage across ALL referrals.
+function srcUsageMap(){
+  var m={};
+  (refs||[]).forEach(function(r){
+    var name=r.referralSource; if(!srcIsTrackable(name)) return;
+    var k=srcCanon(name); if(!k) return;
+    if(!m[k]) m[k]={canon:k,first:'',rawCounts:{},total:0};
+    var d=(r.createdDate||'').substring(0,10);
+    if(d && (!m[k].first || d<m[k].first)) m[k].first=d;
+    var raw=(name||'').trim();
+    m[k].rawCounts[raw]=(m[k].rawCounts[raw]||0)+1; m[k].total++;
+  });
+  return m;
+}
+// Best display spelling for a canon: active list wins, else most-used raw spelling.
+function srcDisplay(entry,activeIdx){
+  if(activeIdx && activeIdx[entry.canon]) return activeIdx[entry.canon];
+  var best='',n=-1; Object.keys(entry.rawCounts).forEach(function(raw){if(entry.rawCounts[raw]>n){n=entry.rawCounts[raw];best=raw;}});
+  return best||entry.canon;
+}
+
+// Attribution: has Matt got an initiative/contact for this source, and when did
+// the outreach start relative to the first referral?
+function srcEffort(canonKey){
+  var info={matched:false,effortDate:'',initName:'',initId:''};
+  function consider(d){if(d){d=String(d).substring(0,10);if(!info.effortDate||d<info.effortDate)info.effortDate=d;}}
+  (mktList||[]).forEach(function(m){
+    if(srcCanon(m.name)!==canonKey) return;
+    info.matched=true; if(!info.initName){info.initName=m.name;info.initId=m.id;}
+    consider(m.dateInitiated); consider(m.createdDate);
+    (m.activityLog||[]).forEach(function(a){consider(a.date);});
+  });
+  (typeof mktContacts!=='undefined'?mktContacts:[]).forEach(function(c){
+    if(srcCanon(c.org)!==canonKey && srcCanon(c.name)!==canonKey) return;
+    info.matched=true; if(!info.initName) info.initName=c.org||c.name;
+    consider(c.createdDate); consider(c.lastContactDate);
+    (c.nurtureLog||[]).forEach(function(a){consider(a.date);});
+  });
+  return info;
+}
+
+// Core: brand-new sources whose first-ever referral falls in [from,to].
+function computeNewSources(from,to){
+  var usage=srcUsageMap(), activeIdx=srcActiveIndex(), out=[];
+  Object.keys(usage).forEach(function(k){
+    var e=usage[k]; if(!e.first) return;
+    if(!_mktIn(e.first,from,to)) return;                // first-ever referral must be inside the range
+    var eff=srcEffort(k);
+    var refsRange=(refs||[]).filter(function(r){return srcCanon(r.referralSource)===k && _mktIn(r.createdDate,from,to);}).length;
+    var cls;
+    if(eff.matched && eff.effortDate && eff.effortDate<=e.first) cls='attributed';
+    else if(eff.matched) cls='after';
+    else cls='unattached';
+    out.push({display:srcDisplay(e,activeIdx),canon:k,first:e.first,refsRange:refsRange,refsAll:e.total,cls:cls,initName:eff.initName});
+  });
+  out.sort(function(a,b){return (b.first||'').localeCompare(a.first||'')|| b.refsRange-a.refsRange;});
+  return out;
+}
+
+// Trailing N calendar quarters, independent of the active filter.
+function srcQuarterSummary(nQuarters){
+  nQuarters=nQuarters||6;
+  var usage=srcUsageMap(), now=new Date(), buckets=[];
+  var cy=now.getFullYear(), cq=Math.floor(now.getMonth()/3);
+  for(var i=nQuarters-1;i>=0;i--){
+    var qTotal=cq-i, y=cy+Math.floor(qTotal/4), q=((qTotal%4)+4)%4;
+    var fromD=new Date(y,q*3,1).toISOString().substring(0,10);
+    var toD=new Date(y,q*3+3,0).toISOString().substring(0,10);
+    buckets.push({label:'Q'+(q+1)+' '+y,from:fromD,to:toD,attributed:0,after:0,unattached:0,total:0});
+  }
+  Object.keys(usage).forEach(function(k){
+    var e=usage[k]; if(!e.first) return;
+    for(var b=0;b<buckets.length;b++){
+      if(e.first>=buckets[b].from && e.first<=buckets[b].to){
+        var eff=srcEffort(k), cls;
+        if(eff.matched && eff.effortDate && eff.effortDate<=e.first) cls='attributed';
+        else if(eff.matched) cls='after'; else cls='unattached';
+        buckets[b][cls]++; buckets[b].total++; break;
+      }
+    }
+  });
+  return buckets;
+}
+
+var SRC_CLS_LABEL={attributed:'Attributed to outreach',after:'Picked up after',unattached:'Net-new / unattached'};
+var SRC_CLS_COLOR={attributed:'var(--green)',after:'var(--gold)',unattached:'var(--teal)'};
+
+// ── Analytics card (live, respects the date filter) ──
+var _newSrcList=[];
+function renderNewRefSourcesCard(from,to){
+  var rows=computeNewSources(from,to); _newSrcList=rows;
+  var att=rows.filter(function(r){return r.cls==='attributed';}).length;
+  var aft=rows.filter(function(r){return r.cls==='after';}).length;
+  var un=rows.filter(function(r){return r.cls==='unattached';}).length;
+  var rangeLbl=(from||to)?((from||'start')+' → '+(to||'today')):'All time';
+  function mini(n,l,c){return '<div style="flex:1;min-width:140px;background:#fff;border:1px solid var(--gray-200);border-left:4px solid '+c+';border-radius:8px;padding:12px 14px"><div style="font-size:26px;font-weight:800;color:'+c+'">'+n+'</div><div style="font-size:11px;color:var(--gray-500)">'+l+'</div></div>';}
+  var h='<div class="table-card" style="border-top:3px solid var(--gold);margin-bottom:18px">';
+  h+='<div class="table-header"><h3>🆕 New Referral Sources</h3><span style="font-size:11px;color:var(--gray-400)">First-ever referral in range · '+esc(rangeLbl)+'</span></div>';
+  h+='<div style="padding:14px 18px">';
+  h+='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">'+mini(rows.length,'New sources',"var(--navy)")+mini(att,'Attributed to outreach','var(--green)')+mini(aft,'Picked up after','var(--gold)')+mini(un,'Net-new / unattached','var(--teal)')+'</div>';
+  h+='<div style="margin-bottom:12px"><button class="filter-btn" onclick="openSourceCleanup()">🧹 Clean up duplicate sources</button></div>';
+  if(!rows.length){
+    h+='<div style="padding:20px;text-align:center;color:var(--gray-400)">No brand-new referral sources first appeared in this range.</div>';
+  } else {
+    h+='<div class="table-scroll"><table class="tbl"><thead><tr><th>Referral Source</th><th>First Referral</th><th style="text-align:center">Refs (range)</th><th>Classification</th><th>Detail / Action</th></tr></thead><tbody>';
+    rows.forEach(function(r,i){
+      var tag='<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;color:#fff;background:'+SRC_CLS_COLOR[r.cls]+'">'+SRC_CLS_LABEL[r.cls]+'</span>';
+      var action;
+      if(r.cls==='unattached') action='<button class="btn-primary" style="font-size:10px;padding:5px 12px;white-space:nowrap" onclick="srcAddToPipeline('+i+')">+ Add to pipeline</button>';
+      else action='<span style="font-size:11px;color:var(--gray-500)">Matched: '+esc(r.initName||'—')+'</span>';
+      h+='<tr><td style="font-weight:700;color:var(--navy)">'+esc(r.display)+'</td><td style="font-size:11px">'+fmtDate(r.first)+'</td><td style="text-align:center;font-weight:700;color:var(--teal)">'+r.refsRange+'</td><td>'+tag+'</td><td>'+action+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+  }
+  // Quarterly summary (trailing 6 quarters, independent of filter)
+  var qs=srcQuarterSummary(6);
+  h+='<div style="margin-top:16px"><div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:6px">New Sources by Quarter <span style="font-weight:400;color:var(--gray-400)">(all data, last 6 quarters)</span></div>';
+  h+='<div class="table-scroll"><table class="tbl"><thead><tr><th>Quarter</th><th style="text-align:center">New Sources</th><th style="text-align:center">Attributed</th><th style="text-align:center">Picked up after</th><th style="text-align:center">Net-new</th></tr></thead><tbody>';
+  qs.forEach(function(b){h+='<tr><td style="font-weight:700;color:var(--navy)">'+b.label+'</td><td style="text-align:center;font-weight:700">'+b.total+'</td><td style="text-align:center;color:var(--green);font-weight:600">'+b.attributed+'</td><td style="text-align:center;color:var(--gold);font-weight:600">'+b.after+'</td><td style="text-align:center;color:var(--teal);font-weight:600">'+b.unattached+'</td></tr>';});
+  h+='</tbody></table></div></div>';
+  h+='</div></div>';
+  return h;
+}
+function srcAddToPipeline(i){var r=_newSrcList[i]; if(!r) return; openNewMktModalFor(r.display);}
+
+// ── Printed PDF report block ──
+function newRefSourcesReportHTML(from,to,C){
+  var rows=computeNewSources(from,to), qs=srcQuarterSummary(6);
+  var th=C.th, td=C.td, NAVY=C.NAVY, TEAL=C.TEAL, GREEN=C.GREEN, GOLD=C.GOLD, MUTE=C.MUTE;
+  var h='<h2>New Referral Sources ('+rows.length+')</h2>';
+  h+='<div class="sub">Sources whose first-ever referral landed in this range. Attributed = outreach logged before the first referral.</div>';
+  h+='<table><tr><th style="'+th+'">Referral Source</th><th style="'+th+'">First Referral</th><th style="'+th+'">Refs (range)</th><th style="'+th+'">Classification</th><th style="'+th+'">Matched Initiative</th></tr>';
+  if(!rows.length) h+='<tr><td style="'+td+'" colspan="5">No new sources first appeared in this range.</td></tr>';
+  rows.forEach(function(r){var col=r.cls==='attributed'?GREEN:(r.cls==='after'?GOLD:TEAL);h+='<tr><td style="'+td+';font-weight:700;color:'+NAVY+'">'+esc(r.display)+'</td><td style="'+td+'">'+esc(r.first)+'</td><td style="'+td+';font-weight:700;color:'+TEAL+'">'+r.refsRange+'</td><td style="'+td+';font-weight:700;color:'+col+'">'+SRC_CLS_LABEL[r.cls]+'</td><td style="'+td+'">'+esc(r.initName||'—')+'</td></tr>';});
+  h+='</table>';
+  h+='<h2>New Sources by Quarter</h2><table><tr><th style="'+th+'">Quarter</th><th style="'+th+'">New Sources</th><th style="'+th+'">Attributed</th><th style="'+th+'">Picked up after</th><th style="'+th+'">Net-new</th></tr>';
+  qs.forEach(function(b){h+='<tr><td style="'+td+';font-weight:700;color:'+NAVY+'">'+b.label+'</td><td style="'+td+';font-weight:700">'+b.total+'</td><td style="'+td+';color:'+GREEN+'">'+b.attributed+'</td><td style="'+td+';color:'+GOLD+'">'+b.after+'</td><td style="'+td+';color:'+TEAL+'">'+b.unattached+'</td></tr>';});
+  h+='</table>';
+  return h;
+}
+
+// ── Duplicate cleanup tool ──
+function srcDuplicateClusters(){
+  // group every known spelling (refs + cases + mkt names + custom) by canon
+  var groups={};
+  function add(raw,bucket){var name=(raw||'').trim(); if(!srcIsTrackable(name)) return; var k=srcCanon(name); if(!k) return; if(!groups[k])groups[k]={canon:k,spellings:{},refCount:0}; groups[k].spellings[name]=(groups[k].spellings[name]||0)+(bucket||0);}
+  (refs||[]).forEach(function(r){add(r.referralSource,1); if(srcIsTrackable(r.referralSource)) {var k=srcCanon(r.referralSource); if(groups[k])groups[k].refCount++;}});
+  (cases||[]).forEach(function(c){add(c.referralSource,1);});
+  (mktList||[]).forEach(function(m){add(m.name,0);});
+  (customRefSources||[]).forEach(function(s){add(s,0);});
+  (typeof REF_SOURCES!=='undefined'?REF_SOURCES:[]).forEach(function(s){add(s,0);});
+  var clusters=[];
+  Object.keys(groups).forEach(function(k){
+    var sp=Object.keys(groups[k].spellings);
+    if(sp.length>1) clusters.push({canon:k,spellings:sp,counts:groups[k].spellings,refCount:groups[k].refCount});
+  });
+  // canonical target = active-list spelling if present, else most-used in refs, else longest
+  var activeIdx=srcActiveIndex();
+  clusters.forEach(function(cl){
+    if(activeIdx[cl.canon]) cl.target=activeIdx[cl.canon];
+    else{var best='',n=-1;cl.spellings.forEach(function(s){if(cl.counts[s]>n){n=cl.counts[s];best=s;}});cl.target=best||cl.spellings[0];}
+  });
+  clusters.sort(function(a,b){return b.refCount-a.refCount;});
+  return clusters;
+}
+function openSourceCleanup(){
+  var ov=document.getElementById('srcCleanupOverlay');
+  if(!ov){ov=document.createElement('div');ov.id='srcCleanupOverlay';ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:30px 16px';ov.onclick=function(e){if(e.target===ov)closeSourceCleanup();};document.body.appendChild(ov);}
+  ov.style.display='flex'; renderSourceCleanup();
+}
+function closeSourceCleanup(){var ov=document.getElementById('srcCleanupOverlay'); if(ov) ov.style.display='none';}
+function renderSourceCleanup(){
+  var ov=document.getElementById('srcCleanupOverlay'); if(!ov) return;
+  var clusters=srcDuplicateClusters();
+  var h='<div style="background:#fff;border-radius:12px;max-width:760px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.3)">';
+  h+='<div style="padding:16px 20px;border-bottom:1px solid var(--gray-200);display:flex;justify-content:space-between;align-items:center">';
+  h+='<div><div style="font-family:DM Serif Display,serif;font-size:18px;color:var(--navy)">🧹 Clean Up Duplicate Sources</div><div style="font-size:11px;color:var(--gray-500)">Same source entered under different spellings. Merging rewrites every referral to the active spelling.</div></div>';
+  h+='<button class="filter-btn" onclick="closeSourceCleanup()">✕ Close</button></div>';
+  h+='<div style="padding:16px 20px;max-height:60vh;overflow:auto">';
+  if(!clusters.length){
+    h+='<div style="padding:30px;text-align:center;color:var(--gray-400)">No duplicate spellings found. Your referral sources are clean. 🎉</div>';
+  } else {
+    h+='<div style="margin-bottom:12px"><button class="btn-primary" onclick="srcMergeAll()" style="font-size:12px">Merge all '+clusters.length+' group'+(clusters.length>1?'s':'')+' to the active spelling</button></div>';
+    clusters.forEach(function(cl,i){
+      h+='<div style="border:1px solid var(--gray-200);border-radius:8px;padding:12px 14px;margin-bottom:10px">';
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div style="font-size:11px;color:var(--gray-500)">'+cl.spellings.length+' spellings · '+cl.refCount+' referral'+(cl.refCount!==1?'s':'')+'</div>';
+      h+='<button class="btn-primary" style="font-size:10px;padding:5px 12px" onclick="srcMergeCluster('+i+')">Merge → keep "'+esc(cl.target)+'"</button></div>';
+      h+='<table class="tbl" style="margin-top:8px"><tbody>';
+      cl.spellings.forEach(function(s){var isT=(s===cl.target);h+='<tr><td style="font-weight:'+(isT?'700':'400')+';color:'+(isT?'var(--green)':'var(--navy)')+'">'+esc(s)+(isT?' ✓ active':'')+'</td><td style="text-align:right;font-size:11px;color:var(--gray-500)">'+(cl.counts[s]||0)+'</td></tr>';});
+      h+='</tbody></table></div>';
+    });
+  }
+  h+='</div></div>';
+  ov.innerHTML=h;
+  ov._clusters=clusters;
+}
+function srcApplyRename(spellings,target){
+  var set={},changed=0; spellings.forEach(function(s){set[s]=1;});
+  (refs||[]).forEach(function(r){if(r.referralSource&&set[r.referralSource.trim()]&&r.referralSource!==target){r.referralSource=target;changed++;if(_useNewTables)_dbPatch('referrals',r.id,{referral_source:target});}});
+  (cases||[]).forEach(function(c){if(c.referralSource&&set[c.referralSource.trim()]&&c.referralSource!==target){c.referralSource=target;if(_useNewTables)_dbPatch('cases',c.id,{referral_source:target});}});
+  if(!_useNewTables){_legacySave('cp11_refs',refs);_legacySave('cp11_cases',cases);}
+  (mktList||[]).forEach(function(m){if(m.name&&set[m.name.trim()]&&m.name!==target){m.name=target;}});
+  customRefSources=(customRefSources||[]).filter(function(s){return !(set[(s||'').trim()]&&s!==target);});
+  if(target && srcCanon(target) && (customRefSources.indexOf(target)===-1) && (typeof REF_SOURCES==='undefined'||REF_SOURCES.indexOf(target)===-1) && !(mktList||[]).some(function(m){return m.name===target;})){ /* leave as-is; target already lives somewhere */ }
+  if(_useNewTables){_dbUpsert('system_config',{key:'custom_ref_sources',value:customRefSources,updated_at:new Date().toISOString()});}else{_legacySave('cp11_customRefSources',customRefSources);}
+  if(typeof saveMktData==='function') saveMktData();
+  return changed;
+}
+function srcMergeCluster(i){
+  var ov=document.getElementById('srcCleanupOverlay'); var cl=ov&&ov._clusters&&ov._clusters[i]; if(!cl) return;
+  if(!confirm('Merge '+cl.spellings.length+' spellings into "'+cl.target+'"? This rewrites '+cl.refCount+' referral record'+(cl.refCount!==1?'s':'')+'.')) return;
+  var n=srcApplyRename(cl.spellings,cl.target);
+  if(typeof populateRefSourceDropdown==='function')populateRefSourceDropdown();
+  if(typeof populateMktOrgList==='function')populateMktOrgList();
+  renderSourceCleanup();
+  if(typeof renderActiveModule==='function')renderActiveModule();
+  alert('Merged into "'+cl.target+'". '+n+' referral record'+(n!==1?'s':'')+' updated.');
+}
+function srcMergeAll(){
+  var ov=document.getElementById('srcCleanupOverlay'); var cls=ov&&ov._clusters; if(!cls||!cls.length) return;
+  if(!confirm('Merge all '+cls.length+' duplicate groups to their active spelling?')) return;
+  var total=0; cls.forEach(function(cl){total+=srcApplyRename(cl.spellings,cl.target);});
+  if(typeof populateRefSourceDropdown==='function')populateRefSourceDropdown();
+  if(typeof populateMktOrgList==='function')populateMktOrgList();
+  renderSourceCleanup();
+  if(typeof renderActiveModule==='function')renderActiveModule();
+  alert('Done. '+total+' referral record'+(total!==1?'s':'')+' updated across '+cls.length+' group'+(cls.length>1?'s':'')+'.');
+}
+// ══════════════════════════════════════════════════════════════════════
+
+
 function renderMktAnalytics(el){
   var from=mktAnFrom,to=mktAnTo;
   var rangeLbl=(from||to)?((from||'start')+' \u2192 '+(to||'today')):'All time';
@@ -6459,6 +6730,7 @@ function renderMktAnalytics(el){
   h+='</div>';
   h+='<div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap">'+downloadBtn('\u2b07 Download PDF Report','downloadMktAnalyticsReport()')+downloadBtn('\u2b07 Export CSV','exportMktAnalytics()')+'<span style="font-size:11px;color:var(--gray-500)">Showing: <strong>'+esc(rangeLbl)+'</strong></span></div>';
 
+  try{h+=renderNewRefSourcesCard(from,to);}catch(_e){console.error('New Sources card error:',_e);}
   // ---- KPI cards ----
   function kpi(val,label,color){return '<div style="flex:1;min-width:150px;background:#fff;border:1px solid var(--gray-200);border-radius:10px;padding:14px 16px"><div style="font-size:30px;font-weight:800;color:'+color+'">'+val+'</div><div style="font-size:11px;color:var(--gray-500);margin-top:2px">'+label+'</div></div>';}
   h+='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">';
@@ -6585,6 +6857,7 @@ function downloadMktAnalyticsReport(){
   html+='<div class="card"><div class="n" style="color:'+RED+'">'+buckets['Disengaged'].length+'</div><div class="l">Disengaged</div></div>';
   html+='</div>';
 
+  try{html+=newRefSourcesReportHTML(from,to,{th:th,td:td,NAVY:NAVY,TEAL:TEAL,GREEN:GREEN,GOLD:GOLD,RED:RED,MUTE:MUTE});}catch(_e){console.error('New Sources report error:',_e);}
   // roadmap KPIs
   var ri=(typeof mktRampIndex==='function')?mktRampIndex():1;var tgt=MKT_KPI_TARGETS[Math.max(0,Math.min(5,ri))];var am=mktActivityMetrics(from,to);
   html+='<h2>Marketing Roadmap \u2014 Activity vs Target (Month '+(ri+1)+')</h2><table><tr><th style="'+th+'">KPI</th><th style="'+th+'">Actual</th><th style="'+th+'">Target</th><th style="'+th+'">Progress</th></tr>';
@@ -6642,6 +6915,7 @@ function exportMktAnalytics(){
   out.push('');
 
   var ri=(typeof mktRampIndex==='function')?mktRampIndex():1;var tgt=MKT_KPI_TARGETS[Math.max(0,Math.min(5,ri))];var am=mktActivityMetrics(from,to);
+  try{(function(){var _ns=computeNewSources(from,to);out.push(line(['NEW REFERRAL SOURCES']));out.push(line(['Source','First Referral','Refs (range)','Classification','Matched Initiative']));if(!_ns.length)out.push(line(['(none)']));_ns.forEach(function(r){out.push(line([r.display,r.first,r.refsRange,SRC_CLS_LABEL[r.cls],r.initName||'']));});out.push('');var _qs=srcQuarterSummary(6);out.push(line(['NEW SOURCES BY QUARTER']));out.push(line(['Quarter','New','Attributed','Picked up after','Net-new']));_qs.forEach(function(b){out.push(line([b.label,b.total,b.attributed,b.after,b.unattached]));});out.push('');})();}catch(_e){}
   out.push(line(['MARKETING ROADMAP \u2014 ACTIVITY VS TARGET','Month '+(ri+1)]));
   out.push(line(['KPI','Actual','Target','Progress']));
   MKT_KPI_ROWS.forEach(function(row){var act=am[row[0]]||0,t=tgt[row[0]]||0,pct=t>0?Math.round(act/t*100):(act>0?100:0);out.push(line([row[1],act,t,pct+'%']));});
