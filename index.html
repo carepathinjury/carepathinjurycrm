@@ -8,27 +8,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CarePath Injury Centers — v3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --navy: #0f2240; --navy-light: #1a3660; --teal: #1a7f7a; --teal-light: #22a89e;
+    --navy: #30508F; --navy-light: #3E63B5; --teal: #3FA7E0; --teal-light: #7CC8F2;
     --gold: #c8973a; --gold-light: #e0b35c; --red: #c0392b; --red-light: #e74c3c;
-    --cream: #f8f5ef; --gray-100: #f1f0ed; --gray-200: #e3e0da; --gray-400: #9e9b94;
+    --cream: #f4f7fb; --gray-100: #f1f0ed; --gray-200: #e3e0da; --gray-400: #9e9b94;
     --gray-600: #5c5a55; --text: #1a1916; --white: #ffffff;
-    --shadow-sm: 0 2px 8px rgba(15,34,64,0.08);
-    --shadow-md: 0 6px 24px rgba(15,34,64,0.12);
-    --shadow-lg: 0 12px 40px rgba(15,34,64,0.16);
-    --radius: 12px; --radius-lg: 20px; --radius-sm: 8px;
+    --shadow-sm: 0 2px 8px rgba(47,79,170,0.10);
+    --shadow-md: 0 6px 24px rgba(47,79,170,0.14);
+    --shadow-lg: 0 12px 40px rgba(47,79,170,0.18);
+    --radius: 14px; --radius-lg: 22px; --radius-sm: 10px;
     --sidebar-w: 250px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:"DM Sans",sans-serif;background:var(--cream);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+  body{font-family:"Inter",sans-serif;background:var(--cream);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
 
   /* ── TOP BAR ─── */
-  .top-bar{background:var(--navy);display:flex;align-items:center;padding:0 24px;border-bottom:3px solid var(--teal);position:sticky;top:0;z-index:150;height:56px}
+  .top-bar{background:#2E4C8F;display:flex;align-items:center;padding:0 24px;border-bottom:2px solid var(--teal-light);position:sticky;top:0;z-index:150;height:56px;box-shadow:0 1px 10px rgba(46,76,143,0.15)}
   .top-logo{display:flex;align-items:center;gap:12px}
-  .logo-mark{width:36px;height:36px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:"DM Serif Display",serif;font-size:17px;color:white;flex-shrink:0}
-  .top-logo h1{font-family:"DM Serif Display",serif;font-size:15px;color:white;white-space:nowrap}
+  .logo-mark{width:36px;height:36px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:"Plus Jakarta Sans",serif;font-size:17px;color:white;flex-shrink:0}
+  .top-logo h1{font-family:"Plus Jakarta Sans",serif;font-size:15px;color:white;white-space:nowrap}
   .top-tabs{display:flex;gap:0;margin-left:40px;height:100%}
   .top-tab{padding:0 24px;display:flex;align-items:center;font-size:13px;font-weight:600;color:rgba(255,255,255,0.5);cursor:pointer;transition:all 0.2s;border-bottom:3px solid transparent;margin-bottom:-3px;white-space:nowrap}
   .top-tab:hover{color:rgba(255,255,255,0.8)}
@@ -39,38 +39,38 @@
   .alert-bell:hover{background:rgba(255,255,255,0.15)}
   .alert-bell svg{width:18px;height:18px;fill:rgba(255,255,255,0.7)}
   .alert-count{position:absolute;top:2px;right:2px;background:var(--red-light);color:white;font-size:9px;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--navy)}
-  .btn-sm{padding:7px 14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius-sm);font-family:"DM Sans",sans-serif;font-size:11px;font-weight:600;color:rgba(255,255,255,0.7);cursor:pointer;transition:all 0.2s}
+  .btn-sm{padding:7px 14px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);border-radius:999px;font-family:"Inter",sans-serif;font-size:11px;font-weight:600;color:rgba(255,255,255,0.7);cursor:pointer;transition:all 0.2s}
   .btn-sm:hover{background:rgba(255,255,255,0.15);color:white}
 
   /* ── LAYOUT ─── */
   .app-layout{display:flex;flex:1;min-height:0}
-  .sidebar{width:var(--sidebar-w);background:var(--navy);flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,0.06);position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto}
+  .sidebar{width:var(--sidebar-w);background:#ffffff;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--gray-200);position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto}
   .sidebar::-webkit-scrollbar{width:4px}
-  .sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:4px}
+  .sidebar::-webkit-scrollbar-thumb{background:rgba(48,80,143,0.18);border-radius:4px}
   .nav-section{padding:18px 14px 6px}
-  .nav-section-label{font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.3);padding:0 10px;margin-bottom:6px}
-  .nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--radius-sm);color:rgba(255,255,255,0.6);font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s;margin-bottom:2px;position:relative}
-  .nav-item:hover{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.9)}
-  .nav-item.active{background:rgba(26,127,122,0.2);color:white;font-weight:600}
+  .nav-section-label{font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#9aa1ad;padding:0 10px;margin-bottom:6px}
+  .nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--radius-sm);color:#4a5568;font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s;margin-bottom:2px;position:relative}
+  .nav-item:hover{background:rgba(48,80,143,0.06);color:var(--navy)}
+  .nav-item.active{background:rgba(63,167,224,0.15);color:var(--navy);font-weight:700}
   .nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--teal-light);border-radius:0 3px 3px 0}
   .nav-icon{width:16px;height:16px;opacity:0.7;flex-shrink:0;display:flex;align-items:center;justify-content:center}
   .nav-item.active .nav-icon{opacity:1}
   .nav-badge{margin-left:auto;background:var(--red-light);color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;min-width:18px;text-align:center}
   .nav-badge.gold{background:var(--gold)}
-  .sidebar-footer{margin-top:auto;padding:14px;border-top:1px solid rgba(255,255,255,0.06)}
-  .sidebar-footer p{font-size:9px;color:rgba(255,255,255,0.2);text-align:center;line-height:1.5}
+  .sidebar-footer{margin-top:auto;padding:14px;border-top:1px solid var(--gray-200)}
+  .sidebar-footer p{font-size:9px;color:#aab0bb;text-align:center;line-height:1.5}
   .main-content{flex:1;padding:24px 28px 50px;overflow-y:auto;min-width:0}
 
   /* ── COMMON ─── */
-  .page-title{font-family:"DM Serif Display",serif;font-size:24px;color:var(--navy);margin-bottom:4px}
+  .page-title{font-family:"Plus Jakarta Sans",serif;font-size:24px;color:var(--navy);margin-bottom:4px}
   .page-subtitle{font-size:12px;color:var(--gray-600);margin-bottom:22px}
   .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
   .stat-card{background:white;border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow-sm);border:1px solid var(--gray-200)}
   .stat-label{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--gray-400);margin-bottom:4px}
-  .stat-value{font-family:"DM Serif Display",serif;font-size:28px;color:var(--navy);line-height:1}
+  .stat-value{font-family:"Plus Jakarta Sans",serif;font-size:28px;color:var(--navy);line-height:1}
   .stat-value.teal{color:var(--teal)}.stat-value.gold{color:var(--gold)}.stat-value.red{color:var(--red)}
   .stat-sub{font-size:10px;color:var(--gray-400);margin-top:3px}
-  .btn-primary{padding:8px 18px;background:var(--teal);color:white;border:none;border-radius:var(--radius-sm);font-family:"DM Sans",sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px}
+  .btn-primary{padding:8px 18px;background:var(--navy);color:white;border:none;border-radius:999px;font-family:"Inter",sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px}
   .btn-primary:hover{background:var(--teal-light);box-shadow:var(--shadow-md)}
 
   /* ── ALERT CARDS ─── */
@@ -89,11 +89,11 @@
   /* ── TABLE ─── */
   .table-card{background:white;border-radius:var(--radius-lg);box-shadow:var(--shadow-md);border:1px solid var(--gray-200);overflow:hidden;margin-bottom:24px}
   .table-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px 14px;border-bottom:1px solid var(--gray-100);flex-wrap:wrap;gap:10px}
-  .table-header h3{font-family:"DM Serif Display",serif;font-size:16px;color:var(--navy)}
+  .table-header h3{font-family:"Plus Jakarta Sans",serif;font-size:16px;color:var(--navy)}
   .table-controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-  .search-input{padding:7px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:"DM Sans",sans-serif;font-size:12px;color:var(--text);background:var(--gray-100);transition:all 0.2s;outline:none;width:180px}
+  .search-input{padding:7px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:"Inter",sans-serif;font-size:12px;color:var(--text);background:var(--gray-100);transition:all 0.2s;outline:none;width:180px}
   .search-input:focus{border-color:var(--teal);background:white}
-  .filter-btn{padding:7px 12px;background:var(--gray-100);border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:"DM Sans",sans-serif;font-size:11px;font-weight:600;color:var(--gray-600);cursor:pointer;transition:all 0.2s}
+  .filter-btn{padding:7px 12px;background:var(--gray-100);border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:"Inter",sans-serif;font-size:11px;font-weight:600;color:var(--gray-600);cursor:pointer;transition:all 0.2s}
   .filter-btn:hover,.filter-btn.active{background:var(--navy);color:white;border-color:var(--navy)}
   .tbl{width:100%;border-collapse:collapse}
   .tbl th{font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-400);padding:10px 14px;text-align:left;border-bottom:2px solid var(--gray-100);background:var(--gray-100)}
@@ -110,11 +110,11 @@
   .type-badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:10px;font-weight:600;background:rgba(15,34,64,0.06);color:var(--navy);border:1px solid rgba(15,34,64,0.12)}
   .alert-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--red-light);margin-right:5px;animation:pulse 2s ease-in-out infinite}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-  .days-count{font-family:"DM Serif Display",serif;font-size:15px}
+  .days-count{font-family:"Plus Jakarta Sans",serif;font-size:15px}
   .days-count.warn{color:var(--gold)}.days-count.danger{color:var(--red)}
   .table-scroll{overflow-x:auto}
-  .btn-resolve{padding:6px 12px;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:var(--radius-sm);font-family:"DM Sans",sans-serif;font-size:10px;font-weight:600;color:var(--gray-600);cursor:pointer;transition:all 0.2s}
-  .btn-resolve:hover{background:var(--teal);color:white;border-color:var(--teal)}
+  .btn-resolve{padding:6px 12px;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:var(--radius-sm);font-family:"Inter",sans-serif;font-size:10px;font-weight:600;color:var(--gray-600);cursor:pointer;transition:all 0.2s}
+  .btn-resolve:hover{background:var(--navy);color:white;border-color:var(--teal)}
 
   /* ── MODAL ─── */
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,34,64,0.55);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
@@ -122,7 +122,7 @@
   .modal{background:white;border-radius:var(--radius-lg);width:700px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--shadow-lg);animation:modalIn 0.25s ease}
   @keyframes modalIn{from{opacity:0;transform:translateY(20px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
   .modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--gray-200);flex:0 0 auto}
-  .modal-header h2{font-family:"DM Serif Display",serif;font-size:18px;color:var(--navy)}
+  .modal-header h2{font-family:"Plus Jakarta Sans",serif;font-size:18px;color:var(--navy)}
   .modal-close{width:32px;height:32px;border:none;background:var(--gray-100);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--gray-600);transition:all 0.2s}
   .modal-close:hover{background:var(--red-light);color:white}
   .modal-body{padding:22px 24px;overflow-y:auto;overflow-x:hidden;flex:1 1 auto;min-height:0}
@@ -130,20 +130,20 @@
   .form-group{display:flex;flex-direction:column}
   .form-group.full{grid-column:1/-1}
   .form-group label{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-600);margin-bottom:5px}
-  .form-group input,.form-group select,.form-group textarea{padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:"DM Sans",sans-serif;font-size:13px;color:var(--text);background:var(--gray-100);transition:all 0.2s;outline:none}
+  .form-group input,.form-group select,.form-group textarea{padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:"Inter",sans-serif;font-size:13px;color:var(--text);background:var(--gray-100);transition:all 0.2s;outline:none}
   .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--teal);background:white;box-shadow:0 0 0 3px rgba(26,127,122,0.12)}
   .form-group textarea{resize:vertical;min-height:60px}
   .modal-footer{padding:14px 24px 20px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--gray-100);flex:0 0 auto}
-  .btn-cancel{padding:9px 18px;background:var(--gray-100);border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:"DM Sans",sans-serif;font-size:12px;font-weight:600;color:var(--gray-600);cursor:pointer}
-  .btn-save{padding:9px 22px;background:var(--navy);border:none;border-radius:var(--radius-sm);font-family:"DM Sans",sans-serif;font-size:12px;font-weight:600;color:white;cursor:pointer;transition:all 0.2s}
+  .btn-cancel{padding:9px 18px;background:var(--gray-100);border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:"Inter",sans-serif;font-size:12px;font-weight:600;color:var(--gray-600);cursor:pointer}
+  .btn-save{padding:9px 22px;background:var(--navy);border:none;border-radius:var(--radius-sm);font-family:"Inter",sans-serif;font-size:12px;font-weight:600;color:white;cursor:pointer;transition:all 0.2s}
   .btn-save:hover{background:var(--teal);box-shadow:var(--shadow-md)}
-  .btn-delete{padding:9px 16px;background:rgba(192,57,43,0.08);border:2px solid rgba(192,57,43,0.2);border-radius:var(--radius-sm);font-family:"DM Sans",sans-serif;font-size:12px;font-weight:600;color:var(--red);cursor:pointer;margin-right:auto}
+  .btn-delete{padding:9px 16px;background:rgba(192,57,43,0.08);border:2px solid rgba(192,57,43,0.2);border-radius:var(--radius-sm);font-family:"Inter",sans-serif;font-size:12px;font-weight:600;color:var(--red);cursor:pointer;margin-right:auto}
   .btn-delete:hover{background:var(--red);color:white;border-color:var(--red)}
 
   /* ── DETAIL ─── */
   .detail-card{background:white;border-radius:var(--radius-lg);box-shadow:var(--shadow-md);border:1px solid var(--gray-200);overflow:hidden;margin-bottom:18px}
   .detail-header{background:var(--navy);padding:18px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-  .detail-header h3{font-family:"DM Serif Display",serif;font-size:18px;color:white}
+  .detail-header h3{font-family:"Plus Jakarta Sans",serif;font-size:18px;color:white}
   .detail-type{padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;background:rgba(255,255,255,0.15);color:white}
   .detail-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0}
   .detail-cell{padding:14px 18px;border-bottom:1px solid var(--gray-100);border-right:1px solid var(--gray-100)}
@@ -159,11 +159,11 @@
   .login-screen{display:flex;align-items:flex-start;justify-content:center;min-height:100vh;background:var(--navy);position:fixed;inset:0;z-index:500;overflow-y:auto;padding:24px 16px}
   .login-screen.hidden{display:none}
   .login-card{background:white;border-radius:var(--radius-lg);padding:32px 28px;width:480px;max-width:95vw;box-shadow:var(--shadow-lg);text-align:center;animation:modalIn 0.4s ease;margin:auto}
-  .login-card h2{font-family:"DM Serif Display",serif;font-size:20px;color:var(--navy);margin-bottom:4px}
+  .login-card h2{font-family:"Plus Jakarta Sans",serif;font-size:20px;color:var(--navy);margin-bottom:4px}
   .login-card p{font-size:12px;color:var(--gray-600);margin-bottom:18px;line-height:1.5}
   .login-columns{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;text-align:left}
   .login-columns .login-section-label{grid-column:1/-1}
-  .login-btn{width:100%;padding:10px;margin-bottom:6px;background:var(--gray-100);border:2px solid var(--gray-200);border-radius:var(--radius);font-family:"DM Sans",sans-serif;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:8px}
+  .login-btn{width:100%;padding:10px;margin-bottom:6px;background:var(--gray-100);border:2px solid var(--gray-200);border-radius:var(--radius);font-family:"Inter",sans-serif;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:8px}
   .login-btn:hover{border-color:var(--teal);background:rgba(26,127,122,0.04)}
   .login-avatar{width:28px;height:28px;border-radius:7px;color:white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
   .login-section-label{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--gray-400);margin:14px 0 6px;text-align:left}
@@ -204,15 +204,15 @@
   .dup-warning.show{display:block}
 
   /* ── OFFICE FINDER ─── */
-  .of-toggle{background:var(--teal);color:white;border:none;padding:6px 14px;border-radius:0 0 var(--radius) var(--radius);font-family:"DM Sans",sans-serif;font-size:11px;font-weight:600;cursor:pointer;position:fixed;right:24px;top:56px;z-index:140;transition:background 0.2s;letter-spacing:0.04em}
+  .of-toggle{background:var(--navy);color:white;border:none;padding:6px 14px;border-radius:0 0 var(--radius) var(--radius);font-family:"Inter",sans-serif;font-size:11px;font-weight:600;cursor:pointer;position:fixed;right:24px;top:56px;z-index:140;transition:background 0.2s;letter-spacing:0.04em}
   .of-toggle:hover{background:var(--teal-light)}
   .of-panel{display:none;background:white;border-bottom:3px solid var(--teal);padding:0;max-height:70vh;overflow-y:auto;position:fixed;top:56px;left:0;right:0;z-index:135;box-shadow:0 8px 32px rgba(0,0,0,0.15)}
   .of-panel.open{display:block}
   .of-inner{max-width:860px;margin:0 auto;padding:20px 24px 24px}
   .of-input-row{display:flex;gap:10px;align-items:flex-end;margin-bottom:16px}
-  .of-input{flex:1;padding:11px 14px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:"DM Sans",sans-serif;font-size:14px;color:var(--text);background:var(--gray-100);outline:none;transition:border 0.2s}
+  .of-input{flex:1;padding:11px 14px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:"Inter",sans-serif;font-size:14px;color:var(--text);background:var(--gray-100);outline:none;transition:border 0.2s}
   .of-input:focus{border-color:var(--teal);background:white}
-  .of-search-btn{padding:11px 20px;background:var(--navy);color:white;border:none;border-radius:var(--radius-sm);font-family:"DM Sans",sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background 0.2s}
+  .of-search-btn{padding:11px 20px;background:var(--navy);color:white;border:none;border-radius:var(--radius-sm);font-family:"Inter",sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background 0.2s}
   .of-search-btn:hover{background:var(--teal)}
   .of-card{background:var(--gray-100);border:2px solid var(--gray-200);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;transition:border-color 0.2s}
   .of-card:hover{border-color:var(--teal-light)}
@@ -221,18 +221,18 @@
   .of-card-top{display:flex;align-items:stretch}
   .of-rank{display:flex;flex-direction:column;align-items:center;justify-content:center;width:48px;background:var(--gray-200);flex-shrink:0;padding:10px 4px}
   .of-closest .of-rank{background:var(--teal)}
-  .of-rank-num{font-family:"DM Serif Display",serif;font-size:22px;color:var(--gray-400);line-height:1}
+  .of-rank-num{font-family:"Plus Jakarta Sans",serif;font-size:22px;color:var(--gray-400);line-height:1}
   .of-closest .of-rank-num{color:white}
   .of-rank-lbl{font-size:7px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:white;margin-top:2px}
   .of-body{flex:1;padding:12px 14px;display:flex;align-items:center;gap:14px;min-width:0}
   .of-info{flex:1;min-width:0}
-  .of-name{font-family:"DM Serif Display",serif;font-size:15px;color:var(--navy);margin-bottom:1px}
+  .of-name{font-family:"Plus Jakarta Sans",serif;font-size:15px;color:var(--navy);margin-bottom:1px}
   .of-county{font-size:9px;color:var(--teal);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px}
   .of-addr{font-size:11px;color:var(--gray-600);line-height:1.3}
   .of-phone{font-size:10px;color:var(--gray-400);margin-top:2px}
   .of-dir{font-size:10px;color:var(--teal);text-decoration:none;font-weight:600;margin-top:3px;display:inline-block}
   .of-time{text-align:right;flex-shrink:0}
-  .of-time-val{font-family:"DM Serif Display",serif;font-size:26px;line-height:1}
+  .of-time-val{font-family:"Plus Jakarta Sans",serif;font-size:26px;line-height:1}
   .of-time-val.fast{color:var(--teal)}.of-time-val.medium{color:var(--gold)}.of-time-val.slow{color:#c0392b}
   .of-time-lbl{font-size:9px;color:var(--gray-400);font-weight:500;letter-spacing:0.05em;text-transform:uppercase;margin-top:1px}
   .of-time-dist{font-size:10px;color:var(--gray-400);margin-top:2px}
@@ -273,16 +273,16 @@
 <!-- ══════════ LOGIN ══════════ -->
 <div class="login-screen" id="loginScreen">
   <div class="login-card">
-    <div class="logo-mark" style="width:44px;height:44px;font-size:22px;border-radius:10px;margin:0 auto 12px">C</div>
+    <img src="data:image/png;base64,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" alt="CarePath Injury Centers of Pennsylvania" style="height:54px;width:auto;display:block;margin:0 auto 14px">
     <h2>CarePath Injury Centers</h2>
     <p>Sign in with your email and password to access the system.</p>
     <div style="text-align:left;max-width:320px;margin:0 auto">
       <label style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.05em;text-transform:uppercase;display:block;margin-bottom:4px">Email</label>
-      <input type="email" id="loginEmail" placeholder="you@carepath.com" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;margin-bottom:12px;box-sizing:border-box" autocomplete="email">
+      <input type="email" id="loginEmail" placeholder="you@carepath.com" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:'Inter',sans-serif;font-size:13px;margin-bottom:12px;box-sizing:border-box" autocomplete="email">
       <label style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.05em;text-transform:uppercase;display:block;margin-bottom:4px">Password</label>
-      <input type="password" id="loginPassword" placeholder="Enter password" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;margin-bottom:6px;box-sizing:border-box" autocomplete="current-password">
+      <input type="password" id="loginPassword" placeholder="Enter password" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-family:'Inter',sans-serif;font-size:13px;margin-bottom:6px;box-sizing:border-box" autocomplete="current-password">
       <div id="loginError" style="display:none;color:#c0392b;font-size:11px;font-weight:600;margin-bottom:8px;padding:6px 10px;background:#fdf0ef;border-radius:6px">Invalid email or password.</div>
-      <button onclick="handleLogin()" style="width:100%;padding:11px;background:var(--teal);color:white;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:6px;transition:opacity 0.2s" id="loginBtn">Sign In</button>
+      <button onclick="handleLogin()" style="width:100%;padding:11px;background:var(--navy);color:white;border:none;border-radius:var(--radius);font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:6px;transition:opacity 0.2s" id="loginBtn">Sign In</button>
     </div>
     <div class="login-switch">Manager? <a onclick="loginAsManager()">Access manager dashboard</a></div>
     <div style="margin-top:14px;font-size:10px;color:var(--gray-400)">build 2026-09-08-crm-casetype</div>
@@ -295,8 +295,7 @@
 <!-- TOP BAR -->
 <div class="top-bar">
   <div class="top-logo">
-    <div class="logo-mark">C</div>
-    <h1>CarePath</h1>
+    <img src="data:image/png;base64,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" alt="CarePath Injury Centers of Pennsylvania" style="height:36px;width:auto;display:block">
   </div>
   <div class="top-tabs" id="topTabs">
     <div class="top-tab active" data-module="crm" onclick="switchModule('crm')">Referral CRM</div>
@@ -320,7 +319,7 @@
 <div class="of-panel" id="ofPanel">
   <div class="of-inner">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div><span style="font-family:DM Serif Display,serif;font-size:16px;color:var(--navy)">Find the Nearest Office</span><br><span style="font-size:11px;color:var(--gray-600)">Enter the patient's ZIP code to find the closest CarePath location.</span></div>
+      <div><span style="font-family:Plus Jakarta Sans,serif;font-size:16px;color:var(--navy)">Find the Nearest Office</span><br><span style="font-size:11px;color:var(--gray-600)">Enter the patient's ZIP code to find the closest CarePath location.</span></div>
       <button onclick="toggleOfficeFinder()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray-400);padding:4px 8px">&times;</button>
     </div>
     <div class="of-input-row">
@@ -330,7 +329,7 @@
     <div class="of-error" id="ofError"></div>
     <div id="ofResults" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">
-        <span style="font-family:DM Serif Display,serif;font-size:14px;color:var(--navy)">All Offices by Distance</span>
+        <span style="font-family:Plus Jakarta Sans,serif;font-size:14px;color:var(--navy)">All Offices by Distance</span>
         <span style="font-size:10px;color:var(--gray-600);background:var(--gray-100);padding:3px 10px;border-radius:14px" id="ofPatientAddr"></span>
       </div>
       <div class="of-legend">
@@ -341,7 +340,7 @@
       <div class="of-alert" id="ofPortRichAlert">
         <div style="font-size:18px;flex-shrink:0">📌</div>
         <div style="flex:1">
-          <div style="font-family:DM Serif Display,serif;font-size:13px;color:white;margin-bottom:3px">Prefer Port Richmond for this patient</div>
+          <div style="font-family:Plus Jakarta Sans,serif;font-size:13px;color:white;margin-bottom:3px">Prefer Port Richmond for this patient</div>
           <div style="font-size:11px;color:rgba(255,255,255,0.85);line-height:1.4">Port Richmond and Old City are within 5 minutes of each other. <strong style="color:white">Port Richmond is recommended</strong> — it has a fluoro suite, two PAs on-site, and EMG available. <span style="background:rgba(200,151,58,0.3);color:#f5c97a;padding:1px 6px;border-radius:8px;font-weight:700;font-size:10px;margin-left:3px">Especially for WC patients</span></div>
         </div>
       </div>
@@ -376,7 +375,7 @@
     <div class="nav-item" id="crmNavMgrDash" data-page="crm-mgr-dash" onclick="openCrmMgrDash()" style="display:none"><div class="nav-icon">🔒</div> Manager Analytics</div>
     <div class="nav-item" id="crmNavMgrMetrics" data-page="crm-mgr-metrics" onclick="promptPIN('crm-mgr-metrics')" style="display:none"><div class="nav-icon">🔒</div> Team Metrics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Internal CRM · Confidential<br>build 2026-10-27d-newsources</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Internal CRM · Confidential<br>build 2026-11-02e-brand</p></div>
 </nav>
 <div class="main-content" id="crmMain">
   <div class="section active" id="sec-crm-dashboard"></div>
@@ -421,7 +420,7 @@
     <div class="nav-item" id="cmNavMyMetrics" data-page="cm-my-metrics" onclick="cmNav('cm-my-metrics')"><div class="nav-icon">📈</div> My Metrics</div>
     <div class="nav-item" id="cmNavMgrDash" data-page="cm-mgr-dash" onclick="promptPIN('cm-mgr-dash')" style="display:none"><div class="nav-icon">🔒</div> Manager View</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Case Management · Confidential<br>build 2026-10-27d-newsources</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Case Management · Confidential<br>build 2026-11-02e-brand</p></div>
 </nav>
 <div class="main-content" id="cmMain">
   <div class="section active" id="sec-cm-dashboard"></div>
@@ -454,7 +453,7 @@
     <div class="nav-item" data-page="mkt-report" onclick="mktNav('mkt-report')"><div class="nav-icon">📄</div> Weekly Snapshot</div>
     <div class="nav-item" data-page="mkt-analytics" onclick="mktNav('mkt-analytics')"><div class="nav-icon">📊</div> Analytics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential<br>build 2026-10-27d-newsources</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential<br>build 2026-11-02e-brand</p></div>
 </nav>
 <div class="main-content" id="mktMain">
   <div class="section active" id="sec-mkt-pipeline"></div>
@@ -492,7 +491,7 @@
     <div class="nav-item" id="psrNavMyMetrics" data-page="psr-my-metrics" onclick="psrNav('psr-my-metrics')"><div class="nav-icon">📈</div> My Metrics</div>
     <div class="nav-item" id="psrNavMgrDash" data-page="psr-mgr-dash" onclick="promptPIN('psr-mgr-dash')" style="display:none"><div class="nav-icon">🔒</div> Manager View</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Patient Services · Confidential<br>build 2026-10-27d-newsources</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Patient Services · Confidential<br>build 2026-11-02e-brand</p></div>
 </nav>
 <div class="main-content" id="psrMain">
   <div class="section active" id="sec-psr-dashboard"></div>
@@ -532,7 +531,7 @@
     <div class="nav-section-label">Metrics</div>
     <div class="nav-item" id="njmvaNavMgrDash" data-page="njmva-analytics" onclick="if(currentUser==='Manager'||userRole==='nj_mva'||_isExec()){njmvaNav('njmva-analytics')}else{promptPIN('njmva-analytics')}" style="display:none"><div class="nav-icon">📊</div> Analytics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential<br>build 2026-10-27d-newsources</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential<br>build 2026-11-02e-brand</p></div>
 </nav>
 <div class="main-content" id="njmvaMain">
   <div class="section active" id="sec-njmva-dashboard"></div>
@@ -681,7 +680,7 @@
       <div class="form-group full" style="border-top:2px solid var(--gray-200);padding-top:16px;margin-top:8px">
         <label style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:8px;display:block">Records Needed / Facilities</label>
         <div id="fRecordsContainer"></div>
-        <button type="button" onclick="addRecordRow()" style="font-size:11px;padding:6px 14px;background:var(--gray-100);border:2px solid var(--gray-200);border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Sans';font-weight:600;color:var(--navy);margin-top:6px">+ Add Facility / Record</button>
+        <button type="button" onclick="addRecordRow()" style="font-size:11px;padding:6px 14px;background:var(--gray-100);border:2px solid var(--gray-200);border-radius:var(--radius-sm);cursor:pointer;font-family:'Inter';font-weight:600;color:var(--navy);margin-top:6px">+ Add Facility / Record</button>
       </div>
       <div class="form-group full"><label>Notes</label><textarea id="fNotes"></textarea></div>
     </div></div>
@@ -1046,7 +1045,7 @@
     <div class="modal-header"><h2>Manager Access</h2><button class="modal-close" onclick="closePinModal()">&times;</button></div>
     <div class="modal-body" style="text-align:center;padding:28px 24px">
       <p style="font-size:12px;color:var(--gray-600);margin-bottom:18px">Enter PIN to continue.</p>
-      <input type="password" id="pinInput" maxlength="6" placeholder="PIN" style="width:140px;text-align:center;padding:10px 14px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:'DM Sans';font-size:18px;letter-spacing:8px;color:var(--navy);background:var(--gray-100);outline:none" onkeydown="if(event.key==='Enter')verifyPIN()">
+      <input type="password" id="pinInput" maxlength="6" placeholder="PIN" style="width:140px;text-align:center;padding:10px 14px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:'Inter';font-size:18px;letter-spacing:8px;color:var(--navy);background:var(--gray-100);outline:none" onkeydown="if(event.key==='Enter')verifyPIN()">
       <div id="pinError" style="display:none;font-size:11px;color:var(--red);margin-top:8px;font-weight:600">Incorrect PIN.</div>
     </div>
     <div class="modal-footer" style="justify-content:center"><button class="btn-save" onclick="verifyPIN()">Unlock</button></div>
@@ -1059,15 +1058,15 @@
     <div class="modal-body" style="padding:24px">
       <div style="margin-bottom:14px">
         <label style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.05em;text-transform:uppercase;display:block;margin-bottom:4px">Current Password</label>
-        <input type="password" id="cpCurrent" style="width:100%;padding:9px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:'DM Sans';font-size:13px;box-sizing:border-box">
+        <input type="password" id="cpCurrent" style="width:100%;padding:9px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:'Inter';font-size:13px;box-sizing:border-box">
       </div>
       <div style="margin-bottom:14px">
         <label style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.05em;text-transform:uppercase;display:block;margin-bottom:4px">New Password</label>
-        <input type="password" id="cpNew" style="width:100%;padding:9px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:'DM Sans';font-size:13px;box-sizing:border-box">
+        <input type="password" id="cpNew" style="width:100%;padding:9px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:'Inter';font-size:13px;box-sizing:border-box">
       </div>
       <div style="margin-bottom:8px">
         <label style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.05em;text-transform:uppercase;display:block;margin-bottom:4px">Confirm New Password</label>
-        <input type="password" id="cpConfirm" style="width:100%;padding:9px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:'DM Sans';font-size:13px;box-sizing:border-box">
+        <input type="password" id="cpConfirm" style="width:100%;padding:9px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:'Inter';font-size:13px;box-sizing:border-box">
       </div>
       <div id="cpError" style="display:none;font-size:11px;color:var(--red);font-weight:600;padding:6px 0"></div>
       <div id="cpSuccess" style="display:none;font-size:11px;color:var(--teal);font-weight:600;padding:6px 0">Password updated successfully!</div>
@@ -1077,7 +1076,7 @@
 </div>
 
 <script>
-console.log('CarePath CRM build: 2026-10-27d-newsources');
+console.log('CarePath CRM build: 2026-11-02e-brand');
 // ══════════════════════════════════════════════════════════════════════
 // CORE DATA
 // ══════════════════════════════════════════════════════════════════════
@@ -1211,7 +1210,7 @@ function _pendingBanner(){
   var q=_pendingLoad();var el=document.getElementById('pendingBanner');
   if(!q.length){if(el&&el.parentNode)el.parentNode.removeChild(el);return;}
   if(!el){el=document.createElement('div');el.id='pendingBanner';
-    el.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:#c0392b;color:#fff;font-family:DM Sans,sans-serif;font-size:12px;font-weight:700;padding:9px 14px;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,0.25)';
+    el.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:#c0392b;color:#fff;font-family:Inter,sans-serif;font-size:12px;font-weight:700;padding:9px 14px;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,0.25)';
     document.body.appendChild(el);}
   var btn='style="background:#fff;color:#c0392b;border:none;border-radius:5px;padding:4px 10px;font-weight:700;font-size:11px;cursor:pointer;font-family:inherit"';
   el.innerHTML='\u26A0 '+q.length+' record'+(q.length===1?'':'s')+' NOT saved to the database yet \u2014 do not close this tab. '+
@@ -1368,19 +1367,19 @@ function _isExecRO(){return _isExec();}
 function _roBlocked(table){ if(_isExecRO() && (table==='referrals'||table==='cases')){ showReadOnly(); return true; } return false; }
 function showReadOnly(){
   var el=document.getElementById('saveIndicator');
-  if(!el){el=document.createElement('div');el.id='saveIndicator';el.style.cssText='position:fixed;bottom:20px;right:20px;padding:8px 16px;border-radius:8px;font-family:DM Sans;font-size:11px;font-weight:600;z-index:998;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:opacity 0.3s;pointer-events:none';document.body.appendChild(el);}
+  if(!el){el=document.createElement('div');el.id='saveIndicator';el.style.cssText='position:fixed;bottom:20px;right:20px;padding:8px 16px;border-radius:8px;font-family:Inter;font-size:11px;font-weight:600;z-index:998;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:opacity 0.3s;pointer-events:none';document.body.appendChild(el);}
   el.style.background='#8a6d3b';el.style.color='white';el.textContent='\uD83D\uDC41 View-only access — not saved';el.style.opacity='1';
   clearTimeout(_saveTimer);_saveTimer=setTimeout(function(){el.style.opacity='0'},2500);
 }
 function showSaveSuccess(){
   var el=document.getElementById('saveIndicator');
-  if(!el){el=document.createElement('div');el.id='saveIndicator';el.style.cssText='position:fixed;bottom:20px;right:20px;padding:8px 16px;border-radius:8px;font-family:DM Sans;font-size:11px;font-weight:600;z-index:998;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:opacity 0.3s;pointer-events:none';document.body.appendChild(el);}
+  if(!el){el=document.createElement('div');el.id='saveIndicator';el.style.cssText='position:fixed;bottom:20px;right:20px;padding:8px 16px;border-radius:8px;font-family:Inter;font-size:11px;font-weight:600;z-index:998;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:opacity 0.3s;pointer-events:none';document.body.appendChild(el);}
   el.style.background='#1a7f7a';el.style.color='white';el.textContent='✓ Saved';el.style.opacity='1';
   clearTimeout(_saveTimer);_saveTimer=setTimeout(function(){el.style.opacity='0'},2000);
 }
 function showSaveError(){
   var el=document.getElementById('saveIndicator');
-  if(!el){el=document.createElement('div');el.id='saveIndicator';el.style.cssText='position:fixed;bottom:20px;right:20px;padding:8px 16px;border-radius:8px;font-family:DM Sans;font-size:11px;font-weight:600;z-index:998;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:opacity 0.3s';document.body.appendChild(el);}
+  if(!el){el=document.createElement('div');el.id='saveIndicator';el.style.cssText='position:fixed;bottom:20px;right:20px;padding:8px 16px;border-radius:8px;font-family:Inter;font-size:11px;font-weight:600;z-index:998;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:opacity 0.3s';document.body.appendChild(el);}
   el.style.background='#c0392b';el.style.color='white';el.textContent='⚠️ Save failed — check connection';el.style.opacity='1';
   clearTimeout(_saveTimer);_saveTimer=setTimeout(function(){el.style.opacity='0'},5000);
 }
@@ -1659,7 +1658,7 @@ function downloadTableAsCSV(title,tableEl){
   });
   downloadCSV(title+'.csv',headers,rows);
 }
-function downloadBtn(label,onclick){return '<button onclick="'+onclick+'" style="font-size:10px;padding:5px 10px;background:var(--gray-100);border:2px solid var(--gray-200);border-radius:var(--radius-sm);cursor:pointer;font-family:DM Sans;font-weight:600;color:var(--navy)">⬇ '+label+'</button>';
+function downloadBtn(label,onclick){return '<button onclick="'+onclick+'" style="font-size:10px;padding:5px 10px;background:var(--gray-100);border:2px solid var(--gray-200);border-radius:var(--radius-sm);cursor:pointer;font-family:Inter;font-weight:600;color:var(--navy)">⬇ '+label+'</button>';
 }
 var eodReminderShown=false;
 var eodCheckInterval=null;
@@ -1971,7 +1970,7 @@ function renderPieChart(data){
     h+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="24" stroke-dasharray="'+dash+' '+(circ-dash)+'" stroke-dashoffset="-'+offset+'" transform="rotate(-90 '+cx+' '+cy+')"/>';
     offset+=dash;
   });
-  h+='<text x="'+cx+'" y="'+cy+'" text-anchor="middle" dy="0.35em" style="font-family:DM Sans;font-size:18px;font-weight:700;fill:var(--navy)">'+total+'</text>';
+  h+='<text x="'+cx+'" y="'+cy+'" text-anchor="middle" dy="0.35em" style="font-family:Inter;font-size:18px;font-weight:700;fill:var(--navy)">'+total+'</text>';
   h+='</svg>';
   // Legend
   h+='<div>';
@@ -2224,10 +2223,10 @@ function addRecordRow(data){
   div.className='record-row';
   div.id='recordRow_'+idx;
   div.style.cssText='display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px;padding:10px;background:var(--gray-100);border-radius:var(--radius-sm)';
-  div.innerHTML='<div><label style="font-size:10px;font-weight:700;color:var(--gray-500);text-transform:uppercase;display:block;margin-bottom:3px">Facility / Provider</label><input type="text" class="recFacility" value="'+(data&&data.facility?esc(data.facility):'')+'" placeholder="e.g. Temple Hospital" style="width:100%;padding:7px 10px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:DM Sans;font-size:12px;box-sizing:border-box"></div>'
-    +'<div><label style="font-size:10px;font-weight:700;color:var(--gray-500);text-transform:uppercase;display:block;margin-bottom:3px">Records Needed</label><input type="text" class="recNeeded" value="'+(data&&data.records?esc(data.records):'')+'" placeholder="e.g. MRI results, treatment notes" style="width:100%;padding:7px 10px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:DM Sans;font-size:12px;box-sizing:border-box"></div>'
+  div.innerHTML='<div><label style="font-size:10px;font-weight:700;color:var(--gray-500);text-transform:uppercase;display:block;margin-bottom:3px">Facility / Provider</label><input type="text" class="recFacility" value="'+(data&&data.facility?esc(data.facility):'')+'" placeholder="e.g. Temple Hospital" style="width:100%;padding:7px 10px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:Inter;font-size:12px;box-sizing:border-box"></div>'
+    +'<div><label style="font-size:10px;font-weight:700;color:var(--gray-500);text-transform:uppercase;display:block;margin-bottom:3px">Records Needed</label><input type="text" class="recNeeded" value="'+(data&&data.records?esc(data.records):'')+'" placeholder="e.g. MRI results, treatment notes" style="width:100%;padding:7px 10px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:Inter;font-size:12px;box-sizing:border-box"></div>'
     +'<div style="display:flex;gap:6px;align-items:center;padding-bottom:2px">'
-    +'<select class="recStatus" style="padding:7px 8px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:DM Sans;font-size:11px;font-weight:600"><option value="pending">Pending</option><option value="requested">Requested</option><option value="received">Received</option><option value="incomplete">Incomplete</option></select>'
+    +'<select class="recStatus" style="padding:7px 8px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:Inter;font-size:11px;font-weight:600"><option value="pending">Pending</option><option value="requested">Requested</option><option value="received">Received</option><option value="incomplete">Incomplete</option></select>'
     +'<button type="button" onclick="this.closest(\'.record-row\').remove()" style="padding:5px 8px;background:var(--red-light);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:11px;font-weight:700">&times;</button></div>';
   if(data&&data.status)div.querySelector('.recStatus').value=data.status;
   c.appendChild(div);
@@ -2841,7 +2840,7 @@ function renderCrmAlerts(el) {
   
   // Callback reminders first
   if(myCallbacks.length>0){
-    h+='<h3 style="font-family:DM Serif Display,serif;font-size:16px;color:var(--gold);margin-bottom:10px">📞 Callback Reminders ('+myCallbacks.length+')</h3>';
+    h+='<h3 style="font-family:Plus Jakarta Sans,serif;font-size:16px;color:var(--gold);margin-bottom:10px">📞 Callback Reminders ('+myCallbacks.length+')</h3>';
     myCallbacks.forEach(function(cb){
       var catLabel=CB_CATEGORIES[cb.category]||cb.category;
       var attempts=(cb.contact_log||[]).length;
@@ -2859,8 +2858,8 @@ function renderCrmAlerts(el) {
   else if(alerts.length>0) {
     const my = CRM_STAFF.includes(currentUser) ? alerts.filter(a=>a.assignedTo===currentUser) : [];
     const other = CRM_STAFF.includes(currentUser) ? alerts.filter(a=>a.assignedTo!==currentUser) : alerts;
-    if (my.length > 0) { h += '<h3 style="font-family:DM Serif Display,serif;font-size:16px;color:var(--navy);margin-bottom:10px">Your Alerts ('+my.length+')</h3>'; my.forEach((a,i)=>{h+=renderCrmAlertCard(a,i);}); }
-    if (other.length > 0) { h += '<h3 style="font-family:DM Serif Display,serif;font-size:16px;color:var(--gray-400);margin:16px 0 10px">'+(my.length>0?'Other':'All')+' Alerts ('+other.length+')</h3>'; other.forEach((a,i)=>{h+=renderCrmAlertCard(a,i);}); }
+    if (my.length > 0) { h += '<h3 style="font-family:Plus Jakarta Sans,serif;font-size:16px;color:var(--navy);margin-bottom:10px">Your Alerts ('+my.length+')</h3>'; my.forEach((a,i)=>{h+=renderCrmAlertCard(a,i);}); }
+    if (other.length > 0) { h += '<h3 style="font-family:Plus Jakarta Sans,serif;font-size:16px;color:var(--gray-400);margin:16px 0 10px">'+(my.length>0?'Other':'All')+' Alerts ('+other.length+')</h3>'; other.forEach((a,i)=>{h+=renderCrmAlertCard(a,i);}); }
   }
   el.innerHTML = h;
 }
@@ -3035,7 +3034,7 @@ function renderCrmMyMetrics(el) {
   h+='<div class="table-card"><div class="table-header"><h3>Log Manual Activity</h3><div class="table-controls"><input type="date" class="search-input" id="crmMetDate" value="'+selDate+'" onchange="renderCrmMyMetrics(document.getElementById(\'sec-crm-my-metrics\'))" style="width:150px"></div></div><div style="padding:20px">';
   h+='<p style="font-size:11px;color:var(--gray-600);margin-bottom:14px">Only enter activities the system doesn\'t track automatically (phone calls, emails sent outside the system, etc.)</p>';
   h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
-  CRM_MANUAL_FIELDS.forEach(f=>{h+='<div class="form-group"><label>'+f.label+'</label><input type="number" min="0" id="crmMet-'+f.key+'" value="'+(existing[f.key]||'')+'" placeholder="0" style="padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:DM Sans;font-size:13px;color:var(--navy);background:var(--gray-100);outline:none"></div>'});
+  CRM_MANUAL_FIELDS.forEach(f=>{h+='<div class="form-group"><label>'+f.label+'</label><input type="number" min="0" id="crmMet-'+f.key+'" value="'+(existing[f.key]||'')+'" placeholder="0" style="padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:Inter;font-size:13px;color:var(--navy);background:var(--gray-100);outline:none"></div>'});
   h+='</div><div style="margin-top:16px;display:flex;justify-content:flex-end"><button class="btn-save" onclick="saveCrmMyMetrics()">Save</button></div></div></div>';
 
   // Weekly combined table
@@ -3045,7 +3044,7 @@ function renderCrmMyMetrics(el) {
   h+='<th>Total</th></tr></thead><tbody>';
   wk.forEach(d=>{
     const auto=crmAutoMetrics(staff,d);const man=getCrmMet(staff,d);let rt=0;const isT=d===today();
-    h+='<tr style="'+(isT?'background:rgba(26,127,122,0.04)':'')+'"><td style="font-weight:600;font-size:11px;'+(isT?'color:var(--teal)':'')+'">'+dayName(d)+' '+fmtDate(d)+(isT?' <span style="font-size:9px;background:var(--teal);color:white;padding:1px 5px;border-radius:5px">Today</span>':'')+'</td>';
+    h+='<tr style="'+(isT?'background:rgba(26,127,122,0.04)':'')+'"><td style="font-weight:600;font-size:11px;'+(isT?'color:var(--teal)':'')+'">'+dayName(d)+' '+fmtDate(d)+(isT?' <span style="font-size:9px;background:var(--navy);color:white;padding:1px 5px;border-radius:5px">Today</span>':'')+'</td>';
     Object.keys(CRM_AUTO_LABELS).forEach(k=>{const v=auto[k];rt+=v;h+='<td style="text-align:center;font-size:11px">'+(v>0?v:'<span style="color:var(--gray-400)">—</span>')+'</td>'});
     CRM_MANUAL_FIELDS.forEach(f=>{const v=parseInt(man[f.key])||0;rt+=v;h+='<td style="text-align:center;font-size:11px;color:var(--gold)">'+(v>0?v:'<span style="color:var(--gray-400)">—</span>')+'</td>'});
     h+='<td style="text-align:center;font-weight:700;font-size:11px">'+rt+'</td></tr>'});
@@ -3503,7 +3502,7 @@ function showCrmDetail(id) {
       h+='<div style="flex:1"><div style="font-weight:700;font-size:13px;color:var(--navy)">'+esc(a.title)+'</div>';
       if(a.note)h+='<div style="font-size:11px;color:var(--gray-600);margin-top:3px">'+esc(a.note)+'</div>';
       h+='<div style="font-size:10px;margin-top:4px">Remind: '+fmtDate(a.reminderDate)+' · '+urgency+' · Assigned: <strong>'+esc(a.assignedTo||'—')+'</strong> · Created by '+esc(a.createdBy||'—')+' on '+fmtDate(a.createdDate)+'</div></div>';
-      h+='<button onclick="completeCustomAlert(\''+r.id+'\',\''+a.id+'\')" style="font-size:10px;padding:5px 10px;background:var(--teal);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-family:DM Sans;font-weight:600;white-space:nowrap">✓ Done</button></div>';
+      h+='<button onclick="completeCustomAlert(\''+r.id+'\',\''+a.id+'\')" style="font-size:10px;padding:5px 10px;background:var(--navy);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-family:Inter;font-weight:600;white-space:nowrap">✓ Done</button></div>';
     });
     if(completedAlerts.length>0){
       h+='<div style="margin-top:12px;padding-top:10px;border-top:2px solid var(--gray-200)"><div style="font-size:10px;font-weight:700;color:var(--gray-400);text-transform:uppercase;margin-bottom:6px">Completed ('+completedAlerts.length+')</div>';
@@ -4973,7 +4972,7 @@ function renderCmMyMetrics(el){
   h+='<div class="table-card"><div class="table-header"><h3>Log Manual Activity</h3><div class="table-controls"><input type="date" class="search-input" id="cmMetDate" value="'+selDate+'" onchange="renderCmMyMetrics(document.getElementById(\'sec-cm-my-metrics\'))" style="width:150px"></div></div><div style="padding:20px">';
   h+='<p style="font-size:11px;color:var(--gray-600);margin-bottom:14px">Only enter activities the system doesn\'t auto-track.</p>';
   h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
-  CM_MANUAL_FIELDS.forEach(f=>{h+='<div class="form-group"><label>'+f.label+'</label><input type="number" min="0" id="cmMet-'+f.key+'" value="'+(existing[f.key]||'')+'" placeholder="0" style="padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:DM Sans;font-size:13px;color:var(--navy);background:var(--gray-100);outline:none"></div>'});
+  CM_MANUAL_FIELDS.forEach(f=>{h+='<div class="form-group"><label>'+f.label+'</label><input type="number" min="0" id="cmMet-'+f.key+'" value="'+(existing[f.key]||'')+'" placeholder="0" style="padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:Inter;font-size:13px;color:var(--navy);background:var(--gray-100);outline:none"></div>'});
   h+='</div><div style="margin-top:16px;display:flex;justify-content:flex-end"><button class="btn-save" onclick="saveCmMyMetrics()">Save</button></div></div></div>';
 
   // Weekly table
@@ -5434,7 +5433,7 @@ function showMktDetail(id){
   }
 
   h+='<div class="detail-card"><div class="detail-header"><h3>'+esc(m.name)+'</h3><span class="pipeline-stage '+sc+'" style="margin-left:12px">'+esc(m.stage)+'</span></div>';
-  h+='<div class="detail-grid">'+dcell('Contact',m.contact||'—')+dcell('Type',m.type||'—')+dcell('Anticipated Cases',m.anticipatedCases||'—')+dcell('Date Initiated',fmtDate(m.dateInitiated))+dcell('Expected Volume',m.volume||'—')+dcell('Effort Level',m.effort||'Low')+dcell('Next Follow-Up',fmtDate(m.nextFollowUp))+dcell('Referrals Generated','<span style="font-family:DM Serif Display,serif;font-size:20px;color:var(--teal)">'+refCount+'</span>')+dcell('ROI','<span style="color:'+roi.color+';font-weight:700">'+roi.icon+' '+roi.label+'</span>')+dcell('Created',fmtDate(m.createdDate))+'</div>';
+  h+='<div class="detail-grid">'+dcell('Contact',m.contact||'—')+dcell('Type',m.type||'—')+dcell('Anticipated Cases',m.anticipatedCases||'—')+dcell('Date Initiated',fmtDate(m.dateInitiated))+dcell('Expected Volume',m.volume||'—')+dcell('Effort Level',m.effort||'Low')+dcell('Next Follow-Up',fmtDate(m.nextFollowUp))+dcell('Referrals Generated','<span style="font-family:Plus Jakarta Sans,serif;font-size:20px;color:var(--teal)">'+refCount+'</span>')+dcell('ROI','<span style="color:'+roi.color+';font-weight:700">'+roi.icon+' '+roi.label+'</span>')+dcell('Created',fmtDate(m.createdDate))+'</div>';
   // Target locations
   const locs=m.targetLocations||[];
   if(locs.length>0){
@@ -5724,11 +5723,11 @@ function renderMktAlerts(el){
   var urgent=alerts.filter(function(a){return a.severity==='red'});
   var attention=alerts.filter(function(a){return a.severity==='gold'});
   if(urgent.length>0){
-    h+='<h3 style="font-family:DM Serif Display,serif;font-size:16px;color:var(--red);margin-bottom:10px">🔴 Urgent ('+urgent.length+')</h3>';
+    h+='<h3 style="font-family:Plus Jakarta Sans,serif;font-size:16px;color:var(--red);margin-bottom:10px">🔴 Urgent ('+urgent.length+')</h3>';
     urgent.forEach(function(a){h+=renderMktAlertCard(a);});
   }
   if(attention.length>0){
-    h+='<h3 style="font-family:DM Serif Display,serif;font-size:16px;color:var(--gold);margin:'+(urgent.length>0?'16px':'0')+' 0 10px">⚠️ Needs Attention ('+attention.length+')</h3>';
+    h+='<h3 style="font-family:Plus Jakarta Sans,serif;font-size:16px;color:var(--gold);margin:'+(urgent.length>0?'16px':'0')+' 0 10px">⚠️ Needs Attention ('+attention.length+')</h3>';
     attention.forEach(function(a){h+=renderMktAlertCard(a);});
   }
   el.innerHTML=h;
@@ -6121,9 +6120,9 @@ function renderMktCorrelation(el){
     const roi=mktRoi(init);
     h+='<div style="padding:10px 0;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;gap:16px;flex-wrap:wrap">';
     h+='<div style="min-width:200px"><strong style="color:var(--navy);cursor:pointer" onclick="showMktDetail(\''+init.id+'\')">'+esc(init.name)+'</strong><br><span style="font-size:10px;color:var(--gray-400)">Started '+fmtDate(init.dateInitiated)+' · Effort: '+esc(init.effort||'Low')+'</span></div>';
-    h+='<div style="min-width:70px;text-align:center"><span style="font-family:DM Serif Display,serif;font-size:22px;color:var(--teal)">'+refCount+'</span><br><span style="font-size:10px;color:var(--gray-400)">total refs</span></div>';
-    h+='<div style="min-width:70px;text-align:center"><span style="font-family:DM Serif Display,serif;font-size:18px;color:var(--navy)">'+last30+'</span><br><span style="font-size:10px;color:var(--gray-400)">last 30d</span></div>';
-    if(daysToFirst!==null) h+='<div style="min-width:80px;text-align:center"><span style="font-family:DM Serif Display,serif;font-size:18px;color:var(--gold)">'+daysToFirst+'</span><br><span style="font-size:10px;color:var(--gray-400)">days to 1st</span></div>';
+    h+='<div style="min-width:70px;text-align:center"><span style="font-family:Plus Jakarta Sans,serif;font-size:22px;color:var(--teal)">'+refCount+'</span><br><span style="font-size:10px;color:var(--gray-400)">total refs</span></div>';
+    h+='<div style="min-width:70px;text-align:center"><span style="font-family:Plus Jakarta Sans,serif;font-size:18px;color:var(--navy)">'+last30+'</span><br><span style="font-size:10px;color:var(--gray-400)">last 30d</span></div>';
+    if(daysToFirst!==null) h+='<div style="min-width:80px;text-align:center"><span style="font-family:Plus Jakarta Sans,serif;font-size:18px;color:var(--gold)">'+daysToFirst+'</span><br><span style="font-size:10px;color:var(--gray-400)">days to 1st</span></div>';
     else h+='<div style="min-width:80px;text-align:center;color:var(--gray-400);font-size:11px">No refs yet</div>';
     h+='<div style="min-width:90px;text-align:center;color:'+roi.color+';font-weight:700;font-size:12px">'+roi.icon+' '+roi.label+'</div>';
     h+='</div>';
@@ -6650,7 +6649,7 @@ function renderSourceCleanup(){
   var clusters=srcDuplicateClusters();
   var h='<div style="background:#fff;border-radius:12px;max-width:760px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.3)">';
   h+='<div style="padding:16px 20px;border-bottom:1px solid var(--gray-200);display:flex;justify-content:space-between;align-items:center">';
-  h+='<div><div style="font-family:DM Serif Display,serif;font-size:18px;color:var(--navy)">🧹 Clean Up Duplicate Sources</div><div style="font-size:11px;color:var(--gray-500)">Same source entered under different spellings. Merging rewrites every referral to the active spelling.</div></div>';
+  h+='<div><div style="font-family:Plus Jakarta Sans,serif;font-size:18px;color:var(--navy)">🧹 Clean Up Duplicate Sources</div><div style="font-size:11px;color:var(--gray-500)">Same source entered under different spellings. Merging rewrites every referral to the active spelling.</div></div>';
   h+='<button class="filter-btn" onclick="closeSourceCleanup()">✕ Close</button></div>';
   h+='<div style="padding:16px 20px;max-height:60vh;overflow:auto">';
   if(!clusters.length){
@@ -7499,7 +7498,7 @@ function renderPsrAlerts(el){
   var h='<div class="page-title">Call Center Alerts</div><div class="page-subtitle">'+totalAlerts+' items need attention</div>';
 
   if(myCallbacks.length>0){
-    h+='<h3 style="font-family:DM Serif Display,serif;font-size:16px;color:var(--gold);margin-bottom:10px">📞 Callback Reminders ('+myCallbacks.length+')</h3>';
+    h+='<h3 style="font-family:Plus Jakarta Sans,serif;font-size:16px;color:var(--gold);margin-bottom:10px">📞 Callback Reminders ('+myCallbacks.length+')</h3>';
     myCallbacks.forEach(function(cb){
       var catLabel=CB_CATEGORIES[cb.category]||cb.category;
       var attempts=(cb.contact_log||[]).length;
@@ -7514,7 +7513,7 @@ function renderPsrAlerts(el){
   }
 
   if(urgentTickets.length>0){
-    h+='<h3 style="font-family:DM Serif Display,serif;font-size:16px;color:var(--red);margin:16px 0 10px">🎫 Urgent Tickets ('+urgentTickets.length+')</h3>';
+    h+='<h3 style="font-family:Plus Jakarta Sans,serif;font-size:16px;color:var(--red);margin:16px 0 10px">🎫 Urgent Tickets ('+urgentTickets.length+')</h3>';
     urgentTickets.forEach(function(t){
       var r=t.refId?refs.find(function(x){return x.id===t.refId}):null;
       h+='<div class="table-card" style="border-left:4px solid var(--red);margin-bottom:8px;padding:12px 18px"><div style="display:flex;align-items:center;gap:12px">';
@@ -7576,7 +7575,7 @@ function renderPsrMyMetrics(el){
   h+='</div>';
   h+='<div class="table-card"><div class="table-header"><h3>Log Daily Activity</h3><div class="table-controls"><input type="date" class="search-input" id="psrMetDate" value="'+selDate+'" onchange="renderPsrMyMetrics(document.getElementById(\'sec-psr-my-metrics\'))" style="width:150px"></div></div><div style="padding:20px">';
   h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
-  PSR_MANUAL_FIELDS.forEach(f=>{h+='<div class="form-group"><label>'+f.label+'</label><input type="number" min="0" id="psrMet-'+f.key+'" value="'+(existing[f.key]||'')+'" placeholder="0" style="padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:DM Sans;font-size:13px;color:var(--navy);background:var(--gray-100);outline:none"></div>'});
+  PSR_MANUAL_FIELDS.forEach(f=>{h+='<div class="form-group"><label>'+f.label+'</label><input type="number" min="0" id="psrMet-'+f.key+'" value="'+(existing[f.key]||'')+'" placeholder="0" style="padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:Inter;font-size:13px;color:var(--navy);background:var(--gray-100);outline:none"></div>'});
   h+='</div><div style="margin-top:16px;display:flex;justify-content:flex-end"><button class="btn-save" onclick="savePsrMyMetrics()">Save</button></div></div></div>';
 
   // Weekly table
@@ -7750,7 +7749,7 @@ function renderManagerExecSummary(){
   const openTk=tickets.filter(t=>t.status!=='Resolved').length;
   const crmA=crmAlerts().length,cmA=cmAlerts().length;
   let h='<div style="margin-bottom:24px;padding:20px;background:white;border-radius:var(--radius-lg);box-shadow:var(--shadow-md);border:1px solid var(--gray-200)">';
-  h+='<div style="font-family:DM Serif Display,serif;font-size:16px;color:var(--navy);margin-bottom:12px">This Week at a Glance</div>';
+  h+='<div style="font-family:Plus Jakarta Sans,serif;font-size:16px;color:var(--navy);margin-bottom:12px">This Week at a Glance</div>';
   h+='<div class="stats-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:0">'+stat('New Referrals',newRefs,'teal')+stat('Scheduled',scheduled,'gold')+stat('Cases Opened',newCases,'')+stat('Cases Settled',settled,'')+'</div>';
   h+='<div class="stats-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:0">'+stat('Total Calls',weekCalls,'teal')+stat('Open Tickets',openTk,openTk>0?'red':'')+stat('CRM Alerts',crmA,crmA>0?'red':'')+stat('CM Alerts',cmA,cmA>0?'red':'')+'</div>';
   h+='</div>';
