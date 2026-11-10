@@ -133,6 +133,56 @@
   .form-group input,.form-group select,.form-group textarea{padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:"Inter",sans-serif;font-size:13px;color:var(--text);background:var(--gray-100);transition:all 0.2s;outline:none}
   .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--teal);background:white;box-shadow:0 0 0 3px rgba(26,127,122,0.12)}
   .form-group textarea{resize:vertical;min-height:60px}
+  /* New Patient Phone Intake */
+  .npi-wrap{display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:20px;align-items:start}
+  @media(max-width:1200px){.npi-wrap{grid-template-columns:1fr}.npi-side{position:static!important}}
+  .npi-sec{background:white;border:1px solid var(--gray-200);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);padding:16px 18px;margin-bottom:16px;scroll-margin-top:16px}
+  .npi-sec-h{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
+  .npi-num{width:24px;height:24px;border-radius:50%;background:var(--navy);color:white;font-size:11px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+  .npi-script{font-size:12px;font-style:italic;color:var(--gray-600);background:var(--gray-100);border-left:3px solid var(--teal);padding:7px 10px;border-radius:4px;margin-bottom:12px}
+  .npi-note{font-size:11px;color:var(--gray-600);margin-top:10px}
+  .dup-hint{display:none;font-size:11px;margin-top:4px;line-height:1.6}
+  .dup-ok{color:var(--teal);font-weight:600}
+  .dup-warn{color:#a15c00;font-weight:700}
+  .dup-new{color:#a15c00}
+  .dup-chip{border:1.5px solid var(--gold);background:#fff8ec;color:#7a5410;border-radius:999px;padding:1px 9px;margin:2px 3px 0 0;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit}
+  .dup-chip:hover{background:var(--gold);color:white}
+  .npi-profile{display:flex;align-items:center;gap:12px;margin-top:12px;padding:14px 18px;background:#f2f7fb;border:2px solid var(--gray-200);border-left:4px solid var(--navy);border-radius:var(--radius);flex-wrap:wrap}
+  .npi-subh{grid-column:1/-1;font-size:12px;font-weight:700;color:var(--navy);border-bottom:1px solid var(--gray-200);padding-bottom:4px;margin-top:6px}
+  .npi-hint{font-size:10px;color:var(--gray-500);margin-top:3px}
+  .npi-warn{background:#fdecea;color:#a12a1f;border:1px solid #f3b8b1;padding:8px 12px;border-radius:6px;font-size:12px;font-weight:700}
+  .npi-lbl{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-600);margin:10px 0 6px}
+  .npi-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+  .npi-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border:1.5px solid var(--gray-200);border-radius:999px;font-size:12px;cursor:pointer;background:var(--gray-100);user-select:none}
+  .npi-chip input{display:none}
+  .npi-chip.on{background:var(--navy);border-color:var(--navy);color:white}
+  .npi-bool{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin:4px 0 8px}
+  .npi-row{display:flex;gap:8px;align-items:flex-end;margin-bottom:8px}
+  .npi-row .form-group{flex:1}
+  .npi-x{border:none;background:none;color:var(--gray-400);font-size:20px;cursor:pointer;padding:0 4px 8px}
+  .npi-x:hover{color:var(--red)}
+  .npi-ros-row{display:grid;grid-template-columns:170px 1fr;gap:8px;align-items:start;padding:6px 0;border-bottom:1px solid var(--gray-100)}
+  .npi-ros-l{font-size:12px;font-weight:600;color:var(--navy);padding-top:5px}
+  .npi-side{position:sticky;top:12px}
+  .npi-panel{background:white;border:1px solid var(--gray-200);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);overflow:hidden}
+  .npi-tabs{display:flex;border-bottom:1px solid var(--gray-200)}
+  .npi-tab{flex:1;padding:10px;border:none;background:var(--gray-100);font-size:12px;font-weight:600;color:var(--gray-600);cursor:pointer;font-family:inherit}
+  .npi-tab.on{background:white;color:var(--navy);box-shadow:inset 0 -2px 0 var(--navy)}
+  .npi-prev{padding:14px;max-height:62vh;overflow-y:auto;font-size:12px;line-height:1.5}
+  .npi-prev .npi-h{font-weight:700;color:var(--navy);margin:10px 0 2px;font-size:12px;border-bottom:1px solid var(--gray-100);padding-bottom:2px}
+  .npi-prev ul{margin:2px 0 0 18px;padding:0}
+  .npi-src{font-size:10.5px;color:var(--gray-500);font-style:italic}
+  .npi-actions{display:flex;gap:6px;padding:10px 14px;border-top:1px solid var(--gray-200);flex-wrap:wrap}
+  .npi-actions .btn-primary{margin-left:auto}
+  .npi-miss{padding:7px 10px;border:1px solid #f3b8b1;background:#fdf3f2;border-radius:6px;margin-bottom:6px;cursor:pointer;color:#a12a1f;font-weight:600}
+  .npi-reg{width:100%;border-collapse:collapse}
+  .npi-reg td{padding:4px 6px;border-bottom:1px solid var(--gray-100);vertical-align:top}
+  .npi-reg td:first-child{color:var(--gray-500);width:38%}
+  .npi-reg-h{font-weight:700;color:var(--navy);padding-top:10px!important;background:none}
+  .npi-cp{border:1px solid var(--gray-200);background:white;border-radius:4px;cursor:pointer;font-size:11px;padding:1px 6px;color:var(--teal)}
+  .npi-jump{display:flex;flex-wrap:wrap;gap:4px 10px;padding:10px 4px;font-size:11px}
+  .npi-jump a{color:var(--teal);cursor:pointer}
+
   .modal-footer{padding:14px 24px 20px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--gray-100);flex:0 0 auto}
   .btn-cancel{padding:9px 18px;background:var(--gray-100);border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:"Inter",sans-serif;font-size:12px;font-weight:600;color:var(--gray-600);cursor:pointer}
   .btn-save{padding:9px 22px;background:var(--navy);border:none;border-radius:var(--radius-sm);font-family:"Inter",sans-serif;font-size:12px;font-weight:600;color:white;cursor:pointer;transition:all 0.2s}
@@ -361,6 +411,7 @@
     <div class="nav-item" data-page="crm-contacts" onclick="crmNav('crm-contacts')"><div class="nav-icon">📇</div> Contacts</div>
     <div class="nav-item" data-page="crm-lost" onclick="crmNav('crm-lost')"><div class="nav-icon">🚫</div> Lost Patients</div>
     <div class="nav-item" data-page="crm-callbacks" onclick="crmNav('crm-callbacks')"><div class="nav-icon">📞</div> Callback List <span class="nav-badge gold" id="callbackBadge" style="display:none">0</span></div>
+    <div class="nav-item" data-page="crm-intake" onclick="crmNav('crm-intake')"><div class="nav-icon">🩺</div> New Patient Intake</div>
   </div>
   <div class="nav-section" id="crmSchedulerSection">
     <div class="nav-section-label">Schedulers</div>
@@ -375,7 +426,7 @@
     <div class="nav-item" id="crmNavMgrDash" data-page="crm-mgr-dash" onclick="openCrmMgrDash()" style="display:none"><div class="nav-icon">🔒</div> Manager Analytics</div>
     <div class="nav-item" id="crmNavMgrMetrics" data-page="crm-mgr-metrics" onclick="promptPIN('crm-mgr-metrics')" style="display:none"><div class="nav-icon">🔒</div> Team Metrics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Internal CRM · Confidential<br>build 2026-11-02e-brand</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Internal CRM · Confidential<br>build 2026-11-10f-np-intake</p></div>
 </nav>
 <div class="main-content" id="crmMain">
   <div class="section active" id="sec-crm-dashboard"></div>
@@ -384,6 +435,8 @@
   <div class="section" id="sec-crm-contacts"></div>
   <div class="section" id="sec-crm-lost"></div>
   <div class="section" id="sec-crm-callbacks"></div>
+  <div class="section" id="sec-crm-intake"></div>
+  <div class="section" id="sec-crm-intake-edit"></div>
   <div class="section" id="sec-crm-staff-Paola"></div>
   <div class="section" id="sec-crm-staff-Abigail"></div>
   <div class="section" id="sec-crm-staff-Maria"></div>
@@ -420,7 +473,7 @@
     <div class="nav-item" id="cmNavMyMetrics" data-page="cm-my-metrics" onclick="cmNav('cm-my-metrics')"><div class="nav-icon">📈</div> My Metrics</div>
     <div class="nav-item" id="cmNavMgrDash" data-page="cm-mgr-dash" onclick="promptPIN('cm-mgr-dash')" style="display:none"><div class="nav-icon">🔒</div> Manager View</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Case Management · Confidential<br>build 2026-11-02e-brand</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Case Management · Confidential<br>build 2026-11-10f-np-intake</p></div>
 </nav>
 <div class="main-content" id="cmMain">
   <div class="section active" id="sec-cm-dashboard"></div>
@@ -453,7 +506,7 @@
     <div class="nav-item" data-page="mkt-report" onclick="mktNav('mkt-report')"><div class="nav-icon">📄</div> Weekly Snapshot</div>
     <div class="nav-item" data-page="mkt-analytics" onclick="mktNav('mkt-analytics')"><div class="nav-icon">📊</div> Analytics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential<br>build 2026-11-02e-brand</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential<br>build 2026-11-10f-np-intake</p></div>
 </nav>
 <div class="main-content" id="mktMain">
   <div class="section active" id="sec-mkt-pipeline"></div>
@@ -491,7 +544,7 @@
     <div class="nav-item" id="psrNavMyMetrics" data-page="psr-my-metrics" onclick="psrNav('psr-my-metrics')"><div class="nav-icon">📈</div> My Metrics</div>
     <div class="nav-item" id="psrNavMgrDash" data-page="psr-mgr-dash" onclick="promptPIN('psr-mgr-dash')" style="display:none"><div class="nav-icon">🔒</div> Manager View</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Patient Services · Confidential<br>build 2026-11-02e-brand</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Patient Services · Confidential<br>build 2026-11-10f-np-intake</p></div>
 </nav>
 <div class="main-content" id="psrMain">
   <div class="section active" id="sec-psr-dashboard"></div>
@@ -531,7 +584,7 @@
     <div class="nav-section-label">Metrics</div>
     <div class="nav-item" id="njmvaNavMgrDash" data-page="njmva-analytics" onclick="if(currentUser==='Manager'||userRole==='nj_mva'||_isExec()){njmvaNav('njmva-analytics')}else{promptPIN('njmva-analytics')}" style="display:none"><div class="nav-icon">📊</div> Analytics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential<br>build 2026-11-02e-brand</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential<br>build 2026-11-10f-np-intake</p></div>
 </nav>
 <div class="main-content" id="njmvaMain">
   <div class="section active" id="sec-njmva-dashboard"></div>
@@ -652,14 +705,15 @@
       <div class="form-group"><label>Patient DOB</label><input type="date" id="fDOB"></div>
       <div class="form-group"><label>Patient Phone</label><input type="tel" id="fPhone" placeholder="(555) 123-4567" oninput="formatPhone(this)"></div>
       <div class="form-group"><label>Patient Email</label><input type="email" id="fEmail" placeholder="patient@email.com"></div>
-      <div class="form-group"><label>Case Type <span style="color:var(--red)">*</span></label><select id="fCaseType"><option value="WC">WC</option><option value="MVA">MVA</option><option value="NJ MVA">NJ MVA</option><option value="PI">PI</option><option value="PHI">PHI</option></select></div>
+      <div class="form-group"><label>Case Type <span style="color:var(--red)">*</span></label><select id="fCaseType"><option value="WC">WC</option><option value="MVA">MVA</option><option value="NJ MVA">NJ MVA</option><option value="PI">PI</option></select></div>
       <div class="form-group"><label>Date of Injury <span style="color:var(--red)">*</span></label><input type="date" id="fDOI"></div>
       <div class="form-group"><label>Clinic Location <span style="color:var(--red)">*</span></label><select id="fLocation"><option value="">— Select —</option><option>Allentown</option><option>Wilkes Barre</option><option>Old City</option><option>Hazleton</option><option>Williamsport</option><option>Carlisle</option><option>Lansdale</option><option>Reading</option><option>Port Richmond</option><option>Germantown</option><option>NE Philly</option><option>Ridley Park</option></select></div>
       <div class="form-group"><label>Preferred Language</label><select id="fLanguage"><option>English</option><option>Spanish</option><option>Other</option></select></div>
-      <div class="form-group"><label>Attorney Name</label><input type="text" id="fAttorney"></div>
-      <div class="form-group"><label>Law Firm</label><input type="text" id="fLawFirm" list="lawFirmList" placeholder="Select or type law firm" oninput="checkBlockedFirm()"><datalist id="lawFirmList"></datalist><div id="fLawFirmWarning" style="display:none;font-size:11px;font-weight:700;color:white;background:var(--red);padding:6px 10px;border-radius:var(--radius-sm);margin-top:4px">⚠️ DO NOT SCHEDULE — We do not participate with this law firm.</div></div>
+      <div class="form-group"><label>Attorney Name</label><input type="text" id="fAttorney" data-dup="attorney" list="attorneyList" placeholder="Select or type attorney"></div>
+      <div class="form-group"><label>Law Firm</label><input type="text" id="fLawFirm" data-dup="firm" list="lawFirmList" placeholder="Select or type law firm" oninput="checkBlockedFirm()"><datalist id="lawFirmList"></datalist><div id="fLawFirmWarning" style="display:none;font-size:11px;font-weight:700;color:white;background:var(--red);padding:6px 10px;border-radius:var(--radius-sm);margin-top:4px">⚠️ DO NOT SCHEDULE — We do not participate with this law firm.</div></div>
       <div class="form-group"><label>Law Firm Contact</label><input type="text" id="fLawContact" placeholder="Phone / Email"></div>
-      <div class="form-group"><label>Referral Source <span style="color:var(--red)">*</span></label><input type="text" id="fRefSource" list="refSourceList" placeholder="Type or select a source"><datalist id="refSourceList"></datalist></div>
+      </div>
+      <div class="form-group"><label>Referral Source <span style="color:var(--red)">*</span></label><input type="text" id="fRefSource" data-dup="source" list="refSourceList" placeholder="Type or select a source"><datalist id="refSourceList"></datalist></div>
       <div class="form-group"><label>Referred / Registered Date <span style="color:var(--red)">*</span></label><input type="date" id="fRegDate"></div>
       <div class="form-group"><label>Scheduled Appointment Date</label><input type="date" id="fApptDate" onchange="if(this.value&&document.getElementById('fStatus').value==='Pending Scheduling')document.getElementById('fStatus').value='Scheduled'"></div>
       <div class="form-group"><label>New Patient Paperwork Completed?</label><select id="fPaperwork"><option value="no">No</option><option value="yes">Yes</option></select></div>
@@ -773,14 +827,14 @@
       <div class="form-group"><label>Patient DOB</label><input type="date" id="cDOB"></div>
       <div class="form-group"><label>Patient Phone</label><input type="tel" id="cPhone" placeholder="(555) 123-4567" oninput="formatPhone(this)"></div>
       <div class="form-group"><label>Patient Email</label><input type="email" id="cEmail" placeholder="patient@email.com"></div>
-      <div class="form-group"><label>Case Type <span style="color:var(--red)">*</span></label><select id="cCaseType"><option value="WC">WC</option><option value="MVA">MVA</option><option value="NJ MVA">NJ MVA</option><option value="PI">PI</option><option value="PHI">PHI</option></select></div>
+      <div class="form-group"><label>Case Type <span style="color:var(--red)">*</span></label><select id="cCaseType"><option value="WC">WC</option><option value="MVA">MVA</option><option value="NJ MVA">NJ MVA</option><option value="PI">PI</option></select></div>
       <div class="form-group"><label>Date of Injury <span style="color:var(--red)">*</span></label><input type="date" id="cDOI"></div>
       <div class="form-group"><label>Clinic Location <span style="color:var(--red)">*</span></label><select id="cLocation"><option value="">— Select —</option><option>Allentown</option><option>Wilkes Barre</option><option>Old City</option><option>Hazleton</option><option>Williamsport</option><option>Carlisle</option><option>Lansdale</option><option>Reading</option><option>Port Richmond</option><option>Germantown</option><option>NE Philly</option><option>Ridley Park</option></select></div>
       <div class="form-group"><label>Preferred Language</label><select id="cLanguage"><option>English</option><option>Spanish</option><option>Other</option></select></div>
-      <div class="form-group"><label>Attorney Name</label><input type="text" id="cAttorney"></div>
-      <div class="form-group"><label>Law Firm</label><input type="text" id="cLawFirm" list="lawFirmList" placeholder="Select or type law firm"></div>
+      <div class="form-group"><label>Attorney Name</label><input type="text" id="cAttorney" data-dup="attorney" list="attorneyList" placeholder="Select or type attorney"></div>
+      <div class="form-group"><label>Law Firm</label><input type="text" id="cLawFirm" data-dup="firm" list="lawFirmList" placeholder="Select or type law firm"></div>
       <div class="form-group"><label>Law Firm Contact</label><input type="text" id="cLawContact" placeholder="Phone / Email"></div>
-      <div class="form-group"><label>Referral Source</label><input type="text" id="cRefSource" list="refSourceList" placeholder="Type or select a source"></div>
+      <div class="form-group"><label>Referral Source</label><input type="text" id="cRefSource" data-dup="source" list="refSourceList" placeholder="Type or select a source"></div>
       <div class="form-group"><label>Assigned To</label><select id="cAssigned"><option>Sophia</option><option>Kent</option></select></div>
       <div class="form-group"><label>Date Case Opened</label><input type="date" id="cDateOpened"></div>
       <div class="form-group"><label>Next Scheduled Appointment</label><input type="date" id="cApptDate"><label style="display:flex;align-items:center;gap:5px;font-size:12px;margin-top:6px;cursor:pointer"><input type="checkbox" id="cApptPrn" style="accent-color:var(--gold)" onchange="if(this.checked)document.getElementById('cApptDate').value=''"> Mark as PRN (as needed)</label></div>
@@ -1076,7 +1130,7 @@
 </div>
 
 <script>
-console.log('CarePath CRM build: 2026-11-02e-brand');
+console.log('CarePath CRM build: 2026-11-10f-np-intake');
 // ══════════════════════════════════════════════════════════════════════
 // CORE DATA
 // ══════════════════════════════════════════════════════════════════════
@@ -1106,7 +1160,7 @@ var _lastLocalSave = 0;
 var _useNewTables = false;
 
 // ─── Field mapping: JS camelCase <-> DB snake_case ─────────────────
-var _refMap = {id:'id',patientName:'patient_name',dob:'dob',phone:'phone',email:'email',doi:'doi',caseType:'case_type',location:'location',language:'language',attorney:'attorney',lawFirm:'law_firm',lawContact:'law_contact',referralSource:'referral_source',apptDate:'appt_date',status:'status',notes:'notes',alertType:'alert_type',paperworkCompleted:'paperwork_completed',recordsNeeded:'records_needed',customAlerts:'custom_alerts',registeredBy:'registered_by',alertAssignedTo:'alert_assigned_to',apptConfirmAssignedTo:'appt_confirm_assigned_to',lastContactDate:'last_contact_date',dateScheduledOn:'date_scheduled_on',daysToSchedule:'days_to_schedule',apptOutcome:'appt_outcome',apptOutcomeReason:'appt_outcome_reason',lastApptFollowUp:'last_appt_follow_up',createdDate:'created_date',enteredAt:'entered_at',updateLog:'update_log',lostReason:'lost_reason',lostDate:'lost_date',lostNotes:'lost_notes',emailResolved:'email_resolved',emailLastFollowUp:'email_last_follow_up'};
+var _refMap = {id:'id',patientName:'patient_name',dob:'dob',phone:'phone',email:'email',doi:'doi',caseType:'case_type',location:'location',language:'language',attorney:'attorney',lawFirm:'law_firm',lawContact:'law_contact',referralSource:'referral_source',apptDate:'appt_date',status:'status',notes:'notes',alertType:'alert_type',paperworkCompleted:'paperwork_completed',recordsNeeded:'records_needed',customAlerts:'custom_alerts',registeredBy:'registered_by',alertAssignedTo:'alert_assigned_to',apptConfirmAssignedTo:'appt_confirm_assigned_to',lastContactDate:'last_contact_date',dateScheduledOn:'date_scheduled_on',daysToSchedule:'days_to_schedule',apptOutcome:'appt_outcome',apptOutcomeReason:'appt_outcome_reason',lastApptFollowUp:'last_appt_follow_up',createdDate:'created_date',enteredAt:'entered_at',updateLog:'update_log',lostReason:'lost_reason',lostDate:'lost_date',lostNotes:'lost_notes',emailResolved:'email_resolved',emailLastFollowUp:'email_last_follow_up',injuryState:'injury_state',insCarrier:'ins_carrier',claimNumber:'claim_number',policyNumber:'policy_number',adjusterName:'adjuster_name',adjusterContact:'adjuster_contact',healthIns:'health_ins',healthInsId:'health_ins_id'};
 var _caseMap = {id:'id',sourceRefId:'source_ref_id',patientName:'patient_name',dob:'dob',phone:'phone',email:'email',doi:'doi',caseType:'case_type',location:'location',language:'language',attorney:'attorney',lawFirm:'law_firm',lawContact:'law_contact',referralSource:'referral_source',assigned:'assigned',apptDate:'appt_date',apptPrn:'appt_prn',prnLastCheck:'prn_last_check',recordsSent:'records_sent',missingInfo:'missing_info',followUpDate:'follow_up_date',notes:'notes',status:'status',createdDate:'created_date',settledDate:'settled_date',uros:'uros',statusChangeDate:'status_change_date',introEmailSentDate:'intro_email_sent_date',settlementEmailSent:'settlement_email_sent',settlementEmailDate:'settlement_email_date',inLitigation:'in_litigation',adjusterResolved:'adjuster_resolved',adjusterResolvedDate:'adjuster_resolved_date',adjusterLastFollowUp:'adjuster_last_follow_up',pipResolved:'pip_resolved',pipResolvedDate:'pip_resolved_date',pipLastFollowUp:'pip_last_follow_up',pipExhausted:'pip_exhausted',dismissedAlerts:'dismissed_alerts',manualAlerts:'manual_alerts',statusHistory:'status_history',noApptLastCheck:'no_appt_last_check',taskLog:'task_log',missingInfoResolvedDate:'missing_info_resolved_date'};
 
 var _dateFields = ['dob','doi','appt_date','created_date','lost_date','settled_date','records_sent','follow_up_date','date_scheduled_on','last_contact_date','last_appt_follow_up','email_last_follow_up','status_change_date','intro_email_sent_date','settlement_email_date','adjuster_resolved_date','adjuster_last_follow_up','pip_resolved_date','pip_last_follow_up','prn_last_check','no_appt_last_check'];
@@ -1441,6 +1495,7 @@ async function _loadFromSupabase(){
   _supabaseReady=true;
   loadPrecerts();
   loadCallbacks();
+  loadNpIntakes();
 }
 
 // ─── Save functions ────────────────────────────────────────────────
@@ -2157,7 +2212,7 @@ function downloadVisualReport(){
   w.print();
 }
 // Law firm dropdown list
-const LAW_FIRMS=['10x Law','Altman Law','Bishop, Dorfman, Kroupa and Bishop','Brandon J Broderick','Brandon Swartz','Brett Tessler & Associates','Clearfield & Kofsky','Cohen, Feeley, Altemose and Rambo','Dashevsky, Horwitz, Kuhn, Novello & Shorr','Cordisco & Saile','Dion, Solomon & Shapiro','Eric Brauer Law','Fellerman Law','Foxworth Law Group','Fredsone, Statmore, and Bitterman','Galerman Law','Gibbons & Crighton','H. Rosen Law','Hourigan, Kluger & Quinn P.C.','J Fine Law','Jeffery S Gross, Esquire','Kavensky Law','Kitlay Law Offices','Kotlar Hernandez and Cohen Law Offices','Kwartler Manus','Lassiter & Associates','Law Offices of Jared S. Zafran LLC','Law Offices of Eric B. Brauer','Lundy Law','Malamut Law','Martin Law','Matt Breslin','Krasno Krasno','Mednick, Mezyk & Kredo','Morgan & Morgan','O\'Donnel Law Offices','Pearson Kutcher','Pond Lehocky','Pujlos Law Group','Robinson Law','Rodden, Rodden & Breslin Law','Rosenbaum & Associates','Simon & Simon','Stampone Law','Stark & Stark','Stern & Cohen','Stoll Medical Group','Swartz Culleton','Wapner Neuman Weinerman'];
+const LAW_FIRMS=['10x Law','Law Office Of Craig Altman','Bishop, Dorfman, Kroupa and Bishop','Brandon J Broderick Law','Brandon Swartz','Brett Tessler & Associates','Clearfield & Associates','Cohen, Feeley, Altemose and Rambo','Dashevsky, Horwitz, Kuhn, Novello & Shorr Law','Cordisco & Saile','Dion, Solomon & Shapiro','Law Offices of Eric B. Brauer','Fellerman Law','Foxworth Law Group','Fredsone, Statmore, and Bitterman','Galerman Law','Gibbons & Crighton','H. Rosen Law','Quinn Law Group','J Fine Law','Jeffery S Gross, Esquire','Kavensky Law','Kitlay Law Offices','Kotlar Hernandez and Cohen Law Offices','Kwartler Manus','Lassiter & Associates','Law Offices of Jared S. Zafran LLC','Lundy Law','Malamut Law','Martin Law','Matt Breslin','Krasno, Krasno, Onwudinjo','Mednick, Mezyk & Kredo','Morgan & Morgan','O’Donnell Law Offices','Pearson Koutcher Law','Pond Lehocky','Pujlos Law Group','Robinson Law','Rodden, Rodden & Breslin Law','Rosenbaum & Associates','Simon & Simon','Stampone Law','Stark & Stark Law','Stern & Cohen','Stoll Medical Group','Swartz Culleton','Wapner Neuman Weinerman'];
 var customLawFirms=[];
 var customRefSources=[];
 function getAllLawFirms(){var all=LAW_FIRMS.concat(customLawFirms);return all.filter(function(v,i,a){return a.indexOf(v)===i}).sort()}
@@ -2174,45 +2229,126 @@ function fuzzyMatch(a,b){
   return false;
 }
 
-function checkAndAddLawFirm(firm){
-  if(!firm)return;
-  var allFirms=getAllLawFirms();
-  // Exact match exists — no action needed
-  if(allFirms.indexOf(firm)!==-1)return;
-  // Check for fuzzy duplicates
-  var matches=allFirms.filter(function(f){return fuzzyMatch(f,firm)});
-  if(matches.length>0){
-    var useExisting=confirm('Similar law firm found:\n\n"'+matches[0]+'"\n\nDid you mean this? Click OK to use the existing name, or Cancel to add "'+firm+'" as new.');
-    if(useExisting){document.getElementById('fLawFirm').value=matches[0];return;}
-  }
-  // Add as new
-  customLawFirms.push(firm);
-  if(_useNewTables){_dbUpsert('system_config',{key:'custom_law_firms',value:customLawFirms,updated_at:new Date().toISOString()})}else{_legacySave('cp11_customLawFirms',customLawFirms)}
-}
+// Legacy entry points — resolution now happens in dupResolve/dupResolveInputs before save.
+function checkAndAddLawFirm(firm){dupRegister('firm',firm);}
+function checkAndAddRefSource(source){dupRegister('source',source);}
+function dupClearHints(root){(root||document).querySelectorAll('.dup-hint').forEach(function(h){h.innerHTML='';h.style.display='none';});}
 
-function checkAndAddRefSource(source){
-  if(!source)return;
-  // Hard de-dupe: if this normalizes to an existing active source under a different
-  // spelling, force the active spelling — never create a divergent duplicate.
-  var active=(typeof srcActiveFor==='function')?srcActiveFor(source):null;
-  if(active){
-    if(active!==source){
-      alert('\u201c'+source+'\u201d is the same referral source as the existing \u201c'+active+'\u201d.\n\nUsing the active source \u201c'+active+'\u201d to prevent a duplicate.');
-      var _el=document.getElementById('fRefSource'); if(_el)_el.value=active;
-    }
-    return;
-  }
-  var allSources=REF_SOURCES.concat(customRefSources).concat(mktList.map(function(m){return m.name})).concat(['Walk-in','Physician Referral','Self-Referral','Other']);
-  var unique=allSources.filter(function(v,i,a){return a.indexOf(v)===i});
-  var matches=unique.filter(function(s){return fuzzyMatch(s,source)});
-  if(matches.length>0){
-    alert('\u201c'+source+'\u201d looks like the existing source \u201c'+matches[0]+'\u201d.\n\nUsing \u201c'+matches[0]+'\u201d to avoid a duplicate.');
-    var _el2=document.getElementById('fRefSource'); if(_el2)_el2.value=matches[0];
-    return;
-  }
-  customRefSources.push(source);
-  if(_useNewTables){_dbUpsert('system_config',{key:'custom_ref_sources',value:customRefSources,updated_at:new Date().toISOString()})}else{_legacySave('cp11_customRefSources',customRefSources)}
+// ══════════════════════════════════════════════════════════════════════
+// DUPLICATE GUARD — law firms, attorneys, referral sources
+// Live "did you mean" while typing + enforced resolution at save.
+// New entries are only added after the scheduler confirms twice.
+// ══════════════════════════════════════════════════════════════════════
+var DUP_LABEL={firm:'law firm',attorney:'attorney',source:'referral source'};
+var DUP_STOP={
+  firm:{the:1,of:1,and:1,law:1,laws:1,lawyer:1,lawyers:1,legal:1,office:1,offices:1,firm:1,group:1,associates:1,assoc:1,llc:1,pllc:1,pc:1,pa:1,llp:1,ltd:1,inc:1,co:1,esq:1,esquire:1,attorney:1,attorneys:1,at:1,injury:1,personal:1,accident:1,accidents:1},
+  attorney:{esq:1,esquire:1,attorney:1,atty:1,mr:1,mrs:1,ms:1,dr:1,jr:1,sr:1,ii:1,iii:1},
+  source:{the:1,of:1,and:1,llc:1,pllc:1,pc:1,pa:1,inc:1,co:1,esq:1,esquire:1,ltd:1,llp:1}
+};
+function dupTokens(kind,s){
+  var raw=String(s||'').toLowerCase().replace(/&/g,' and ').replace(/[^a-z0-9]+/g,' ').trim().split(/\s+/).filter(Boolean);
+  var t=raw.filter(function(w){return !DUP_STOP[kind][w]});
+  return t.length?t:raw;
 }
+function dupKey(kind,s){return dupTokens(kind,s).slice().sort().join(' ');}
+// Strict key: only legal suffixes / punctuation / &-and differ. Used for silent auto-correct.
+var DUP_SUFFIX={the:1,of:1,and:1,llc:1,pllc:1,pc:1,pa:1,llp:1,ltd:1,inc:1,co:1,esq:1,esquire:1};
+function dupStrictKey(kind,s){
+  var raw=String(s||'').toLowerCase().replace(/&/g,' and ').replace(/[^a-z0-9]+/g,' ').trim().split(/\s+/).filter(Boolean);
+  var stop=kind==='attorney'?DUP_STOP.attorney:DUP_SUFFIX;
+  var t=raw.filter(function(w){return !stop[w]});return (t.length?t:raw).sort().join(' ');
+}
+function dupLev(a,b){ // edit distance; a swap of two adjacent letters counts as one edit
+  if(a===b)return 0;var m=a.length,n=b.length;if(Math.abs(m-n)>3)return 9;var d=[],i,j;
+  for(i=0;i<=m;i++){d[i]=[i];}for(j=0;j<=n;j++)d[0][j]=j;
+  for(i=1;i<=m;i++)for(j=1;j<=n;j++){var c=a[i-1]===b[j-1]?0:1;d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+c);
+    if(i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1])d[i][j]=Math.min(d[i][j],d[i-2][j-2]+1);}
+  return d[m][n];}
+function dupSimilar(kind,a,b){
+  var ka=dupKey(kind,a),kb=dupKey(kind,b);if(!ka||!kb)return false;if(ka===kb)return true;
+  var ta=dupTokens(kind,a),tb=dupTokens(kind,b);
+  if(kind==='attorney'){ // same last name + same first initial (J. Smith ~ John Smith)
+    var la=ta[ta.length-1],lb=tb[tb.length-1];
+    if(la&&lb&&la.length>2&&(la===lb||dupLev(la,lb)<=1)&&ta[0][0]===tb[0][0])return true;
+  } else {
+    var sh=ta.length<=tb.length?ta:tb,lo=ta.length<=tb.length?tb:ta;
+    if(sh.every(function(w){return lo.indexOf(w)!==-1})&&sh.some(function(w){return w.length>=4}))return true;
+  }
+  var ja=ka.replace(/ /g,''),jb=kb.replace(/ /g,''),L=Math.min(ja.length,jb.length);
+  var tol=L>=12?2:L>=6?1:0;
+  return tol>0&&dupLev(ja,jb)<=tol;
+}
+function dupList(kind){
+  if(kind==='firm')return getAllLawFirms();
+  if(kind==='source')return getUnifiedRefSources();
+  // attorneys: built from existing referrals + cases; most-used spelling wins
+  var cnt={},best={};
+  (refs||[]).concat(cases||[]).forEach(function(r){var a=(r.attorney||'').trim();if(!a||a==='—')return;var k=dupKey('attorney',a);if(!k)return;
+    cnt[k]=cnt[k]||{};cnt[k][a]=(cnt[k][a]||0)+1;});
+  Object.keys(cnt).forEach(function(k){var o=cnt[k];best[k]=Object.keys(o).sort(function(x,y){return o[y]-o[x]})[0];});
+  return Object.keys(best).map(function(k){return best[k]}).sort(function(a,b){return a.toLowerCase().localeCompare(b.toLowerCase())});
+}
+function dupCheck(kind,val){
+  var v=(val||'').trim();if(!v)return{};
+  var list=dupList(kind);
+  if(list.indexOf(v)!==-1)return{exact:v};
+  if(kind==='source'&&typeof srcActiveFor==='function'){var act=srcActiveFor(v);if(act&&act!==v)return{canon:act};}
+  var k=dupStrictKey(kind,v);
+  var canon=list.find(function(x){return dupStrictKey(kind,x)===k});
+  if(canon)return{canon:canon};
+  var sim=list.filter(function(x){return dupSimilar(kind,x,v)}).slice(0,4);
+  return sim.length?{similar:sim}:{isNew:true};
+}
+// Save-time: returns the value to save, or null to stop the save.
+function dupResolve(kind,val){
+  var v=(val||'').trim();if(!v)return'';
+  var r=dupCheck(kind,v),lab=DUP_LABEL[kind];
+  if(r.exact)return v;
+  if(r.canon)return r.canon;
+  if(r.similar){
+    var pick=r.similar[0];
+    if(confirm('⚠️ Possible duplicate '+lab+'\n\nYou entered:  "'+v+'"\nAlready in the list:  '+r.similar.map(function(x){return '"'+x+'"'}).join(', ')+'\n\nOK = use "'+pick+'"\nCancel = this is a different '+lab))return pick;
+    if(confirm('Add "'+v+'" as a NEW '+lab+'?\n\nOnly do this if it is truly not already in the list.\n\nOK = add as new\nCancel = go back and pick from the list'))return v;
+    return null;
+  }
+  if(confirm('"'+v+'" is not in the '+lab+' list.\n\nOK = add it as a NEW '+lab+'\nCancel = go back and pick from the list'))return v;
+  return null;
+}
+// Register a confirmed value in the saved lists (attorneys are derived from referrals).
+function dupRegister(kind,val){
+  var v=(val||'').trim();if(!v)return;
+  if(kind==='firm'&&getAllLawFirms().indexOf(v)===-1){customLawFirms.push(v);
+    if(_useNewTables){_dbUpsert('system_config',{key:'custom_law_firms',value:customLawFirms,updated_at:new Date().toISOString()})}else{_legacySave('cp11_customLawFirms',customLawFirms)}}
+  if(kind==='source'&&getUnifiedRefSources().indexOf(v)===-1&&!(typeof srcActiveFor==='function'&&srcActiveFor(v))){customRefSources.push(v);
+    if(_useNewTables){_dbUpsert('system_config',{key:'custom_ref_sources',value:customRefSources,updated_at:new Date().toISOString()})}else{_legacySave('cp11_customRefSources',customRefSources)}}
+}
+// Resolve a set of [kind, inputId] fields in a form; writes corrected values back. Returns false to stop.
+function dupResolveInputs(pairs){
+  for(var i=0;i<pairs.length;i++){var el=document.getElementById(pairs[i][1]);if(!el)continue;
+    var out=dupResolve(pairs[i][0],el.value);if(out===null){el.focus();dupHint(el);return false;}
+    if(out!==el.value.trim()){el.value=out;el.dispatchEvent(new Event('input',{bubbles:true}));}}
+  pairs.forEach(function(p){var el=document.getElementById(p[1]);if(el)dupRegister(p[0],el.value);});
+  return true;
+}
+// ── live hint under any input with data-dup="firm|attorney|source" ──
+function dupEnsureAttorneyList(){var dl=document.getElementById('attorneyList');if(!dl){dl=document.createElement('datalist');dl.id='attorneyList';document.body.appendChild(dl);}
+  dl.innerHTML='';dupList('attorney').forEach(function(a){var o=document.createElement('option');o.value=a;dl.appendChild(o);});}
+function dupHint(el){
+  var kind=el.getAttribute('data-dup');if(!kind)return;
+  var host=el.parentNode.querySelector('.dup-hint');
+  if(!host){host=document.createElement('div');host.className='dup-hint';el.insertAdjacentElement('afterend',host);}
+  var r=dupCheck(kind,el.value),lab=DUP_LABEL[kind],h='';
+  if(r.canon)h='<span class="dup-ok">✓ Matches existing “'+esc(r.canon)+'” — will save as that.</span>';
+  else if(r.similar)h='<span class="dup-warn">⚠️ Already in the list?</span> '+r.similar.map(function(x){return '<button type="button" class="dup-chip" data-v="'+esc(x)+'">'+esc(x)+'</button>'}).join('');
+  else if(r.isNew)h='<span class="dup-new">＋ Not in the '+lab+' list. Pick from the list if it’s there — new entries need confirmation.</span>';
+  host.innerHTML=h;host.style.display=h?'block':'none';
+}
+document.addEventListener('input',function(e){var t=e.target;if(t&&t.getAttribute&&t.getAttribute('data-dup'))dupHint(t);},true);
+document.addEventListener('focusin',function(e){var t=e.target;if(t&&t.getAttribute&&t.getAttribute('data-dup')==='attorney')dupEnsureAttorneyList();},true);
+document.addEventListener('focusout',function(e){var t=e.target;if(!t||!t.getAttribute)return;var kind=t.getAttribute('data-dup');if(!kind)return;
+  var r=dupCheck(kind,t.value);if(r.canon){t.value=r.canon;t.dispatchEvent(new Event('input',{bubbles:true}));}},true);
+document.addEventListener('mousedown',function(e){var b=e.target.closest&&e.target.closest('.dup-chip');if(!b)return;e.preventDefault();
+  var el=b.closest('.dup-hint').previousElementSibling;if(!el)return;el.value=b.getAttribute('data-v');el.dispatchEvent(new Event('input',{bubbles:true}));},true);
 
 // Records needed rows
 var recordRowCounter=0;
@@ -2253,7 +2389,7 @@ function loadRecordsData(arr){
 // ══════════════════════════════════════════════════════════════════════
 let currentUser = null;
 let currentEmail = '';
-const BUILD_VERSION='2026-09-08-crm-casetype';
+const BUILD_VERSION='2026-11-10f-np-intake';
 try{console.log('%cCarePath build: '+BUILD_VERSION,'color:#1a7f7a;font-weight:700');}catch(e){}
 let userRole = null; // 'scheduler','case_mgr','marketing','manager'
 let managerUnlocked = false;
@@ -2661,8 +2797,9 @@ function crmNav(page) {
   crmCurrentPage = page;
   document.querySelectorAll('#module-crm .section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('#crmSidebar .nav-item').forEach(n => n.classList.remove('active'));
-  const nav = document.querySelector('#crmSidebar .nav-item[data-page="'+page+'"]');
+  const nav = document.querySelector('#crmSidebar .nav-item[data-page="'+(page==='crm-intake-edit'?'crm-intake':page)+'"]');
   if (nav) nav.classList.add('active');
+  if (page !== 'crm-intake-edit') { var _npe=document.getElementById('sec-crm-intake-edit'); if(_npe){ if(typeof npiFlush==='function')npiFlush(); _npe.dataset.npiId=''; _npe.innerHTML=''; } }
   const el = document.getElementById('sec-'+page);
   if (el) el.classList.add('active');
   renderCrmPage(page);
@@ -2677,6 +2814,8 @@ function renderCrmPage(page) {
   else if (page === 'crm-contacts') renderCmContacts(el);
   else if (page === 'crm-lost') renderCrmLostPatients(el);
   else if (page === 'crm-callbacks') renderCallbackList(el);
+  else if (page === 'crm-intake') renderNpIntakeList(el);
+  else if (page === 'crm-intake-edit') { if (el.dataset.npiId === (npiCur&&npiCur.id) && el.innerHTML) return; el.dataset.npiId = npiCur?npiCur.id:''; renderNpIntakeEditor(el); }
   else if (page.startsWith('crm-staff-')) renderCrmStaff(el, page.replace('crm-staff-',''));
   else if (page === 'crm-my-metrics') renderCrmMyMetrics(el);
   else if (page === 'crm-mgr-dash') renderCrmMgrDash(el);
@@ -2693,7 +2832,7 @@ function renderCrmDashboard(el) {
   const withSched = refs.filter(r => r.daysToSchedule != null);
   const avgDays = withSched.length > 0 ? Math.round(withSched.reduce((s,r) => s+r.daysToSchedule,0)/withSched.length) : '—';
 
-  let h = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">Referral Dashboard</div><div style="margin-left:auto"><button class="btn-primary" onclick="openNewRefModal()" style="font-size:11px;padding:7px 14px">+ New Referral</button></div></div><div class="page-subtitle">Overview of referrals, scheduling, and alerts.</div>';
+  let h = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">Referral Dashboard</div><div style="margin-left:auto"><button class="btn-primary" onclick="npiStart(null)" style="font-size:11px;padding:7px 14px;background:var(--teal);margin-right:6px" title="Patient is on the phone now — one form creates the referral and the NP HPI">📞 + New Patient Intake</button><button class="btn-primary" onclick="openNewRefModal()" style="font-size:11px;padding:7px 14px" title="Couldn\'t reach the patient yet — add the referral for follow-up">+ New Referral</button></div></div><div class="page-subtitle">Overview of referrals, scheduling, and alerts.</div>';
   h += '<div class="stats-row" style="grid-template-columns:repeat(5,1fr)">' +
     stat('Active Referrals', active.length, 'teal') + stat('Pending Scheduling', pending.length, 'gold') +
     stat('Scheduling Alerts', schedAlerts, 'red') + stat('Appt Follow-Ups', apptAlerts, apptAlerts>0?'gold':'') +
@@ -2712,6 +2851,17 @@ function renderCrmDashboard(el) {
   el.innerHTML = h;
 }
 
+function refClaimCells(r){
+  if(!r)return'';var ct=r.caseType||'';var mva=(ct==='MVA'||ct==='NJ MVA');var h='';
+  if(ct==='WC'||mva){
+    h+=dcell(mva?'Auto Carrier':'WC Carrier',esc(r.insCarrier)||'—')+dcell('Claim #',esc(r.claimNumber)||'—');
+    if(mva)h+=dcell('Policy #',esc(r.policyNumber)||'—');
+    h+=dcell('Adjuster',esc([r.adjusterName,r.adjusterContact].filter(Boolean).join(' · '))||'—');
+    if(r.injuryState)h+=dcell(mva?'Accident State':'Injury State',esc(r.injuryState));
+  }
+  if(r.healthIns||r.healthInsId)h+=dcell('Health Insurance',esc([r.healthIns,r.healthInsId].filter(Boolean).join(' · ')));
+  return h;
+}
 function stat(label, value, cls) {
   return '<div class="stat-card"><div class="stat-label">'+label+'</div><div class="stat-value '+(cls||'')+'">'+value+'</div></div>';
 }
@@ -2790,7 +2940,7 @@ function renderCrmReferrals(el) {
   // Get unique case types for filter
   var caseTypes={};refs.forEach(function(r){if(r.caseType)caseTypes[r.caseType]=true;});
   var typeOptions=Object.keys(caseTypes).sort();
-  let h = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">All Referrals</div><div style="margin-left:auto"><button class="btn-primary" onclick="openNewRefModal()" style="font-size:11px;padding:7px 14px">+ New Referral</button></div></div>';
+  let h = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">All Referrals</div><div style="margin-left:auto"><button class="btn-primary" onclick="npiStart(null)" style="font-size:11px;padding:7px 14px;background:var(--teal);margin-right:6px" title="Patient is on the phone now — one form creates the referral and the NP HPI">📞 + New Patient Intake</button><button class="btn-primary" onclick="openNewRefModal()" style="font-size:11px;padding:7px 14px" title="Couldn\'t reach the patient yet — add the referral for follow-up">+ New Referral</button></div></div>';
   h += '<div class="page-subtitle">'+refs.length+' total referrals.</div>';
   h += '<div class="table-card"><div class="table-header"><h3>Registry</h3><div class="table-controls">';
   h += '<select class="search-input" style="width:auto" onchange="crmRefTypeFilter=this.value;renderCrmReferrals(document.getElementById(\'sec-crm-referrals\'))"><option value="">All Types</option>';
@@ -2836,7 +2986,7 @@ function renderCrmAlerts(el) {
   var now=today();
   var myCallbacks=callbackRequests.filter(function(cb){return cb.status==='active'&&(!cb.next_follow_up||cb.next_follow_up<=now)&&(cb.assigned_to===currentUser||currentUser==='Manager')});
   var totalAlerts=alerts.length+myCallbacks.length;
-  let h = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">Scheduling Alerts</div><div style="margin-left:auto"><button class="btn-primary" onclick="openNewRefModal()" style="font-size:11px;padding:7px 14px">+ New Referral</button></div></div><div class="page-subtitle">'+totalAlerts+' active alerts.</div>';
+  let h = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">Scheduling Alerts</div><div style="margin-left:auto"><button class="btn-primary" onclick="npiStart(null)" style="font-size:11px;padding:7px 14px;background:var(--teal);margin-right:6px" title="Patient is on the phone now — one form creates the referral and the NP HPI">📞 + New Patient Intake</button><button class="btn-primary" onclick="openNewRefModal()" style="font-size:11px;padding:7px 14px" title="Couldn\'t reach the patient yet — add the referral for follow-up">+ New Referral</button></div></div><div class="page-subtitle">'+totalAlerts+' active alerts.</div>';
   
   // Callback reminders first
   if(myCallbacks.length>0){
@@ -2903,7 +3053,7 @@ function renderCrmStaff(el, staff) {
   const lost = staffRefs.filter(r => r.status === 'Patient Lost');
   const tab = crmStaffTab[staff] || 'all';
 
-  let h = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">'+esc(staff)+'\'s Queue</div><div style="margin-left:auto"><button class="btn-primary" onclick="openNewRefModal()" style="font-size:11px;padding:7px 14px">+ New Referral</button></div></div><div class="page-subtitle">Alerts, referrals, and activity for '+esc(staff)+'.</div>';
+  let h = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">'+esc(staff)+'\'s Queue</div><div style="margin-left:auto"><button class="btn-primary" onclick="npiStart(null)" style="font-size:11px;padding:7px 14px;background:var(--teal);margin-right:6px" title="Patient is on the phone now — one form creates the referral and the NP HPI">📞 + New Patient Intake</button><button class="btn-primary" onclick="openNewRefModal()" style="font-size:11px;padding:7px 14px" title="Couldn\'t reach the patient yet — add the referral for follow-up">+ New Referral</button></div></div><div class="page-subtitle">Alerts, referrals, and activity for '+esc(staff)+'.</div>';
   h += '<div class="stats-row" style="grid-template-columns:repeat(5,1fr)">' +
     stat('Active Alerts', allAlerts.length, 'red') +
     stat('Total Assigned', staffRefs.length, 'teal') +
@@ -3467,10 +3617,11 @@ function showCrmDetail(id) {
     dcell('Date of Injury',fmtDate(r.doi))+dcell('Location',r.location||'—')+dcell('Language',r.language||'—')+
     dcell('Days in System','<span class="days-count '+dc+'">'+days+'</span> days')+dcell('Appointment',fmtDate(r.apptDate))+
     (r.apptDate ? '<div class="detail-cell"><div class="detail-cell-label">Appt Outcome</div><div class="detail-cell-value"><span style="'+ocStyle+'cursor:pointer" onclick="openApptConfirmModal(\''+r.id+'\')">'+oc+' <span style="font-size:9px;color:var(--teal);font-weight:600">✎ edit</span></span></div></div>' : dcell('Appt Outcome','—'))+
-    dcell('Attorney',r.attorney||'—')+dcell('Law Firm',r.lawFirm||'—')+dcell('Firm Contact',r.lawContact||'—')+
+    dcell('Attorney',r.attorney||'—')+dcell('Law Firm',r.lawFirm||'—')+dcell('Firm Contact',r.lawContact||'—')+refClaimCells(r)+
     dcell('Referral Source',r.referralSource||'—')+dcell('Alert / Missing Info',r.alertType?'<span style="color:var(--red);font-weight:700">'+esc(r.alertType)+'</span>':'<span style="color:var(--gray-400)">None</span>')+dcell('NP Paperwork',r.paperworkCompleted==='yes'?'<span style="color:var(--teal);font-weight:700">✓ Completed</span>':'<span style="color:var(--red);font-weight:700">✗ Not Completed</span>')+dcell('Registered',fmtDate(r.createdDate))+dcell('Registered By',r.registeredBy||'—')+
   '</div>';
   if(r.notes) h+='<div class="detail-notes"><div class="detail-cell-label">Notes</div><div class="detail-cell-value" style="font-size:12px">'+esc(r.notes)+'</div></div>';
+  if(typeof npiProfilePanel==='function') h+=npiProfilePanel(r);
   // Records Needed section
   if(r.recordsNeeded&&r.recordsNeeded.length>0){
     h+='<div style="margin-top:12px;padding:14px 18px;background:var(--gray-100);border-radius:var(--radius);border:2px solid var(--gray-200)"><div style="font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Records Needed / Facilities</div>';
@@ -3552,7 +3703,7 @@ function dcell(l,v){return'<div class="detail-cell"><div class="detail-cell-labe
 // ══════════════════════════════════════════════════════════════════════
 let editingRefId = null;
 
-const REF_SOURCES=['10x Law','Altman Law','Booth Chiro','Brach Eichler LLC','Brain Health Centers of America','Brandon J Broderick','Brandon Swartz','Brett Tessler & Associates','Brideburg Spine','Cherry Hill Office','Chiropractic Wellness & Rehab','Clearfield & Kofsky','Cohen, Feeley, Altemose and Rambo','Dashevsky, Horwitz, Kuhn, Novello & Shorr','Cordisco & Saile','Dion, Solomon & Shapiro','Dr. Lyons','Dr. Andy Kim','Eric Brauer Law','Fellerman Law','Foxworth Law Group','Fredsone, Statmore, and Bitterman','Galerman Law','Germantown Office','Gibbons & Crighton','Google','H. Rosen Law','Healthbridge','HealthMark','Hourigan, Kluger & Quinn P.C.','Injury Links','Injured Call Today','Integrated Medical Care','J Fine Law','Jeffery S Gross, Esquire','Kavensky Law','Kitlay Law Offices','Kotlar Hernandez and Cohen Law Offices','Kwartler Manus','Lassiter & Associates','Law offices of Jared S. Zafran LLC','Law offices of Eric B. Brauer','Lundy Law','LVP','Malamut Law','Martin Law','Matt Bittenbender','Matt Breslin','MedNinja/Krasno Krasno','Mednick, Mezyk & Kredo','Morgan & Morgan','New Heights Chiro and Wellness','O\'donnel Law Offices','On It Med','Panaia Chiropractic','Patient Referral','Pearson Kutcher','Percision Health & Wellness','Philadelphia Pain Center','Pond Lehocky','Port Richmond Office','Pujlos Law Group','Robinson Law','Rodden, Rodden & Breslin Law','Rosenbaum & Associates','Simon & Simon','Spinal Rehab Network','Stampone Law','Stark & Stark','Stern & Cohen','Stoll Medical Group','Swartz Culleton','TMT Pharmacy','Wapner Neuman','Weinerman Pain and Wellness','Woodland Spine'];
+const REF_SOURCES=['10x Law','Craig A. Altman (Law Offices of Craig A. Altman)','Booth Chiro','Brach Eichler LLC','Brain Health Centers of America','Brandon J Broderick','Brandon Swartz','Brett Tessler & Associates','Bridesburg Spine and Injury Clinic, LLC','Cherry Hill Office','Chiropractic Wellness & Rehab','Clearfield & Kofsky','Cohen, Feeley, Altemose and Rambo','Dashevsky, Horwitz, Kuhn, Novello & Shorr','Cordisco & Saile','Dion, Solomon & Shapiro','Dr. Lyons','Dr. Andy Kim','Law offices of Eric B. Brauer','Fellerman & Ciarimboli Law, PC','Foxworth Law Group','Fredsone, Statmore, and Bitterman','Galerman Law','Germantown Office','Gibbons & Crighton','Google','H. Rosen Law','Healthbridge','HealthMark','Hourigan, Kluger & Quinn P.C.','Injury Links','Injured Call Today','Integrated Medical Care','J Fine Law','Jeffery S Gross, Esquire','Kavensky Law','Kitay Law Offices','Kotlar Hernandez and Cohen Law Offices','Kwartler Manus','Lassiter & Associates','Law offices of Jared S. Zafran LLC','Lundy Law','LVP','Malamut Law','Martin Law','Matt Bittenbender','Matt Breslin','MedNinja/Krasno, Krasno, Onwudinjo','Mednick, Mezyk & Kredo','Morgan & Morgan','New Heights Chiro and Wellness','O\'donnel Law Offices','On It Med','Panaia Chiropractic','Patient Referral','Pearson Kutcher','Precision Health & Wellness','Philadelphia Pain Center','Pond Lehocky','Port Richmond Office','Pujlos Law Group','Robinson Law','Rodden, Rodden & Breslin Law','Rosenbaum & Associates','Simon & Simon','Spinal Rehab Network','Stampone Law','Stark & Stark Law','Stern & Cohen','Stoll Medical Group','Swartz Culleton','TMT Pharmacy','Wapner Neuman','Weinerman Pain and Wellness','Woodland Spine'];
 
 function getUnifiedRefSources(){
   var all=[];
@@ -3596,6 +3747,11 @@ function setAlertCheckboxes(alerts){
   document.getElementById('fAlertOther').value=others.join(', ');
 }
 
+function _ctLegacyOption(selId,val){
+  var sel=document.getElementById(selId);if(!sel)return;
+  sel.querySelectorAll('option[data-legacy]').forEach(function(o){o.remove()});
+  if(val&&![].some.call(sel.options,function(o){return o.value===val})){var o=document.createElement('option');o.value=val;o.textContent=val+' (no longer accepted)';o.setAttribute('data-legacy','1');sel.appendChild(o);}
+}
 function openNewRefModal() {
   if(_isExecRO()){showReadOnly();return;}
   editingRefId = null;
@@ -3606,12 +3762,13 @@ function openNewRefModal() {
   document.getElementById('fPaperwork').value='no';
   document.getElementById('fLostReason').value='';
   document.getElementById('fLostReasonGroup').style.display='none';
-  document.getElementById('fCaseType').value='WC';document.getElementById('fLocation').value='';document.getElementById('fLanguage').value='English';document.getElementById('fStatus').value='Pending Scheduling';
+  _ctLegacyOption('fCaseType','');document.getElementById('fCaseType').value='WC';document.getElementById('fLocation').value='';document.getElementById('fLanguage').value='English';document.getElementById('fStatus').value='Pending Scheduling';
   document.querySelectorAll('.alertCb').forEach(cb=>{cb.checked=false});
   populateRefSourceDropdown();
   populateLawFirmDropdown();
   document.getElementById('fRefSource').value = '';
   loadRecordsData([]);
+  dupClearHints(document.getElementById('referralModal'));
   document.getElementById('referralModal').classList.add('show');
 }
 
@@ -3625,7 +3782,7 @@ function openEditRefModal(id) {
   document.getElementById('fFirstName').value=(nameParts[1]||'').trim();
   document.getElementById('fDOB').value=r.dob||'';
   document.getElementById('fPhone').value=r.phone||'';document.getElementById('fEmail').value=r.email||'';
-  document.getElementById('fDOI').value=r.doi||'';document.getElementById('fCaseType').value=r.caseType||'WC';
+  document.getElementById('fDOI').value=r.doi||'';_ctLegacyOption('fCaseType',r.caseType);document.getElementById('fCaseType').value=r.caseType||'WC';
   document.getElementById('fLocation').value=r.location||'';document.getElementById('fLanguage').value=r.language||'English';
   document.getElementById('fAttorney').value=r.attorney||'';document.getElementById('fLawFirm').value=r.lawFirm||'';
   document.getElementById('fLawContact').value=r.lawContact||'';document.getElementById('fApptDate').value=r.apptDate||'';
@@ -3641,6 +3798,7 @@ function openEditRefModal(id) {
   populateLawFirmDropdown();
   document.getElementById('fRefSource').value = r.referralSource || '';
   loadRecordsData(r.recordsNeeded||[]);
+  dupClearHints(document.getElementById('referralModal'));
   document.getElementById('referralModal').classList.add('show');
 }
 
@@ -3661,17 +3819,21 @@ function saveReferral() {
 
   // Required fields
   if (!document.getElementById('fCaseType').value) {alert('Case Type is required.');return;}
-  if (!document.getElementById('fDOI').value && document.getElementById('fCaseType').value!=='PHI') {alert('Date of Injury is required.');return;}
+  if (!document.getElementById('fDOI').value) {alert('Date of Injury is required.');return;}
   if (!document.getElementById('fLocation').value) {alert('Clinic Location is required.');return;}
   if (!document.getElementById('fRefSource').value.trim()) {alert('Referral Source is required.');return;}
   if (!document.getElementById('fRegDate').value) {alert('Referred / Registered Date is required.');return;}
 
   // Duplicate detection: check name+DOB against existing referrals
   if (!editingRefId) {
-    const dupes = checkDuplicatePatient(name, dob);
-    if (dupes.length > 0) {
-      const dupeList = dupes.slice(0,3).map(d=>'"'+d.patientName+'" (DOB: '+fmtDate(d.dob)+', DOI: '+fmtDate(d.doi)+', Case: '+(d.caseType||'—')+', Status: '+d.status+', Registered: '+fmtDate(d.createdDate)+')').join('\n');
-      if (!confirm('⚠️ Possible duplicate'+(dupes.length>1?'s':'')+' detected!\n\n'+dupeList+'\n\nIf this is a new case/injury for the same patient, click OK to proceed.\nClick Cancel to go back.')) return;
+    var doiIn=document.getElementById('fDOI').value;
+    const dupes = checkDuplicatePatient(name, dob).filter(d=>!dob||!d.dob||d.dob===dob);   // different DOB = different person
+    const fmtD=d=>'"'+d.patientName+'" (DOB: '+fmtDate(d.dob)+', DOI: '+fmtDate(d.doi)+', Case: '+(d.caseType||'—')+', Status: '+d.status+', Registered: '+fmtDate(d.createdDate)+')';
+    const sameDoi=dupes.filter(d=>d.doi&&d.doi===doiIn), otherDoi=dupes.filter(d=>!(d.doi&&d.doi===doiIn));
+    if (sameDoi.length) {
+      if (!confirm('⛔ DUPLICATE REFERRAL\n\nThis patient already has a referral for this date of injury ('+fmtDate(doiIn)+'):\n\n'+sameDoi.slice(0,3).map(fmtD).join('\n')+'\n\nCancel = go back (open the existing referral instead)\nOK = save a second referral for the same injury anyway')) return;
+    } else if (otherDoi.length) {
+      if (!confirm('ℹ️ This patient has other referral'+(otherDoi.length>1?'s':'')+' with a different date of injury:\n\n'+otherDoi.slice(0,3).map(fmtD).join('\n')+'\n\nOK = save as a NEW referral for DOI '+fmtDate(doiIn)+'\nCancel = go back')) return;
     }
   }
 
@@ -3679,6 +3841,7 @@ function saveReferral() {
   const alertType=selectedAlerts.length>0?selectedAlerts.join(' | '):'';
 
   // Check and auto-add new law firms and referral sources
+  if(!dupResolveInputs([['source','fRefSource'],['firm','fLawFirm'],['attorney','fAttorney']]))return;
   var lawFirmVal=document.getElementById('fLawFirm').value.trim();
   var blockedFirm=isBlockedFirm(lawFirmVal);
   if(blockedFirm){
@@ -5091,7 +5254,7 @@ function showCmDetail(id){
   if(settlementEmailDisplay)h+=dcell('Settlement Update Email',settlementEmailDisplay);
   // Attorney info from linked referral
   const srcRef=c.sourceRefId?refs.find(x=>x.id===c.sourceRefId):null;
-  if(srcRef){h+=dcell('Attorney',srcRef.attorney||'—')+dcell('Law Firm',srcRef.lawFirm||'—')+dcell('Firm Contact',srcRef.lawContact||'—')+dcell('Referral Source',srcRef.referralSource||'—');}
+  if(srcRef){h+=dcell('Attorney',srcRef.attorney||'—')+dcell('Law Firm',srcRef.lawFirm||'—')+dcell('Firm Contact',srcRef.lawContact||'—')+dcell('Referral Source',srcRef.referralSource||'—')+refClaimCells(srcRef);}
   h+='</div>';
   if(c.missingInfo) h+='<div class="detail-notes"><div class="detail-cell-label">Missing Info</div><div class="detail-cell-value" style="font-size:12px">'+esc(c.missingInfo)+'</div></div>';
   h+='<div class="detail-actions"><button class="btn-cancel" onclick="openEditCaseModal(\''+c.id+'\')">Edit Case</button><button class="btn-primary" onclick="openCaseStatusModal(\''+c.id+'\')" style="font-size:11px;padding:7px 14px;background:var(--navy)">⚡ Update Case Status</button><button class="btn-primary" onclick="addCmManualAlert(\''+c.id+'\')" style="font-size:11px;padding:7px 14px">+ Add Reminder</button><button class="btn-primary" onclick="openCallLogModal(\''+(c.sourceRefId||'')+'\',\''+c.id+'\')" style="font-size:11px;padding:7px 14px;background:var(--gold)">📞 Log Call</button></div></div>';
@@ -5260,9 +5423,9 @@ let editingCaseId=null;
 
 function cmAutoAssign(){document.getElementById('cAssigned').value=getNextCM()}
 
-function openNewCaseModal(){if(_isExecRO()){showReadOnly();return;}try{editingCaseId=null;document.getElementById('caseModalTitle').textContent='New Case';document.getElementById('btnDeleteCase').style.display='none';['cLastName','cFirstName','cDOB','cPhone','cEmail','cDOI','cAttorney','cLawFirm','cLawContact','cRefSource','cApptDate','cRecordsSent','cMissingInfo','cFollowUp','cNotes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});document.getElementById('cDateOpened').value=today();document.getElementById('cCaseType').value='WC';document.getElementById('cLocation').value='';document.getElementById('cLanguage').value='English';document.getElementById('cAssigned').value=getNextCM();document.getElementById('cStatus').value='Active';document.querySelectorAll('.caseAlertCb').forEach(function(cb){cb.checked=false});try{populateLawFirmDropdown();populateRefSourceDropdown();}catch(e){}document.getElementById('caseModal').classList.add('show')}catch(e){console.error('Error opening case modal:',e);alert('Error opening form. Please try again.')}}
+function openNewCaseModal(){dupClearHints(document.getElementById('caseModal'));if(_isExecRO()){showReadOnly();return;}try{editingCaseId=null;document.getElementById('caseModalTitle').textContent='New Case';document.getElementById('btnDeleteCase').style.display='none';['cLastName','cFirstName','cDOB','cPhone','cEmail','cDOI','cAttorney','cLawFirm','cLawContact','cRefSource','cApptDate','cRecordsSent','cMissingInfo','cFollowUp','cNotes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});document.getElementById('cDateOpened').value=today();_ctLegacyOption('cCaseType','');document.getElementById('cCaseType').value='WC';document.getElementById('cLocation').value='';document.getElementById('cLanguage').value='English';document.getElementById('cAssigned').value=getNextCM();document.getElementById('cStatus').value='Active';document.querySelectorAll('.caseAlertCb').forEach(function(cb){cb.checked=false});try{populateLawFirmDropdown();populateRefSourceDropdown();}catch(e){}document.getElementById('caseModal').classList.add('show')}catch(e){console.error('Error opening case modal:',e);alert('Error opening form. Please try again.')}}
 
-function openEditCaseModal(id){const c=cases.find(x=>x.id===id);if(!c)return;editingCaseId=id;document.getElementById('caseModalTitle').textContent='Edit Case';document.getElementById('btnDeleteCase').style.display='block';var nameParts=(c.patientName||'').split(',');document.getElementById('cLastName').value=(nameParts[0]||'').trim();document.getElementById('cFirstName').value=(nameParts[1]||'').trim();document.getElementById('cDOB').value=c.dob||'';document.getElementById('cPhone').value=c.phone||'';document.getElementById('cEmail').value=c.email||'';document.getElementById('cDOI').value=c.doi||'';document.getElementById('cCaseType').value=c.caseType||'WC';document.getElementById('cLocation').value=c.location||'';document.getElementById('cLanguage').value=c.language||'English';document.getElementById('cAttorney').value=c.attorney||'';document.getElementById('cLawFirm').value=c.lawFirm||'';document.getElementById('cLawContact').value=c.lawContact||'';document.getElementById('cRefSource').value=c.referralSource||'';document.getElementById('cAssigned').value=c.assigned||'Sophia';document.getElementById('cDateOpened').value=c.createdDate||'';document.getElementById('cApptDate').value=c.apptDate||'';document.getElementById('cApptPrn').checked=!!c.apptPrn;document.getElementById('cRecordsSent').value=c.recordsSent||'';document.getElementById('cMissingInfo').value=c.missingInfo||'';document.getElementById('cFollowUp').value=c.followUpDate||'';document.getElementById('cNotes').value=c.notes||'';document.getElementById('cStatus').value=c.status||'Active';var alerts=(c.missingInfo||'').split(' | ').filter(Boolean);document.querySelectorAll('.caseAlertCb').forEach(cb=>{cb.checked=alerts.includes(cb.value)});populateLawFirmDropdown();populateRefSourceDropdown();document.getElementById('caseModal').classList.add('show')}
+function openEditCaseModal(id){dupClearHints(document.getElementById('caseModal'));const c=cases.find(x=>x.id===id);if(!c)return;editingCaseId=id;document.getElementById('caseModalTitle').textContent='Edit Case';document.getElementById('btnDeleteCase').style.display='block';var nameParts=(c.patientName||'').split(',');document.getElementById('cLastName').value=(nameParts[0]||'').trim();document.getElementById('cFirstName').value=(nameParts[1]||'').trim();document.getElementById('cDOB').value=c.dob||'';document.getElementById('cPhone').value=c.phone||'';document.getElementById('cEmail').value=c.email||'';document.getElementById('cDOI').value=c.doi||'';_ctLegacyOption('cCaseType',c.caseType);document.getElementById('cCaseType').value=c.caseType||'WC';document.getElementById('cLocation').value=c.location||'';document.getElementById('cLanguage').value=c.language||'English';document.getElementById('cAttorney').value=c.attorney||'';document.getElementById('cLawFirm').value=c.lawFirm||'';document.getElementById('cLawContact').value=c.lawContact||'';document.getElementById('cRefSource').value=c.referralSource||'';document.getElementById('cAssigned').value=c.assigned||'Sophia';document.getElementById('cDateOpened').value=c.createdDate||'';document.getElementById('cApptDate').value=c.apptDate||'';document.getElementById('cApptPrn').checked=!!c.apptPrn;document.getElementById('cRecordsSent').value=c.recordsSent||'';document.getElementById('cMissingInfo').value=c.missingInfo||'';document.getElementById('cFollowUp').value=c.followUpDate||'';document.getElementById('cNotes').value=c.notes||'';document.getElementById('cStatus').value=c.status||'Active';var alerts=(c.missingInfo||'').split(' | ').filter(Boolean);document.querySelectorAll('.caseAlertCb').forEach(cb=>{cb.checked=alerts.includes(cb.value)});populateLawFirmDropdown();populateRefSourceDropdown();document.getElementById('caseModal').classList.add('show')}
 
 function closeCaseModal(){document.getElementById('caseModal').classList.remove('show');editingCaseId=null}
 
@@ -5277,8 +5440,9 @@ function saveCase(){
   firstName=firstName.split(/\s+/).map(capWord).join(' ');
   var name=lastName+', '+firstName;
   if(!document.getElementById('cCaseType').value){alert('Case Type is required.');return;}
-  if(!document.getElementById('cDOI').value && document.getElementById('cCaseType').value!=='PHI'){alert('Date of Injury is required.');return;}
+  if(!document.getElementById('cDOI').value){alert('Date of Injury is required.');return;}
   if(!document.getElementById('cLocation').value){alert('Clinic Location is required.');return;}
+  if(!dupResolveInputs([['source','cRefSource'],['firm','cLawFirm'],['attorney','cAttorney']]))return;
   // Build missing info from checkboxes + notes
   var checkedAlerts=[];document.querySelectorAll('.caseAlertCb').forEach(function(cb){if(cb.checked)checkedAlerts.push(cb.value)});
   var missingInfoNotes=document.getElementById('cMissingInfo').value.trim();
@@ -8474,6 +8638,672 @@ function updateNjmvaBadges(){
   var alerts=njmvaAlerts();
   var badge=document.getElementById('njmvaAlertBadge');
   if(badge){badge.textContent=alerts.length;badge.style.display=alerts.length>0?'inline':'none';}
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
+// NEW PATIENT PHONE INTAKE (WC)  — replaces Section 1 of the Jotform NP packet
+// Scheduler interviews patient by phone → registration data + clinical NP HPI.
+// Storage: np_intakes (data = JSONB of answers, hpi_text = generated note).
+// SSN is intentionally NOT collected here — enter it directly in RXNT.
+// ══════════════════════════════════════════════════════════════════════
+var npIntakes=[];var npiCur=null;var npiSaveTimer=null;var npiFilter='open';var npiSearch='';
+
+var NPI_AREAS=['Head','Neck','Upper back','Mid back','Lower back','Chest','Abdomen','Left shoulder','Right shoulder','Left arm/elbow','Right arm/elbow','Left wrist/hand','Right wrist/hand','Left hip','Right hip','Left leg','Right leg','Left knee','Right knee','Left ankle/foot','Right ankle/foot'];
+var NPI_QUALITIES=['sharp','stabbing','dull','aching','burning','throbbing','shooting','electric','pins and needles','numbness','tingling','tightness','stiffness','cramping','itching','pressure'];
+var NPI_ADL=['Walking','Standing','Sitting','Sleeping','Driving','Lifting','Bending','Reaching overhead','Climbing stairs','Cleaning','Cooking','Laundry','Grocery shopping','Dressing','Bathing/showering','Caring for children','Yard work','Exercise','Work duties'];
+var NPI_PMH=['High blood pressure','Diabetes','Heart disease','Asthma/COPD','Thyroid disorder','Kidney disease','Liver disease','Arthritis','Anxiety','Depression','Cancer (history)','Bleeding disorder','Takes blood thinners','Seizures','Currently pregnant'];
+
+function npiBlank(){
+  return {demo:{},claim:{caseType:'WC'},hipaa:{scope:'full'},meds:{list:[{}]},pmh:{conditions:[]},injury:{},areas:{list:[]},pain:{qualities:[]},tx:{list:[{}]},emp:{},adl:{list:[]},prior:{},ref:{regDate:today()},appt:{},meta:{}};
+}
+
+async function loadNpIntakes(){
+  if(!_useNewTables)return;
+  try{
+    var resp=await fetch(SUPABASE_URL+'/rest/v1/np_intakes?select=*&order=updated_at.desc',{headers:_sbRead});
+    if(resp.ok){
+      npIntakes=await resp.json();
+      npIntakes.forEach(function(x){if(typeof x.data==='string'){try{x.data=JSON.parse(x.data)}catch(e){x.data=npiBlank()}}});
+    }
+  }catch(e){console.warn('NP intake load error:',e);}
+}
+
+// ── helpers ──
+function npiGet(o,path){return path.split('.').reduce(function(a,k){return a==null?undefined:a[k]},o);}
+function npiSet(o,path,v){var p=path.split('.');var t=o;for(var i=0;i<p.length-1;i++){if(t[p[i]]==null)t[p[i]]={};t=t[p[i]];}t[p[p.length-1]]=v;}
+function npiV(path){var v=npiGet(npiCur.data,path);return v==null?'':v;}
+function npiTxt(label,path,opts){opts=opts||{};var v=npiV(path);
+  return '<div class="form-group'+(opts.full?' full':'')+'"><label>'+label+(opts.req?' <span style="color:var(--red)">*</span>':'')+'</label>'+
+    (opts.area?'<textarea data-npk="'+path+'" rows="'+(opts.rows||3)+'" placeholder="'+esc(opts.ph||'')+'">'+esc(v)+'</textarea>':
+    '<input type="'+(opts.type||'text')+'" data-npk="'+path+'" value="'+esc(v)+'" placeholder="'+esc(opts.ph||'')+'"'+(opts.list?' list="'+opts.list+'"':'')+(opts.dup?' data-dup="'+opts.dup+'"':'')+'>')+(opts.after||'')+(opts.hint?'<div class="npi-hint">'+opts.hint+'</div>':'')+'</div>';}
+function npiSel(label,path,options,opts){opts=opts||{};var v=npiV(path);
+  var h='<div class="form-group'+(opts.full?' full':'')+'"><label>'+label+(opts.req?' <span style="color:var(--red)">*</span>':'')+'</label><select data-npk="'+path+'"><option value="">— Select —</option>';
+  options.forEach(function(o){var val=Array.isArray(o)?o[0]:o,lab=Array.isArray(o)?o[1]:o;h+='<option value="'+esc(val)+'"'+(v===val?' selected':'')+'>'+esc(lab)+'</option>';});
+  return h+'</select></div>';}
+function npiChecks(path,items){var arr=npiGet(npiCur.data,path)||[];var h='<div class="npi-chips">';
+  items.forEach(function(it){var on=arr.indexOf(it)!==-1;h+='<label class="npi-chip'+(on?' on':'')+'"><input type="checkbox" data-npa="'+path+'" value="'+esc(it)+'"'+(on?' checked':'')+'>'+esc(it)+'</label>';});
+  return h+'</div>';}
+function npiBool(label,path){var on=!!npiGet(npiCur.data,path);return '<label class="npi-bool"><input type="checkbox" data-npb="'+path+'"'+(on?' checked':'')+'> '+label+'</label>';}
+var _npiSecNo=0,_npiJump=[];
+function npiSec(n,title,script,body,short){_npiSecNo++;_npiJump.push([n,short||title]);return '<div class="npi-sec" id="npiSec'+n+'"><div class="npi-sec-h"><span class="npi-num">'+_npiSecNo+'</span>'+title+'</div>'+(script?'<div class="npi-script">🗣 '+script+'</div>':'')+body+'</div>';}
+function npiFmtD(d){return d?fmtDate(d):'';}
+function npiList(a){a=(a||[]).filter(Boolean);if(a.length<=1)return a.join('');if(a.length===2)return a[0]+' and '+a[1];return a.slice(0,-1).join(', ')+' and '+a[a.length-1];}
+function npiLc(s){return (s||'').replace(/^(Left|Right|Upper|Mid|Lower|Head|Neck|Chest|Abdomen)/,function(m){return m.toLowerCase();});}
+function npiAreas(d){var a=(d.areas.list||[]).map(npiLc);if(d.areas.other)a.push(d.areas.other.trim());return a;}
+
+// ── list page ──
+function renderNpIntakeList(el){
+  el.innerHTML='<div class="page-title">New Patient Intake</div><div class="page-subtitle">Loading…</div>';
+  loadNpIntakes().then(function(){npiDrawList(el)});
+}
+function npiDrawList(el){
+  var open=npIntakes.filter(function(x){return x.status!=='complete'}),done=npIntakes.filter(function(x){return x.status==='complete'});
+  var h='<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">New Patient Intake</div><div style="margin-left:auto"><button class="btn-primary" onclick="npiStart(null)" style="font-size:11px;padding:7px 14px;background:var(--teal)">📞 + New Patient Intake</button></div></div>';
+  h+='<div class="page-subtitle">One intake per referral (patient + date of injury). Patient on the phone: start a <strong>New Patient Intake</strong> — it creates the referral. Referral already in: open it and click <strong>Start NP Intake</strong>. '+open.length+' in progress · '+done.length+' complete</div>';
+  h+='<div class="table-card"><div class="table-header"><h3>'+(npiFilter==='open'?'In Progress':npiFilter==='complete'?'Completed':'All Intakes')+'</h3><div class="table-controls">';
+  h+='<select class="search-input" style="width:auto" onchange="npiFilter=this.value;npiDrawList(this.closest(\'.section\'))"><option value="open"'+(npiFilter==='open'?' selected':'')+'>In Progress</option><option value="complete"'+(npiFilter==='complete'?' selected':'')+'>Completed</option><option value="all"'+(npiFilter==='all'?' selected':'')+'>All</option></select>';
+  h+='<input class="search-input" id="npiSearchInput" value="'+esc(npiSearch)+'" placeholder="Search patient…" oninput="npiSearch=this.value;npiDrawList(this.closest(\'.section\'));var i=document.getElementById(\'npiSearchInput\');i.focus();i.setSelectionRange(i.value.length,i.value.length)">';
+  h+='</div></div>';
+  var list=npiFilter==='open'?open:npiFilter==='complete'?done:npIntakes.slice();
+  var s=npiSearch.toLowerCase();if(s)list=list.filter(function(x){return (x.patient_name||'').toLowerCase().indexOf(s)!==-1});
+  h+='<div class="table-scroll"><table class="tbl" style="min-width:760px"><thead><tr><th>Patient</th><th>DOB</th><th>DOI</th><th>Location</th><th>Status</th><th>Started By</th><th>Last Updated</th><th></th></tr></thead><tbody>';
+  if(!list.length)h+='<tr><td colspan="8" style="text-align:center;color:var(--gray-500);padding:24px">No intakes here yet.</td></tr>';
+  list.forEach(function(x){
+    var st=x.status==='complete'?'<span class="status-badge status-settled">Complete</span>':'<span class="status-badge status-pending">Draft</span>';
+    h+='<tr style="cursor:pointer" onclick="npiOpen(\''+x.id+'\')"><td><strong>'+esc(x.patient_name||'(no name yet)')+'</strong></td><td>'+fmtDate(x.dob)+'</td><td>'+fmtDate(x.doi)+'</td><td>'+esc(x.location||'—')+'</td><td>'+st+'</td><td>'+esc(x.created_by||'—')+'</td><td>'+(x.updated_at?new Date(x.updated_at).toLocaleString():'—')+'</td><td style="color:var(--teal);font-weight:600">Open →</td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  el.innerHTML=h;
+}
+
+// Referral-level match: the CRM tracks one referral per patient per date of injury.
+function npiRefMatches(d){
+  var nm=npiCap(d.demo.lastName)+', '+npiCap(d.demo.firstName||'');
+  var all=d.demo.lastName?(checkDuplicatePatient(nm,d.demo.dob)||[]):[];
+  if(d.demo.dob)all=all.filter(function(x){return !x.dob||x.dob===d.demo.dob});   // different DOB = different person
+  var doi=d.injury.doi||'';
+  return {all:all,same:doi?all.filter(function(x){return x.doi===doi}):[],other:doi?all.filter(function(x){return x.doi!==doi}):all};
+}
+// attach an unsaved intake to the existing referral for this injury (prevents duplicates)
+function npiLinkRef(refId){
+  var r=refs.find(function(x){return x.id===refId});if(!r||!npiCur)return;
+  if(npiCur.data.injury.doi&&r.doi&&r.doi!==npiCur.data.injury.doi){alert('That referral is for a different date of injury ('+fmtDate(r.doi)+'). A new injury gets its own referral.');return;}
+  var other=npIntakes.find(function(i){return i.ref_id===refId&&i.id!==npiCur.id});
+  if(other){
+    if(!confirm('This referral already has an NP intake ('+(other.status==='complete'?'complete':'in progress')+'). Open that one instead?\n\nThe draft you just started will be discarded.'))return;
+    var dead=npiCur.id;npIntakes=npIntakes.filter(function(i){return i.id!==dead});if(_useNewTables)_dbDelete('np_intakes',dead);
+    npiCur=null;npiOpen(other.id);return;
+  }
+  npiCur.ref_id=refId;npiPullRef(npiCur.data,r);npiSaveNow();
+  var ed=document.getElementById('sec-crm-intake-edit');ed.dataset.npiId=npiCur.id;renderNpIntakeEditor(ed);
+  var s=document.getElementById('npiSaved');if(s){s.textContent='✓ Attached to '+r.patientName+' (DOI '+fmtDate(r.doi)+')';s.style.color='var(--teal)';}
+}
+
+// Intake activity log — kept on the intake (its own section), not in Updates to Referring Party
+function npiLog(text){if(!npiCur||!text)return;var m=npiCur.data.meta=npiCur.data.meta||{};m.log=m.log||[];m.log.push({at:new Date().toISOString(),by:currentUser||'',text:text});}
+
+// ── panel on the patient profile ──
+function npiProfilePanel(r){
+  var x=npIntakes.find(function(i){return i.ref_id===r.id});
+  var st=!x?'<span style="color:var(--gray-500)">Not started</span>':x.status==='complete'?'<span class="status-badge status-settled">Complete</span> <span style="font-size:11px;color:var(--gray-500)">by '+esc(x.completed_by||'')+(x.completed_at?' · '+new Date(x.completed_at).toLocaleDateString():'')+'</span>':'<span class="status-badge status-pending">In progress</span> <span style="font-size:11px;color:var(--gray-500)">started by '+esc(x.created_by||'')+'</span>';
+  var h='<div class="npi-profile"><div><div style="font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">🩺 New Patient Intake</div><div>'+st+'</div>'+
+    (!x?'<div style="font-size:11px;color:var(--gray-500);margin-top:4px">Complete by phone once you reach the patient — generates the NP HPI for the chart.</div>':'')+'</div>'+
+    '<div style="margin-left:auto;display:flex;gap:6px">';
+  if(x&&x.status==='complete')h+='<button class="btn-cancel" style="font-size:11px" onclick="npiProfilePdf(\''+r.id+'\')">⬇ HPI PDF</button>';
+  h+='<button class="btn-primary" style="font-size:11px;padding:7px 14px" onclick="npiStart(\''+r.id+'\')">'+(!x?'Start NP Intake':x.status==='complete'?'View / Edit Intake':'Continue Intake')+'</button></div>';
+  var lg=(x&&x.data&&x.data.meta&&x.data.meta.log)||[];
+  if(lg.length){
+    h+='<div style="flex-basis:100%;border-top:1px solid var(--gray-200);margin-top:6px;padding-top:8px"><div style="font-size:10px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Intake Log</div>'+
+      lg.slice().reverse().slice(0,8).map(function(e){return '<div style="font-size:12px;padding:3px 0"><span style="color:var(--teal);font-weight:600">'+new Date(e.at).toLocaleDateString()+'</span> · '+esc(e.by||'')+' — '+esc(e.text)+'</div>'}).join('')+'</div>';
+  }
+  h+='</div>';
+  return h;
+}
+async function npiProfilePdf(refId){var x=npIntakes.find(function(i){return i.ref_id===refId});if(!x)return;var prev=npiCur;
+  var b=npiBlank();x.data=Object.assign(b,x.data||{});npiPullRef(x.data,refs.find(function(r){return r.id===refId}));npiCur=x;try{await npiDownloadPdf();}finally{npiCur=prev;}}
+
+// ── open / start ──
+// Fields shared with the referral record (referral is the source of truth once linked)
+var NPI_SYNC=[['demo.dob','dob'],['demo.phone','phone'],['demo.email','email'],['demo.language','language'],['injury.doi','doi'],['claim.caseType','caseType'],
+  ['appt.location','location'],['claim.attorney','attorney'],['claim.lawFirm','lawFirm'],['claim.lawContact','lawContact'],['ref.source','referralSource'],['ref.regDate','createdDate'],['appt.date','apptDate'],
+  ['claim.injState','injuryState'],['claim.carrier','insCarrier'],['claim.claimNo','claimNumber'],['claim.policyNo','policyNumber'],['claim.adjName','adjusterName'],['claim.adjPhone','adjusterContact'],
+  ['claim.insName','healthIns'],['claim.insId','healthInsId']];
+var NPI_ALERTS=['Missing Claim Info','Need LOP','Missing Attorney Info','Patient Needs Legal Representation','Missing Adjuster','Need PIP Status Update','Missing Patient Email'];
+function npiPullRef(d,r){
+  if(!r)return;
+  var parts=(r.patientName||'').split(',');
+  if(parts[0]&&parts[0].trim())d.demo.lastName=parts[0].trim();
+  if(parts.length>1&&parts.slice(1).join(',').trim())d.demo.firstName=parts.slice(1).join(',').trim();
+  NPI_SYNC.forEach(function(m){var v=r[m[1]];if(v!=null&&v!=='')npiSet(d,m[0],v);});
+  var al=r.alertType?r.alertType.split(' | ').map(function(x){return x.trim()}).filter(Boolean):[];
+  d.ref.alerts=al.filter(function(x){return NPI_ALERTS.indexOf(x)!==-1});
+  d.ref.alertOther=al.filter(function(x){return NPI_ALERTS.indexOf(x)===-1}).join(', ');
+}
+function npiAlertType(d){var a=(d.ref.alerts||[]).slice();if(d.ref.alertOther&&d.ref.alertOther.trim())a.push(d.ref.alertOther.trim());return a.join(' | ');}
+function npiStart(refId){
+  if(_isExecRO()){showReadOnly();return;}
+  if(refId&&!refs.find(function(x){return x.id===refId})){alert('That patient profile could not be found.');return;}
+  var existing=refId?npIntakes.find(function(x){return x.ref_id===refId}):null;
+  if(existing){npiOpen(existing.id);return;}
+  var d=npiBlank();var r=refId?refs.find(function(x){return x.id===refId}):null;
+  npiPullRef(d,r);
+  npiCur={id:genId(),ref_id:refId||null,status:'draft',data:d,created_by:currentUser||'',created_date:today()};
+  npIntakes.unshift(npiCur);
+  npiSaveNow();npiShowEditor();
+}
+async function npiOpen(id){
+  await loadNpIntakes();
+  var x=npIntakes.find(function(i){return i.id===id});if(!x)return;
+  var b=npiBlank();x.data=Object.assign(b,x.data||{});
+  ['meds','tx'].forEach(function(k){if(!x.data[k].list||!x.data[k].list.length)x.data[k].list=[{}];});
+  if(x.ref_id)npiPullRef(x.data,refs.find(function(r){return r.id===x.ref_id}));  // pick up edits made on the referral profile
+  npiCur=x;var _ed=document.getElementById('sec-crm-intake-edit');if(_ed)_ed.dataset.npiId='';npiShowEditor();
+}
+function npiShowEditor(){crmNav('crm-intake-edit');}
+function npiClose(){npiFlush();npiCur=null;crmNav('crm-intake');}
+
+// ── editor ──
+function renderNpIntakeEditor(el){
+  if(!npiCur){crmNav('crm-intake');return;}
+  var d=npiCur.data,r=npiCur.ref_id?refs.find(function(x){return x.id===npiCur.ref_id}):null;
+  var h='<div class="back-link" onclick="'+(r?'npiFlush();showCrmDetail(\''+r.id+'\')':'npiClose()')+'">&larr; '+(r?'Back to referral':'Back to intakes')+'</div>';
+  h+='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px"><div class="page-title" style="margin-bottom:0" id="npiTitle">'+esc(npiCur.patient_name||'New Patient Intake')+'</div>'+
+     '<span class="status-badge '+(npiCur.status==='complete'?'status-settled':'status-pending')+'" id="npiStatusBadge">'+(npiCur.status==='complete'?'Complete':'Draft')+'</span>'+
+     ''+
+     '<span id="npiSaved" style="margin-left:auto;font-size:11px;color:var(--gray-500)"></span></div>';
+  h+='<div class="page-subtitle">Read the 🗣 prompts to the patient. Record the patient\'s own words — the HPI on the right builds as you type. Contact, claim, attorney, alert and appointment fields are the referral\'s fields, so saving here updates that referral.</div>';
+  h+='<div class="npi-wrap"><div class="npi-form" id="npiForm">';
+  _npiSecNo=0;_npiJump=[];var ct=d.claim.caseType||'WC',isMva=(ct==='MVA'||ct==='NJ MVA');
+
+  // 1 Demographics
+  var b='<div class="form-grid">'+npiTxt('First Name','demo.firstName',{req:1})+npiTxt('Last Name','demo.lastName',{req:1})+
+    npiTxt('Date of Birth','demo.dob',{type:'date',req:1})+npiTxt('Phone','demo.phone',{req:1})+npiTxt('Email','demo.email')+
+    npiSel('Preferred Language','demo.language',['English','Spanish','Other'])+
+    npiTxt('Street Address','demo.addr1',{req:1})+npiTxt('Apt / Suite','demo.addr2')+npiTxt('City','demo.city',{req:1})+
+    '<div class="form-group"><label>State / ZIP <span style="color:var(--red)">*</span></label><div style="display:flex;gap:6px"><input data-npk="demo.state" value="'+esc(npiV('demo.state'))+'" placeholder="PA" maxlength="2" style="width:60px;text-transform:uppercase"><input data-npk="demo.zip" value="'+esc(npiV('demo.zip'))+'" placeholder="ZIP" style="flex:1"></div></div>'+
+    '<div class="form-group"><label>Height <span style="color:var(--red)">*</span></label><div style="display:flex;gap:6px;align-items:center"><input data-npk="demo.htFt" type="number" min="3" max="7" value="'+esc(npiV('demo.htFt'))+'" style="width:64px"> ft <input data-npk="demo.htIn" type="number" min="0" max="11" value="'+esc(npiV('demo.htIn'))+'" style="width:64px"> in</div></div>'+
+    npiTxt('Weight (lbs)','demo.weight',{type:'number',req:1})+npiSel('Dominant Hand','demo.hand',['Right','Left','Ambidextrous'],{req:1})+
+    '</div><div id="npiDupWarn"></div><div class="npi-note">🔒 SSN is not collected here. Enter it directly in RXNT during registration.</div>';
+  h+=npiSec(1,'Patient Information','"I\'m going to collect your new patient information over the phone so you only need to sign a few forms. Can you confirm your full name and date of birth?"',b,'Patient');
+
+  // 2 Referral, claim & insurance (fields depend on case type)
+  b='<div class="form-grid">'+npiSel('Case Type','claim.caseType',['WC','MVA','NJ MVA','PI'],{req:1})+npiTxt('Date of Injury','injury.doi',{type:'date',req:1})+npiTxt('Referral Source','ref.source',{req:1,list:'refSourceList',dup:'source',ph:'Type or select a source'})+
+    npiTxt('Referred / Registered Date','ref.regDate',{type:'date',req:1});
+  if(ct==='WC'||isMva){
+    b+=npiSel(isMva?'State where the accident happened':'State where the injury happened','claim.injState',['PA','NJ','DE','NY','MD','TX','Other'],{req:1})+'<div class="form-group full" id="npiJurisWarn"></div>';
+    b+='<div class="npi-subh full">'+(isMva?'Auto Claim':'Workers\' Comp Claim')+'</div>';
+    if(ct==='WC')b+=npiSel('WC claim filed?','claim.filed',[['yes','Yes'],['no','No / not yet'],['unknown','Patient unsure']]);
+    b+=npiTxt(isMva?'Auto Insurance Carrier':'WC Insurance Carrier','claim.carrier',{ph:isMva?'':'N/A if not filed'})+npiTxt('Claim Number','claim.claimNo');
+    if(isMva)b+=npiTxt('Policy Number','claim.policyNo');
+    b+=npiTxt('Adjuster Name','claim.adjName')+npiTxt('Adjuster Phone / Email','claim.adjPhone');
+  }
+  {
+    b+='<div class="npi-subh full">Attorney</div>'+npiTxt('Attorney','claim.attorney',{list:'attorneyList',dup:'attorney',ph:'Select or type attorney'})+npiTxt('Law Firm','claim.lawFirm',{list:'lawFirmList',dup:'firm',ph:'Select or type law firm',after:'<div id="npiFirmWarn"></div>'})+npiTxt('Firm Contact (phone/email)','claim.lawContact');
+  }
+  if(ct!=='PI'){
+    b+='<div class="npi-subh full">Personal Health Insurance</div>'+npiSel('Has personal health insurance?','claim.hasIns',[['yes','Yes'],['no','No']])+
+      npiTxt('Health Insurance Carrier','claim.insName')+npiTxt('Member ID','claim.insId');
+  }
+  b+='</div><div class="npi-lbl" style="margin-top:14px">Alerts / missing info (select all that apply)</div>'+npiChecks('ref.alerts',NPI_ALERTS)+
+    '<div class="form-grid">'+npiTxt('Other alert','ref.alertOther',{ph:'Any other alert needed…'})+'</div>';
+  if(ct!=='PI')b+='<div class="npi-note">📷 Insurance card photos (front/back) are still collected in the signature packet.</div>';
+  var s2=ct==='PI'?'"How did you hear about us? Do you have an attorney for this injury — who is it, and what firm?"':
+         isMva?'"How did you hear about us? Do you have your auto insurance company, claim number, and policy number? Do you know your adjuster? Do you have an attorney?"':
+         '"How did you hear about us? Do you have your workers\' comp claim number or the insurance company\'s name? Do you know your adjuster? Do you have an attorney?"';
+  h+=npiSec(2,'Referral, Claim &amp; Insurance',s2,b,'Claim');
+
+  // 3 HIPAA authorization (prefills the signature form)
+  b='<div class="form-grid">'+npiSel('Scope of authorization','hipaa.scope',[['full','Full disclosure of medical & billing info'],['limited','Limited disclosure']])+npiTxt('If limited, specify','hipaa.limited')+
+    npiTxt('Authorized Individual','hipaa.name')+npiSel('Relationship','hipaa.rel',['Mother','Father','Son','Daughter','Sibling','Spouse','Friend','Other'])+npiTxt('Individual\'s Phone','hipaa.phone')+'</div>';
+  h+=npiSec(3,'HIPAA Authorized Contact','"Is there anyone besides your attorney we\'re allowed to speak with about your care?"',b,'HIPAA');
+
+  // 4 Injury
+  b='<div class="form-grid">'+npiTxt('Approximate time of injury','injury.time',{ph:'e.g. 10:30 AM'})+
+    npiTxt('What happened? (patient\'s words)','injury.desc',{area:1,full:1,rows:5,req:1,ph:isMva?'Driver/passenger, type of collision, seatbelt, airbags, hit head, how they got to care':'What were you doing, what happened, what part of your body was hit/strained, did you fall?'})+'</div>';
+  h+=npiSec(4,'Injury / Accident',isMva?'"In your own words, walk me through the accident — were you the driver or a passenger, where were you hit, were you wearing a seatbelt, did the airbags go off?"':'"In your own words, walk me through exactly what happened on the day you were hurt."',b,'Injury');
+
+  // 5 Body areas & symptoms
+  b='<div class="npi-lbl">Body areas injured <span style="color:var(--red)">*</span></div>'+npiChecks('areas.list',NPI_AREAS)+'<div class="form-grid">'+npiTxt('Other area','areas.other')+'</div>'+
+    '<div class="npi-lbl">How does the pain feel?</div>'+npiChecks('pain.qualities',NPI_QUALITIES)+
+    '<div class="form-grid">'+npiSel('Frequency','pain.freq',['constant','intermittent','occasional'],{req:1})+
+    npiTxt('Does the pain travel anywhere?','pain.radiate',{ph:'e.g. down the left leg to the foot'})+
+    npiSel('Swelling / inflammation?','pain.swell',[['yes','Yes'],['no','No']])+npiTxt('Swelling details','pain.swellNote',{ph:'e.g. less swollen than before'})+
+    npiTxt('What makes it worse?','pain.worse')+npiTxt('What makes it better?','pain.better')+
+    npiTxt('Anything else about symptoms','pain.notes',{area:1,full:1,rows:2})+'</div>';
+  h+=npiSec(5,'Affected Areas &amp; Current Symptoms','"Which parts of your body were hurt? How would you describe the pain — sharp, dull, burning? Is it there all the time or does it come and go?"',b,'Symptoms');
+
+  // 6 Treatment history
+  b=npiBool('No treatment for this injury yet','tx.none')+'<div id="npiTxRows"></div><button class="btn-cancel" style="font-size:11px;margin-top:6px" onclick="npiAddRow(\'tx\')">+ Add another visit</button>';
+  h+=npiSec(6,'Treatment for This Injury','"Where have you been seen for this injury so far — ER, urgent care, company doctor? Did they do X-rays, a CT, an MRI, therapy?"',b,'Treatment');
+
+  // 7 Medications & allergies
+  b=npiBool('Patient takes no medications','meds.none')+'<div id="npiMedRows"></div><button class="btn-cancel" style="font-size:11px;margin-top:6px" onclick="npiAddRow(\'meds\')">+ Add medication</button>'+
+    '<div class="form-grid" style="margin-top:12px">'+'<div class="form-group full">'+npiBool('No known allergies','meds.nka')+'</div>'+npiTxt('Allergies (medications, latex, iodine/contrast)','meds.allergies',{full:1})+'</div>';
+  h+=npiSec(7,'Medications (Past Year) &amp; Allergies','"What medications have you taken in the past year, including for this injury? Do you remember the dose? Any allergies to medications, latex, or iodine?"',b,'Meds');
+
+  // 8 Medical history
+  b=npiBool('No past medical history per patient','pmh.none')+'<div class="npi-lbl">Conditions</div>'+npiChecks('pmh.conditions',NPI_PMH)+
+    '<div class="form-grid">'+npiTxt('Other conditions','pmh.other',{full:1})+npiTxt('Prior surgeries','pmh.surg',{full:1})+'</div>';
+  h+=npiSec(8,'Past Medical History','"Do you have any ongoing health conditions? Any surgeries?"',b,'PMH');
+
+  // 9 Prior injuries
+  b=npiBool('No prior injuries or accidents','prior.none')+'<div class="form-grid">'+npiTxt('Prior injuries / accidents (what, when, body area, treatment)','prior.text',{area:1,full:1,rows:3,ph:'e.g. 2014 left arm injury, treated with PT'})+'</div>';
+  h+=npiSec(9,'Previous Injuries or Conditions','"Before this accident, had you ever injured this or any other part of your body — work injuries, car accidents, sports?"',b,'Prior');
+
+  // 10 Employment (WC only)
+  if(ct==='WC'){
+  b='<div class="form-grid">'+npiTxt('Employer at time of injury','emp.employer',{req:1})+npiTxt('Job Title','emp.title',{req:1})+
+    npiSel('Employment Status','emp.status',['Full-time','Part-time','Contractor','Temp / agency'],{req:1})+npiTxt('How long employed there','emp.duration',{req:1})+
+    npiTxt('Hours per day','emp.hrsDay',{type:'number'})+npiTxt('Days per week','emp.daysWk',{type:'number'})+
+    npiTxt('Shift start','emp.start',{ph:'6:00 AM'})+npiTxt('Shift end','emp.end',{ph:'4:00 PM'})+
+    npiTxt('Job duties (physical demands)','emp.duties',{area:1,full:1,rows:2,req:1})+npiTxt('Heaviest weight lifted','emp.lift',{ph:'e.g. 0–50 lbs'})+
+    npiSel('Restrictions before this injury?','emp.priorR',[['no','No'],['yes','Yes']],{req:1})+npiTxt('Prior restrictions','emp.priorRText',{full:1})+
+    npiTxt('Date injury reported to employer','emp.reported',{type:'date',req:1})+npiTxt('Reported to (supervisor/HR)','emp.reportedTo')+
+    npiTxt('Last date worked','emp.lastWorked',{type:'date'})+
+    npiSel('Currently working?','emp.cur',[['no','Not working'],['same_light','Same employer — light/modified duty'],['same_full','Same employer — full duty'],['other','Working for a different employer']],{req:1})+
+    npiTxt('Current work details / restrictions','emp.curText',{area:1,full:1,rows:2,ph:'Who, since when, hours, restrictions'})+'</div>';
+  h+=npiSec(10,'Employment Information','"Tell me about the job where you were hurt — your title, hours, and what the job physically involves. When did you report it to your employer? Are you working now?"',b,'Employment');
+  }
+
+  // 11 ADL
+  b=npiChecks('adl.list',NPI_ADL)+'<div class="form-grid">'+npiTxt('Other / details','adl.other',{full:1,ph:'e.g. can\'t stand longer than 15 minutes'})+'</div>';
+  h+=npiSec(11,'Impact on Daily Activities','"What everyday activities are harder for you now because of this injury?"',b,'ADLs');
+
+  // 12 Appointment
+  b='<div class="form-grid">'+npiSel('Office','appt.location',LOCATIONS,{req:1})+'<div class="form-group"><label>&nbsp;</label><button class="btn-cancel" style="font-size:11px" onclick="toggleOfficeFinder()">📍 Find nearest office</button></div>'+
+    npiTxt('Appointment Date','appt.date',{type:'date',hint:'Leave blank if the patient can\'t schedule yet — the referral saves as Pending Scheduling.'})+npiTxt('Appointment Time','appt.time',{type:'time'})+
+    npiTxt('Scheduling notes (provider, transportation, interpreter, etc.)','appt.notes',{area:1,full:1,rows:2})+'</div>'+
+    '<div class="npi-note"><strong>Save</strong> '+(npiCur.ref_id?'updates':'creates')+' the referral for this date of injury with sections 1–2 and this appointment — no separate referral form needed. <strong>Complete</strong> also downloads the NP HPI PDF. Then register the patient in RXNT and book the appointment there.</div>';
+  h+=npiSec(12,'Appointment','"Let\'s get you scheduled. Which office is most convenient for you? What day and time work best?"',b,'Appt');
+
+  // 13 Notes
+  b='<div class="form-grid">'+npiTxt('Scheduler notes (not printed on HPI)','meta.notes',{area:1,full:1,rows:2})+'</div>';
+  h+=npiSec(13,'Internal Notes','',b,'Notes');
+
+  h+='</div>'; // form
+  // right panel
+  h+='<div class="npi-side"><div class="npi-panel">'+
+     '<div class="npi-tabs"><button class="npi-tab on" data-tab="hpi" onclick="npiTab(\'hpi\')">NP HPI</button><button class="npi-tab" data-tab="reg" onclick="npiTab(\'reg\')">Registration</button><button class="npi-tab" data-tab="miss" onclick="npiTab(\'miss\')">Missing <span id="npiMissCt" class="nav-badge" style="position:static;margin-left:4px">0</span></button></div>'+
+     '<div class="npi-prev" id="npiPrev"></div>'+
+     '<div class="npi-actions"><button class="btn-cancel" style="font-size:11px" onclick="npiCopyHpi()">📋 Copy HPI</button><button class="btn-cancel" style="font-size:11px" onclick="npiDownloadPdf()">⬇ Download PDF</button>'+
+     '<button class="btn-cancel" id="npiSaveCrmBtn" style="font-size:11px;border-color:var(--navy);color:var(--navy)" onclick="npiSaveToCrm()">💾 '+(npiCur.ref_id?'Save to Referral':'Save &amp; Create Referral')+'</button>'+
+     (npiCur.status==='complete'?'':'<button class="btn-primary" id="npiCompleteBtn" style="font-size:11px;padding:7px 14px" onclick="npiComplete()">✓ Complete &amp; Download HPI</button>')+'</div>'+
+     '<div style="font-size:10px;color:var(--gray-500);padding:0 14px 12px">'+(npiCur.status==='complete'?'Intake completed by '+esc(npiCur.completed_by||'')+' · '+(npiCur.completed_at?new Date(npiCur.completed_at).toLocaleString():'')+'. You can keep editing — click Save to Referral to push changes.':'Intake autosaves as you type. The referral updates when you click Save.')+'</div>'+
+     '</div><div class="npi-jump">'+_npiJump.map(function(j,i){return '<a onclick="document.getElementById(\'npiSec'+j[0]+'\').scrollIntoView({behavior:\'smooth\',block:\'start\'})">'+(i+1)+'. '+j[1]+'</a>'}).join('')+'</div></div>';
+  h+='</div>';
+  el.innerHTML=h;
+  try{populateLawFirmDropdown();populateRefSourceDropdown();}catch(e){}
+  npiDrawRows('tx');npiDrawRows('meds');npiBind(el);npiRefresh();
+}
+
+function npiDrawRows(kind){
+  var host=document.getElementById(kind==='tx'?'npiTxRows':'npiMedRows');if(!host)return;
+  var list=npiCur.data[kind].list;var h='';
+  list.forEach(function(row,i){
+    if(kind==='tx'){
+      h+='<div class="npi-row"><div class="form-group"><label>When</label><input data-npr="tx.'+i+'.when" value="'+esc(row.when||'')+'" placeholder="Same day / 9/2/26"></div>'+
+         '<div class="form-group"><label>Where / Provider</label><input data-npr="tx.'+i+'.where" value="'+esc(row.where||'')+'" placeholder="LVHN Hazleton ER"></div>'+
+         '<div class="form-group" style="flex:2"><label>What was done</label><input data-npr="tx.'+i+'.what" value="'+esc(row.what||'')+'" placeholder="X-ray; prescribed meds; CT ordered"></div>'+
+         '<button class="npi-x" title="Remove" onclick="npiDelRow(\'tx\','+i+')">×</button></div>';
+    } else {
+      h+='<div class="npi-row"><div class="form-group" style="flex:2"><label>Medication</label><input data-npr="meds.'+i+'.name" value="'+esc(row.name||'')+'" placeholder="Name (or describe if unsure)"></div>'+
+         '<div class="form-group"><label>Dose / frequency</label><input data-npr="meds.'+i+'.dose" value="'+esc(row.dose||'')+'" placeholder="if known"></div>'+
+         '<div class="form-group"><label>For</label><input data-npr="meds.'+i+'.for" value="'+esc(row.for||'')+'" placeholder="this injury / BP…"></div>'+
+         '<button class="npi-x" title="Remove" onclick="npiDelRow(\'meds\','+i+')">×</button></div>';
+    }
+  });
+  host.innerHTML=h;
+}
+function npiAddRow(kind){npiCur.data[kind].list.push({});npiDrawRows(kind);npiChanged();}
+function npiDelRow(kind,i){npiCur.data[kind].list.splice(i,1);if(!npiCur.data[kind].list.length)npiCur.data[kind].list.push({});npiDrawRows(kind);npiChanged();}
+
+function npiBind(el){
+  var form=el.querySelector('#npiForm');
+  var handler=function(e){
+    var t=e.target;
+    if(t.dataset.npk){npiSet(npiCur.data,t.dataset.npk,t.value);if(t.dataset.npk==='claim.caseType'){npiChanged();var y=window.scrollY,mc=document.getElementById('crmMain'),my=mc?mc.scrollTop:0;renderNpIntakeEditor(document.getElementById('sec-crm-intake-edit'));window.scrollTo(0,y);if(mc)mc.scrollTop=my;return;}}
+    else if(t.dataset.npr){var p=t.dataset.npr.split('.');npiCur.data[p[0]].list[+p[1]][p[2]]=t.value;}
+    else if(t.dataset.npb){npiSet(npiCur.data,t.dataset.npb,t.checked);}
+    else if(t.dataset.npa){var arr=npiGet(npiCur.data,t.dataset.npa)||[];var i=arr.indexOf(t.value);if(t.checked&&i===-1)arr.push(t.value);if(!t.checked&&i!==-1)arr.splice(i,1);npiSet(npiCur.data,t.dataset.npa,arr);t.closest('.npi-chip').classList.toggle('on',t.checked);}
+    else return;
+    npiChanged();
+  };
+  form.addEventListener('input',handler);form.addEventListener('change',function(e){if(e.target.type==='checkbox'||e.target.tagName==='SELECT')handler(e);});
+}
+function npiChanged(){npiRefresh();clearTimeout(npiSaveTimer);var s=document.getElementById('npiSaved');if(s)s.textContent='Saving…';npiSaveTimer=setTimeout(npiSaveNow,1200);}
+function npiFlush(){if(npiSaveTimer){clearTimeout(npiSaveTimer);npiSaveTimer=null;npiSaveNow();}}
+function npiRow(){
+  var d=npiCur.data;var nm=[npiCap(d.demo.lastName),npiCap(d.demo.firstName)].filter(Boolean).join(', ');
+  npiCur.patient_name=nm;
+  return {id:npiCur.id,ref_id:npiCur.ref_id||null,patient_name:nm||null,dob:d.demo.dob||null,doi:d.injury.doi||null,case_type:d.claim.caseType||null,location:d.appt.location||null,
+    status:npiCur.status||'draft',data:d,hpi_text:npiHpiText(d),created_by:npiCur.created_by||currentUser||null,completed_by:npiCur.completed_by||null,
+    created_date:npiCur.created_date||today(),completed_at:npiCur.completed_at||null,updated_at:new Date().toISOString()};
+}
+function npiSaveNow(){
+  npiSaveTimer=null;if(!npiCur)return;
+  var row=npiRow();npiCur.updated_at=row.updated_at;
+  if(_useNewTables)_dbUpsert('np_intakes',row);
+  var s=document.getElementById('npiSaved');if(s)s.textContent='Saved '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+  var t=document.getElementById('npiTitle');if(t)t.textContent=npiCur.patient_name||'New Patient Intake';
+}
+
+// ── validation ──
+function npiMissing(d){
+  var m=[];function req(v,l,sec){if(v==null||v===''||(Array.isArray(v)&&!v.length))m.push({l:l,sec:sec});}
+  req(d.demo.firstName,'First name',1);req(d.demo.lastName,'Last name',1);req(d.demo.dob,'Date of birth',1);req(d.demo.phone,'Phone',1);
+  req(d.demo.addr1,'Street address',1);req(d.demo.city,'City',1);req(d.demo.state,'State',1);req(d.demo.zip,'ZIP',1);
+  req(d.ref.source,'Referral source',2);req(d.ref.regDate,'Referred / registered date',2);
+  req(d.demo.htFt,'Height',1);req(d.demo.weight,'Weight',1);req(d.demo.hand,'Dominant hand',1);
+  var _ct=d.claim.caseType||'WC';req(_ct,'Case type',2);if(_ct==='WC'||_ct==='MVA'||_ct==='NJ MVA')req(d.claim.injState,'State where '+(_ct==='WC'?'injury':'accident')+' happened',2);
+  req(d.injury.doi,'Date of injury',2);req(d.injury.desc,'Injury description',4);
+  if(!(d.areas.list||[]).length&&!d.areas.other)m.push({l:'Body areas injured',sec:5});
+  req(d.pain.freq,'Pain frequency',5);
+  if(!(d.tx.list||[]).some(function(r){return r.where||r.what})&&!d.tx.none)m.push({l:'Treatment history (or none)',sec:6});
+  if(!d.meds.none&&!(d.meds.list||[]).some(function(r){return r.name}))m.push({l:'Medications (or none)',sec:7});
+  if(!d.meds.nka&&!d.meds.allergies)m.push({l:'Allergies (or none)',sec:7});
+  if(!d.pmh.none&&!(d.pmh.conditions||[]).length&&!d.pmh.other)m.push({l:'Past medical history (or none)',sec:8});
+  if(!d.prior.none&&!d.prior.text)m.push({l:'Prior injuries (or none)',sec:9});
+  if((d.claim.caseType||'WC')==='WC'){
+    req(d.emp.employer,'Employer',10);req(d.emp.title,'Job title',10);req(d.emp.status,'Employment status',10);req(d.emp.duration,'Length of employment',10);
+    req(d.emp.duties,'Job duties',10);req(d.emp.priorR,'Prior restrictions',10);req(d.emp.reported,'Date reported to employer',10);req(d.emp.cur,'Current work status',10);
+  }
+  if(!(d.adl.list||[]).length&&!d.adl.other)m.push({l:'Impact on daily activities',sec:11});
+  req(d.appt.location,'Office',12);req(d.appt.date,'Appointment date (optional — saves as Pending Scheduling)',12);
+  return m;
+}
+
+// ── HPI generation ──
+function npiHpiSections(d){
+  var S=[];var areas=npiAreas(d);
+  var _c=d.claim.caseType||'WC';var cc=(_c==='WC'?'Work-related injury':(_c==='MVA'||_c==='NJ MVA')?'Motor vehicle accident injury':'Injury')+(areas.length?' involving the '+npiList(areas):'')+(d.injury.doi?' sustained on '+npiFmtD(d.injury.doi):'')+'.';
+  S.push({h:'Chief Complaint',lines:[cc]});
+  var ht=d.demo.htFt?d.demo.htFt+"'"+(d.demo.htIn||0)+'"':'';
+  S.push({h:'Current Height / Weight / Dominant Hand',lines:['Height: '+(ht||'—'),'Weight: '+(d.demo.weight?d.demo.weight+' lbs':'—'),'Dominant Hand: '+(d.demo.hand||'—')]});
+  var meds=d.meds.none?['None per patient']:(d.meds.list||[]).filter(function(r){return r.name}).map(function(r){return r.name+(r.dose?' — '+r.dose:'')+(r.for?' (for '+r.for+')':'')});
+  S.push({h:'Current Medications (Past Year)',lines:meds.length?meds:['—']});
+  S.push({h:'Allergies',lines:[d.meds.nka?'No known allergies per patient':(d.meds.allergies||'—')]});
+  var pmh=d.pmh.none?['None per patient']:(d.pmh.conditions||[]).slice();if(!d.pmh.none&&d.pmh.other)pmh.push(d.pmh.other);
+  if(d.pmh.surg)pmh.push('Prior surgeries: '+d.pmh.surg);
+  S.push({h:'Past Medical History',lines:pmh.length?pmh:['—']});
+  var inj=['Date of Injury: '+(npiFmtD(d.injury.doi)||'—')+(d.injury.time?' at approximately '+d.injury.time:'')];
+  if(d.claim.injState)inj.push('State of Injury: '+(d.claim.injState==='Other'?'Other':d.claim.injState));
+  inj.push('Summary of Injury:');inj.push(d.injury.desc||'—');
+  S.push({h:'Injury / Accident Description',lines:inj});
+  S.push({h:'Affected Body Areas',lines:areas.length?areas.map(function(a){return a.charAt(0).toUpperCase()+a.slice(1)}):['—']});
+  var p=d.pain,s='';
+  if(areas.length||p.freq||(p.qualities||[]).length){
+    s='Location & Quality of Pain: Pain in the '+(npiList(areas)||'affected area')+' is '+[p.freq,npiList(p.qualities||[])].filter(Boolean).join(' ')+' pain.';
+  }
+  if(p.radiate)s+=' The pain radiates '+p.radiate.replace(/^radiates\s*/i,'')+'.';
+  if(p.swell==='yes')s+=' The patient reports ongoing inflammation/swelling involving the '+(npiList(areas)||'affected area')+'.'+(p.swellNote?' '+p.swellNote.replace(/\.?$/,'.'):'');
+  else if(p.swell==='no')s+=' The patient denies swelling.';
+  if(p.worse)s+=' Aggravating factors: '+p.worse+'.';
+  if(p.better)s+=' Alleviating factors: '+p.better+'.';
+  if(p.notes)s+=' '+p.notes;
+  S.push({h:'Current Symptoms',lines:[s.trim()||'—']});
+  var tx=(d.tx.list||[]).filter(function(r){return r.where||r.what}).map(function(r){return [r.when,r.where].filter(Boolean).join(' — ')+(r.what?(r.when||r.where?': ':'')+r.what:'')});
+  S.push({h:'Treatment History',lines:['Evaluations/Treatments:'].concat(tx.length?tx:['None reported'])});
+  if((d.claim.caseType||'WC')==='WC'){
+    var e=d.emp,el=[];
+    el.push('Employer: '+(e.employer||'—'));el.push('Job Title: '+(e.title||'—'));
+    el.push('Employment Status: '+([e.status,e.hrsDay?e.hrsDay+'-hour days':'',e.daysWk?e.daysWk+' days/week':''].filter(Boolean).join(', ')||'—'));
+    el.push('Duration of Employment: '+(e.duration||'—'));
+    if(e.start||e.end)el.push('Job Hours: '+[e.start,e.end].filter(Boolean).join('–'));
+    el.push('Job Duties: '+(e.duties?e.duties.replace(/\.?\s*$/,'.'):'—')+(e.lift?' Lifting up to '+e.lift+'.':''));
+    el.push('Prior Restrictions: '+(e.priorR==='yes'?(e.priorRText||'Yes'):e.priorR==='no'?'None':'—'));
+    el.push('Date Injury Was Reported to Employer: '+(npiFmtD(e.reported)||'—')+(e.reported&&d.injury.doi&&e.reported===d.injury.doi?' (same day as injury)':'')+(e.reportedTo?' — reported to '+e.reportedTo:''));
+    if(e.lastWorked)el.push('Last Date Worked: '+(e.lastWorked===d.injury.doi?'Date of injury':npiFmtD(e.lastWorked)));
+    var cm={no:'Not currently working',same_light:'Working for the same employer on light/modified duty',same_full:'Working for the same employer at full duty',other:'Working for a different employer'};
+    if(e.cur)el.push('Current Work: '+cm[e.cur]+(e.curText?'. '+e.curText:''));
+    S.push({h:'Employment Information',lines:el});
+  }
+  var adl=(d.adl.list||[]).slice();if(d.adl.other)adl.push(d.adl.other);
+  S.push({h:'Impact on Daily Activities',lines:adl.length?['The patient reports difficulty with the following due to the injury:'].concat(adl):['—']});
+  S.push({h:'Previous Injuries or Conditions',lines:[d.prior.none?'The patient denies prior injuries or accidents.':(d.prior.text?'The patient reports: '+d.prior.text:'—')]});
+  return S;
+}
+function npiSource(d){
+  var lang=d.demo.language&&d.demo.language!=='English'?' in '+d.demo.language:'';
+  return 'History obtained by telephone'+lang+' from the patient by '+(npiCur&&npiCur.created_by||'CarePath staff')+' on '+npiFmtD(npiCur&&npiCur.created_date||today())+'.';
+}
+function npiHpiText(d){
+  var nm=[npiCap(d.demo.firstName),npiCap(d.demo.lastName)].filter(Boolean).join(' ');
+  var out='NEW PATIENT HPI — '+(nm||'')+(d.demo.dob?' (DOB '+npiFmtD(d.demo.dob)+')':'')+'\n'+npiSource(d)+'\n';
+  npiHpiSections(d).forEach(function(s){out+='\n'+s.h.toUpperCase()+'\n'+s.lines.join('\n')+'\n';});
+  return out.trim();
+}
+function npiHpiHtml(d){
+  var h='';npiHpiSections(d).forEach(function(s){
+    h+='<div class="npi-h">'+esc(s.h)+'</div>';
+    var multi=['Current Medications (Past Year)','Past Medical History','Affected Body Areas','Treatment History','Impact on Daily Activities'].indexOf(s.h)!==-1;
+    if(multi&&s.lines.length>1||s.h==='Treatment History'||s.h==='Impact on Daily Activities'){
+      var first=s.lines[0],rest=s.lines.slice(1);
+      if(s.h==='Treatment History'||s.h==='Impact on Daily Activities'){h+='<div>'+esc(first)+'</div><ul>'+rest.map(function(l){return '<li>'+esc(l)+'</li>'}).join('')+'</ul>';}
+      else h+='<ul>'+s.lines.map(function(l){return '<li>'+esc(l)+'</li>'}).join('')+'</ul>';
+    } else h+=s.lines.map(function(l){var m=l.match(/^([^:]{2,45}):\s(.*)$/);return '<div>'+(m?'<strong>'+esc(m[1])+':</strong> '+esc(m[2]):esc(l))+'</div>'}).join('');
+  });
+  return h;
+}
+
+// ── right panel ──
+var npiTabCur='hpi';
+function npiTab(t){npiTabCur=t;document.querySelectorAll('.npi-tab').forEach(function(b){b.classList.toggle('on',b.dataset.tab===t)});npiRefresh();}
+function npiRefresh(){
+  if(!npiCur)return;var d=npiCur.data;
+  var w=document.getElementById('npiJurisWarn');
+  if(w){var st=d.claim.injState,ct=d.claim.caseType||'WC';var msg='';
+    if(st==='TX')msg='CarePath does not accept Texas cases. Do not schedule — check with a manager.';
+    else if(st==='NJ'&&ct==='WC')msg='CarePath does not accept New Jersey workers\' comp cases. Do not schedule.';
+    w.innerHTML=msg?'<div class="npi-warn">⛔ '+msg+'</div>':'';w.style.display=msg?'block':'none';}
+  var fw=document.getElementById('npiFirmWarn');if(fw){var bf=d.claim.lawFirm&&typeof isBlockedFirm==='function'&&isBlockedFirm(d.claim.lawFirm);fw.innerHTML=bf?'<div class="npi-warn" style="margin-top:4px">⛔ DO NOT SCHEDULE — CarePath does not participate with this law firm.</div>':'';}
+  var dw=document.getElementById('npiDupWarn');
+  if(dw){var hh='';
+    if(!npiCur.ref_id&&d.demo.lastName&&(d.demo.dob||d.demo.firstName)){
+      var mt=npiRefMatches(d);
+      var row=function(x,btn){return '<div style="display:flex;align-items:center;gap:8px;margin-top:6px;font-weight:600">'+esc(x.patientName)+' · DOB '+fmtDate(x.dob)+' · <span style="text-decoration:underline">DOI '+fmtDate(x.doi)+'</span> · '+esc(x.caseType||'')+' · '+esc(x.status||'')+(btn?'<button class="btn-cancel" style="font-size:11px;margin-left:auto" onclick="npiLinkRef(\''+x.id+'\')">Use this referral</button>':'')+'</div>';};
+      if(!d.injury.doi&&mt.all.length){
+        hh='<div class="npi-warn" style="background:#eef4fb;color:var(--navy);border-color:#bcd0ea;margin-top:10px">ℹ️ This patient has '+mt.all.length+' referral'+(mt.all.length>1?'s':'')+' in the CRM. Enter the <strong>Date of Injury</strong> (section 2) to check whether this injury is already registered.'+mt.all.slice(0,4).map(function(x){return row(x,false)}).join('')+'</div>';
+      } else if(mt.same.length){
+        hh='<div class="npi-warn" style="background:#fff8ec;color:#7a5410;border-color:var(--gold);margin-top:10px">⚠️ A referral for this injury (DOI '+fmtDate(d.injury.doi)+') is already in the CRM. Use it so nothing is duplicated:'+mt.same.slice(0,3).map(function(x){return row(x,true)}).join('')+'</div>';
+      } else if(mt.other.length){
+        hh='<div class="npi-warn" style="background:#eef4fb;color:var(--navy);border-color:#bcd0ea;margin-top:10px">ℹ️ This patient has other referral'+(mt.other.length>1?'s':'')+' with a different date of injury. This intake will create a <strong>new referral for DOI '+fmtDate(d.injury.doi)+'</strong>.'+mt.other.slice(0,4).map(function(x){return row(x,false)}).join('')+'</div>';
+      }
+    }
+    if(dw.innerHTML!==hh)dw.innerHTML=hh;
+  }
+  var miss=npiMissing(d);var ct=document.getElementById('npiMissCt');if(ct){ct.textContent=miss.length;ct.style.background=miss.length?'var(--red)':'var(--teal)';}
+  var pv=document.getElementById('npiPrev');if(!pv)return;
+  if(npiTabCur==='hpi'){pv.innerHTML='<div class="npi-src">'+esc(npiSource(d))+'</div>'+npiHpiHtml(d);}
+  else if(npiTabCur==='miss'){
+    pv.innerHTML=miss.length?'<div style="font-size:12px;color:var(--gray-600);margin-bottom:8px">Still needed before marking complete:</div>'+miss.map(function(m){return '<div class="npi-miss" onclick="document.getElementById(\'npiSec'+m.sec+'\').scrollIntoView({behavior:\'smooth\'})">'+m.sec+'. '+esc(m.l)+' →</div>'}).join(''):'<div style="color:var(--teal);font-weight:700;padding:12px 0">✓ Everything required is filled in.</div>';
+  } else {
+    var rows=npiRegRows(d);
+    pv.innerHTML='<table class="npi-reg">'+rows.map(function(r,i){return r[0]==='§'?'<tr><td colspan="3" class="npi-reg-h">'+esc(r[1])+'</td></tr>':'<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1]||'—')+'</td><td>'+(r[1]?'<button class="npi-cp" onclick="npiCopy('+i+')" title="Copy">⧉</button>':'')+'</td></tr>'}).join('')+'</table>';
+  }
+}
+function npiRegRows(d){
+  var a=d.demo,c=d.claim,hp=d.hipaa,e=d.emp,ct=c.caseType||'WC',mva=(ct==='MVA'||ct==='NJ MVA');
+  var rows=[['§','Patient'],['Last name',npiCap(a.lastName)],['First name',npiCap(a.firstName)],['DOB',npiFmtD(a.dob)],['Phone',a.phone],['Email',a.email],['Language',a.language],
+    ['Address',a.addr1],['Apt/Suite',a.addr2],['City',a.city],['State',(a.state||'').toUpperCase()],['ZIP',a.zip],
+    ['§','Appointment'],['Office',d.appt.location],['Date',npiFmtD(d.appt.date)],['Time',npiTime(d.appt.time)],['Referral source',d.ref.source],['Referred / registered',npiFmtD(d.ref.regDate)],
+    ['§','Case'],['Case type',ct],['Date of injury',npiFmtD(d.injury.doi)]];
+  if(ct==='WC'||mva){rows.push([mva?'Accident state':'Injury state',c.injState],[mva?'Auto carrier':'WC carrier',c.carrier],['Claim #',c.claimNo]);if(mva)rows.push(['Policy #',c.policyNo]);rows.push(['Adjuster',c.adjName],['Adjuster contact',c.adjPhone]);}
+  rows.push(['Attorney',c.attorney],['Law firm',c.lawFirm],['Firm contact',c.lawContact]);
+  var al=npiAlertType(d);if(al)rows.push(['Alerts',al.replace(/ \| /g,', ')]);
+  if(ct==='WC')rows.push(['§','Employer'],['Employer',e.employer],['Job title',e.title],['Reported to employer',npiFmtD(e.reported)]);
+  if(ct!=='PI')rows.push(['§','Health Insurance'],['Has insurance',c.hasIns==='yes'?'Yes':c.hasIns==='no'?'No':''],['Carrier',c.insName],['Member ID',c.insId]);
+  rows.push(['§','HIPAA Authorization (for signature form)'],['Scope',hp.scope==='limited'?'Limited — '+(hp.limited||''):hp.scope==='full'?'Full disclosure':''],['Authorized individual',hp.name],['Relationship',hp.rel],['Phone',hp.phone]);
+  return rows;
+}
+function npiCopy(i){var r=npiRegRows(npiCur.data)[i];if(r&&r[1])npiClip(r[1],'Copied '+r[0]);}
+function npiClip(text,msg){
+  var done=function(){var s=document.getElementById('npiSaved');if(s){s.textContent='✓ '+(msg||'Copied');}};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(done).catch(function(){npiClipFallback(text);done();});
+  else{npiClipFallback(text);done();}
+}
+function npiClipFallback(text){var t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(t);}
+function npiCopyHpi(){npiClip(npiHpiText(npiCur.data),'HPI copied — paste into the chart');}
+function npiTime(t){if(!t)return'';var m=t.match(/^(\d{1,2}):(\d{2})/);if(!m)return t;var h=+m[1],ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+m[2]+' '+ap;}
+function npiCap(x){return (x||'').trim().split(/\s+/).map(function(w){return w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()}).join(' ');}
+function npiFileName(d){var n=[npiCap(d.demo.lastName),npiCap(d.demo.firstName)].filter(Boolean).join('_').replace(/[^A-Za-z0-9_\-]/g,'')||'Patient';return n+(d.injury.doi?'_DOI-'+d.injury.doi:'')+'_NP_HPI.pdf';}
+
+// ── PDF (jsPDF, loaded on demand) ──
+var _npiPdfLib=null;
+function npiLoadPdfLib(){
+  if(window.jspdf&&window.jspdf.jsPDF)return Promise.resolve(window.jspdf.jsPDF);
+  if(_npiPdfLib)return _npiPdfLib;
+  _npiPdfLib=new Promise(function(res,rej){var sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    sc.onload=function(){window.jspdf&&window.jspdf.jsPDF?res(window.jspdf.jsPDF):rej(new Error('jsPDF missing'))};sc.onerror=function(){_npiPdfLib=null;rej(new Error('Could not load PDF library'))};document.head.appendChild(sc);});
+  return _npiPdfLib;
+}
+function npiPdfSafe(t){return String(t==null?'':t).replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/…/g,'...').replace(/[^\x09\x0A\x0D\x20-\x7E -ÿ–—•]/g,'');}
+async function npiDownloadPdf(){
+  var d=npiCur.data;
+  try{var JsPDF=await npiLoadPdfLib();}catch(e){alert('Could not load the PDF tool (check your internet connection). Opening the print view instead — choose "Save as PDF".');npiPrint();return;}
+  var doc=new JsPDF({unit:'pt',format:'letter'});var W=612,M=54,y=0,CW=W-2*M,navy=[48,80,143];
+  var nm=[npiCap(d.demo.firstName),npiCap(d.demo.lastName)].filter(Boolean).join(' ');
+  function header(){doc.setFillColor(navy[0],navy[1],navy[2]);doc.rect(0,0,W,6,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(15);doc.setTextColor(navy[0],navy[1],navy[2]);doc.text('New Patient HPI',M,42);
+    doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(60);doc.text('CarePath Injury Centers'+(d.appt.location?'  |  '+d.appt.location:''),W-M,42,{align:'right'});
+    doc.setFontSize(10.5);doc.setTextColor(20);doc.text(npiPdfSafe(nm+(d.demo.dob?'   DOB '+npiFmtD(d.demo.dob):'')+(d.injury.doi?'   DOI '+npiFmtD(d.injury.doi):'')),M,60);
+    doc.setDrawColor(navy[0],navy[1],navy[2]);doc.setLineWidth(1);doc.line(M,68,W-M,68);y=86;}
+  function ensure(h){if(y+h>792-M){doc.addPage();header();}}
+  function para(t,opts){opts=opts||{};doc.setFont('helvetica',opts.bold?'bold':(opts.italic?'italic':'normal'));doc.setFontSize(opts.size||10);doc.setTextColor(opts.color||20);
+    var x=M+(opts.indent||0),w=CW-(opts.indent||0);var lines=doc.splitTextToSize(npiPdfSafe(t),w);
+    lines.forEach(function(ln,i){ensure(13);if(opts.bullet&&i===0)doc.text('•',x-10,y);doc.text(ln,x,y);y+=13;});}
+  header();
+  para(npiSource(d),{italic:1,size:9,color:90});y+=2;
+  var bulletSecs=['Current Medications (Past Year)','Past Medical History','Affected Body Areas','Treatment History','Impact on Daily Activities'];
+  npiHpiSections(d).forEach(function(sec){
+    ensure(34);y+=8;doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(navy[0],navy[1],navy[2]);doc.text(sec.h,M,y);y+=4;
+    doc.setDrawColor(215);doc.setLineWidth(0.5);doc.line(M,y,W-M,y);y+=12;
+    var isB=bulletSecs.indexOf(sec.h)!==-1;
+    sec.lines.forEach(function(l,i){
+      var lead=(sec.h==='Treatment History'||sec.h==='Impact on Daily Activities')&&i===0;
+      if(isB&&!lead&&l!=='—'&&!/^None/.test(l))para(l,{bullet:1,indent:14});else para(l);
+    });
+  });
+  var n=doc.getNumberOfPages();for(var i=1;i<=n;i++){doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(120);doc.text(npiPdfSafe(nm)+'  |  Page '+i+' of '+n,W/2,792-28,{align:'center'});}
+  doc.save(npiFileName(d));
+}
+function npiPrint(){
+  var d=npiCur.data,nm=[npiCap(d.demo.firstName),npiCap(d.demo.lastName)].filter(Boolean).join(' ');
+  var w=window.open('','_blank');if(!w){alert('Allow pop-ups to print.');return;}
+  w.document.write('<!DOCTYPE html><html><head><title>'+esc(npiFileName(d).replace('.pdf',''))+'</title><style>body{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#111;margin:36px;line-height:1.45}.top{display:flex;justify-content:space-between;border-bottom:2px solid #30508F;padding-bottom:8px;margin-bottom:6px}.top h1{font-size:16px;margin:0;color:#30508F}.npi-src{font-size:10.5px;color:#555;margin-bottom:6px}.npi-h{font-weight:700;font-size:12.5px;margin:12px 0 3px;color:#30508F;border-bottom:1px solid #ddd;padding-bottom:2px}ul{margin:2px 0 0 18px;padding:0}</style></head><body>'+
+    '<div class="top"><div><h1>New Patient HPI</h1><div>'+esc(nm)+(d.demo.dob?' · DOB '+npiFmtD(d.demo.dob):'')+(d.injury.doi?' · DOI '+npiFmtD(d.injury.doi):'')+'</div></div><div style="text-align:right">CarePath Injury Centers<br>'+esc(d.appt.location||'')+'</div></div>'+
+    '<div class="npi-src">'+esc(npiSource(d))+'</div>'+npiHpiHtml(d)+'</body></html>');
+  w.document.close();w.focus();setTimeout(function(){w.print();},300);
+}
+
+// ── create / update the referral profile ──
+function npiRefFields(d){
+  var f={patientName:npiCap(d.demo.lastName)+', '+npiCap(d.demo.firstName)};
+  NPI_SYNC.forEach(function(m){if(m[1]==='apptDate'||m[1]==='createdDate')return;var v=npiGet(d,m[0]);f[m[1]]=(v==null?'':String(v).trim());});
+  if(!f.caseType)f.caseType='WC';if(!f.language)f.language='English';
+  f.alertType=npiAlertType(d);
+  return f;
+}
+function npiSaveReferral(isComplete){
+  var d=npiCur.data;
+  var fields=npiRefFields(d);
+  dupRegister('firm',fields.lawFirm);dupRegister('source',fields.referralSource);
+  var apptLine=d.appt.date?'Scheduled for '+fmtDate(d.appt.date)+(d.appt.time?' at '+npiTime(d.appt.time):'')+' — '+(d.appt.location||''):'Not yet scheduled';
+  var logEntry=isComplete?'Intake completed. '+apptLine+(d.appt.notes?' ('+d.appt.notes+')':'')+'. Signature forms still required.':null;
+  var r=npiCur.ref_id?refs.find(function(x){return x.id===npiCur.ref_id}):null;
+  if(r){
+    var patch={};
+    Object.keys(fields).forEach(function(k){if(!_refMap[k])return;r[k]=fields[k];patch[_refMap[k]]=(_dateFields.indexOf(_refMap[k])!==-1&&!fields[k])?null:fields[k];});
+    if(d.ref.regDate&&d.ref.regDate!==r.createdDate){r.createdDate=d.ref.regDate;patch.created_date=d.ref.regDate;}
+    if(d.appt.date&&d.appt.date!==r.apptDate){
+      var prevAppt=r.apptDate,prevOutcome=r.apptOutcome;
+      r.apptDate=d.appt.date;patch.appt_date=d.appt.date;
+      if(!prevAppt){r.dateScheduledOn=today();r.daysToSchedule=r.createdDate?Math.max(0,daysBtw(r.createdDate,today())):0;r.alertAssignedTo=null;
+        patch.date_scheduled_on=r.dateScheduledOn;patch.days_to_schedule=r.daysToSchedule;patch.alert_assigned_to=null;}
+      else if(prevOutcome==='no_show'||prevOutcome==='cancelled'){r.apptOutcome=null;r.apptOutcomeReason='';r.apptConfirmAssignedTo=null;r.lastApptFollowUp=null;
+        patch.appt_outcome=null;patch.appt_outcome_reason='';patch.appt_confirm_assigned_to=null;patch.last_appt_follow_up=null;}
+      if(r.status==='Pending Scheduling'||(prevAppt&&(prevOutcome==='no_show'||prevOutcome==='cancelled'))){r.status='Scheduled';patch.status='Scheduled';}
+      npiLog((prevAppt?'Appointment changed from '+fmtDate(prevAppt)+' to ':'Scheduled for ')+fmtDate(d.appt.date)+(d.appt.time?' at '+npiTime(d.appt.time):'')+' — '+(d.appt.location||''));
+      if(!prevAppt&&!cases.find(function(c){return c.sourceRefId===r.id}))createCaseFromRef(r);
+    }
+    npiLog(logEntry||'Saved to referral.');
+    _markModified(r.id);
+    if(_useNewTables)_dbPatch('referrals',r.id,patch);else _legacySave('cp11_refs',refs);
+    // keep the linked case in step (same as editing a referral)
+    try{syncRefToCase(r.id);}catch(e){}
+    var lc=cases.find(function(c){return c.sourceRefId===r.id});
+    if(lc&&(lc.missingInfo||'')!==(r.alertType||'')){
+      lc.missingInfo=r.alertType||'';if(r.alertType)lc.dismissedAlerts=(lc.dismissedAlerts||[]).filter(function(x){return x!=='missing-info'});
+      _markModified(lc.id);if(_useNewTables)_dbPatch('cases',lc.id,{missing_info:lc.missingInfo,dismissed_alerts:lc.dismissedAlerts||[]});
+    }
+    return r;
+  }
+  var owner=getNextStaff();  // same round-robin rule as + New Referral
+  var nr=Object.assign({id:genId()},fields,{apptDate:d.appt.date||'',notes:d.appt.notes||'',status:d.appt.date?'Scheduled':'Pending Scheduling',paperworkCompleted:'no',recordsNeeded:[],
+    createdDate:d.ref.regDate||today(),enteredAt:new Date().toISOString(),registeredBy:currentUser,updateLog:[],alertAssignedTo:owner,lastContactDate:today(),
+    dateScheduledOn:null,daysToSchedule:null,apptOutcome:null,apptConfirmAssignedTo:null,lastApptFollowUp:null});
+  npiLog('Referral created from phone intake. '+apptLine+'.');if(logEntry)npiLog(logEntry);
+  if(nr.apptDate){nr.dateScheduledOn=today();nr.daysToSchedule=nr.createdDate?Math.max(0,daysBtw(nr.createdDate,today())):0;nr.apptConfirmAssignedTo=owner;}
+  refs.push(nr);
+  if(nr.apptDate)createCaseFromRef(nr);
+  saveSingleRef(nr,true);
+  return nr;
+}
+
+// shared checks before writing to the referral; returns false to stop
+function npiPreflight(){
+  var d=npiCur.data,ct=d.claim.caseType||'WC';
+  if(!d.demo.firstName||!d.demo.lastName){alert('First and last name are required.');return false;}
+  if(!ct){alert('Case type is required.');return false;}
+  if(!d.injury.doi){alert('Date of injury is required.');return false;}
+  if(!d.ref.source){alert('Referral source is required.');return false;}
+  if(!d.ref.regDate){alert('Referred / registered date is required.');return false;}
+  if(!d.appt.location){alert('Office is required (section: Appointment).');return false;}
+  var dupF=[['source','ref.source'],['firm','claim.lawFirm'],['attorney','claim.attorney']];
+  for(var di=0;di<dupF.length;di++){var cur=npiGet(d,dupF[di][1])||'';var out=dupResolve(dupF[di][0],cur);
+    var inp=document.querySelector('[data-npk="'+dupF[di][1]+'"]');
+    if(out===null){if(inp){inp.focus();dupHint(inp);}return false;}
+    if(out!==String(cur).trim()){npiSet(d,dupF[di][1],out);if(inp){inp.value=out;dupHint(inp);}}}
+  var st=d.claim.injState;
+  if(st==='TX'||(st==='NJ'&&ct==='WC')){alert('⛔ DO NOT SCHEDULE\n\nCarePath does not accept '+(st==='TX'?'Texas cases':'New Jersey workers\' comp cases')+'. Check with a manager before going further.');return false;}
+  if(d.claim.lawFirm&&isBlockedFirm(d.claim.lawFirm)){alert('⛔ DO NOT SCHEDULE\n\nCarePath does not participate with "'+d.claim.lawFirm+'". Check with a manager before going further.');return false;}
+  if(!npiCur.ref_id){
+    var mt=npiRefMatches(d);
+    var lst=function(a){return a.slice(0,4).map(function(x){return '"'+x.patientName+'" (DOB '+fmtDate(x.dob)+', DOI '+fmtDate(x.doi)+', '+x.status+')'}).join('\n');};
+    if(mt.same.length){
+      var x=mt.same[0];
+      if(confirm('A referral for this injury is already in the CRM:\n\n'+lst(mt.same)+'\n\nOK = attach this intake to that referral and update it\nCancel = go back'))npiLinkRef(x.id);
+      return false;  // re-render attached to the existing referral; scheduler clicks Save again
+    }
+    if(mt.other.length&&!confirm('This patient has other referral'+(mt.other.length>1?'s':'')+' with a different date of injury:\n\n'+lst(mt.other)+'\n\nOK = create a NEW referral for DOI '+fmtDate(d.injury.doi)+'\nCancel = go back'))return false;
+  } else {
+    var lr=refs.find(function(x){return x.id===npiCur.ref_id});
+    if(lr&&lr.doi&&d.injury.doi!==lr.doi&&!confirm('This intake is attached to the referral with DOI '+fmtDate(lr.doi)+'.\n\nChange that referral\'s date of injury to '+fmtDate(d.injury.doi)+'?\n\nOnly do this to fix a typo. If this is a NEW injury, click Cancel and start a new intake — each injury gets its own referral.'))return false;
+  }
+  return true;
+}
+function npiAfterSave(msg){
+  npiSaveNow();
+  var ed=document.getElementById('sec-crm-intake-edit');ed.dataset.npiId=npiCur.id;renderNpIntakeEditor(ed);
+  try{updateAllBadges();}catch(e){}
+  var s=document.getElementById('npiSaved');if(s){s.textContent='✓ '+msg;s.style.color='var(--teal)';s.style.fontWeight='700';}
+}
+function npiSaveToCrm(){
+  if(_isExecRO()){showReadOnly();return;}
+  var wasLinked=!!npiCur.ref_id;
+  if(!npiPreflight())return;
+  var r=npiSaveReferral(false);npiCur.ref_id=r.id;
+  npiAfterSave(wasLinked?'Referral updated':'Referral created — follow-up reminders are active');
+}
+async function npiComplete(){
+  if(_isExecRO()){showReadOnly();return;}
+  if(!npiPreflight())return;
+  var miss=npiMissing(npiCur.data);
+  if(miss.length&&!confirm(miss.length+' item(s) are still blank:\n\n• '+miss.map(function(m){return m.l}).join('\n• ')+'\n\nComplete and save anyway?'))return;
+  var r=npiSaveReferral(true);
+  npiCur.ref_id=r.id;npiCur.status='complete';npiCur.completed_by=currentUser||'';npiCur.completed_at=new Date().toISOString();
+  npiAfterSave('Intake complete — referral updated, HPI downloading');
+  npiDownloadPdf();
 }
 
 // ══════════════════════════════════════════════════════════════════════
