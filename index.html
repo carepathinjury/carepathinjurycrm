@@ -426,7 +426,7 @@
     <div class="nav-item" id="crmNavMgrDash" data-page="crm-mgr-dash" onclick="openCrmMgrDash()" style="display:none"><div class="nav-icon">🔒</div> Manager Analytics</div>
     <div class="nav-item" id="crmNavMgrMetrics" data-page="crm-mgr-metrics" onclick="promptPIN('crm-mgr-metrics')" style="display:none"><div class="nav-icon">🔒</div> Team Metrics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Internal CRM · Confidential<br>build 2026-11-11-views</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Internal CRM · Confidential<br>build 2026-11-11-np-intake</p></div>
 </nav>
 <div class="main-content" id="crmMain">
   <div class="section active" id="sec-crm-dashboard"></div>
@@ -473,7 +473,7 @@
     <div class="nav-item" id="cmNavMyMetrics" data-page="cm-my-metrics" onclick="cmNav('cm-my-metrics')"><div class="nav-icon">📈</div> My Metrics</div>
     <div class="nav-item" id="cmNavMgrDash" data-page="cm-mgr-dash" onclick="promptPIN('cm-mgr-dash')" style="display:none"><div class="nav-icon">🔒</div> Manager View</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Case Management · Confidential<br>build 2026-11-11-views</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Case Management · Confidential<br>build 2026-11-11-np-intake</p></div>
 </nav>
 <div class="main-content" id="cmMain">
   <div class="section active" id="sec-cm-dashboard"></div>
@@ -506,7 +506,7 @@
     <div class="nav-item" data-page="mkt-report" onclick="mktNav('mkt-report')"><div class="nav-icon">📄</div> Weekly Snapshot</div>
     <div class="nav-item" data-page="mkt-analytics" onclick="mktNav('mkt-analytics')"><div class="nav-icon">📊</div> Analytics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential<br>build 2026-11-11-views</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential<br>build 2026-11-11-np-intake</p></div>
 </nav>
 <div class="main-content" id="mktMain">
   <div class="section active" id="sec-mkt-pipeline"></div>
@@ -544,7 +544,7 @@
     <div class="nav-item" id="psrNavMyMetrics" data-page="psr-my-metrics" onclick="psrNav('psr-my-metrics')"><div class="nav-icon">📈</div> My Metrics</div>
     <div class="nav-item" id="psrNavMgrDash" data-page="psr-mgr-dash" onclick="promptPIN('psr-mgr-dash')" style="display:none"><div class="nav-icon">🔒</div> Manager View</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Patient Services · Confidential<br>build 2026-11-11-views</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Patient Services · Confidential<br>build 2026-11-11-np-intake</p></div>
 </nav>
 <div class="main-content" id="psrMain">
   <div class="section active" id="sec-psr-dashboard"></div>
@@ -584,7 +584,7 @@
     <div class="nav-section-label">Metrics</div>
     <div class="nav-item" id="njmvaNavMgrDash" data-page="njmva-analytics" onclick="if(currentUser==='Manager'||userRole==='nj_mva'||_isExec()){njmvaNav('njmva-analytics')}else{promptPIN('njmva-analytics')}" style="display:none"><div class="nav-icon">📊</div> Analytics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential<br>build 2026-11-11-views</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential<br>build 2026-11-11-np-intake</p></div>
 </nav>
 <div class="main-content" id="njmvaMain">
   <div class="section active" id="sec-njmva-dashboard"></div>
@@ -1130,7 +1130,7 @@
 </div>
 
 <script>
-console.log('CarePath CRM build: 2026-11-11-views');
+console.log('CarePath CRM build: 2026-11-11-np-intake');
 // ══════════════════════════════════════════════════════════════════════
 // CORE DATA
 // ══════════════════════════════════════════════════════════════════════
@@ -1415,7 +1415,7 @@ function _dbDelete(table, id){
 
 // ─── Save indicator ────────────────────────────────────────────────
 var _saveTimer=null;
-var EXEC_USERS = ['Gabriel','ghuh@carepathinjury.com','Sam Sisco','ssisco@carepathinjury.com'];
+var EXEC_USERS = ['Gabriel','ghuh@carepathinjury.com'];
 function _isExec(){ var u=(currentUser||'').trim().toLowerCase(), e=(currentEmail||'').trim().toLowerCase(); return userRole==='exec' || EXEC_USERS.some(function(n){var x=n.toLowerCase();return x===u||x===e;}); }
 function _isExecRO(){return _isExec();}
 function _roBlocked(table){ if(_isExecRO() && (table==='referrals'||table==='cases')){ showReadOnly(); return true; } return false; }
@@ -2389,7 +2389,7 @@ function loadRecordsData(arr){
 // ══════════════════════════════════════════════════════════════════════
 let currentUser = null;
 let currentEmail = '';
-const BUILD_VERSION='2026-11-10f-np-intake';
+const BUILD_VERSION='2026-11-11-np-intake';
 try{console.log('%cCarePath build: '+BUILD_VERSION,'color:#1a7f7a;font-weight:700');}catch(e){}
 let userRole = null; // 'scheduler','case_mgr','marketing','manager'
 let managerUnlocked = false;
@@ -2934,8 +2934,6 @@ function renderCrmAlertCard(a, i) {
 var crmRefSort='newest';
 var crmRefSearchVal='';
 var crmRefTypeFilter='';
-var crmRefStatusFilter='';
-var crmLostSort='date',crmLostLocFilter='';
 function renderCrmReferrals(el) {
   var searchEl=document.getElementById('crmRefSearch');
   if(searchEl)crmRefSearchVal=searchEl.value;
@@ -2944,10 +2942,6 @@ function renderCrmReferrals(el) {
   var typeOptions=Object.keys(caseTypes).sort();
   let h = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">All Referrals</div><div style="margin-left:auto"><button class="btn-primary" onclick="npiStart(null)" style="font-size:11px;padding:7px 14px;background:var(--teal);margin-right:6px" title="Patient is on the phone now — one form creates the referral and the NP HPI">📞 + New Patient Intake</button><button class="btn-primary" onclick="openNewRefModal()" style="font-size:11px;padding:7px 14px" title="Couldn\'t reach the patient yet — add the referral for follow-up">+ New Referral</button></div></div>';
   h += '<div class="page-subtitle">'+refs.length+' total referrals.</div>';
-  var _so=['Pending Scheduling','Scheduled','Active Treatment','Completed','Patient Lost'];
-  var _scol={'Pending Scheduling':'var(--gold)','Scheduled':'var(--teal)','Active Treatment':'#2e7d5b','Completed':'var(--navy)','Patient Lost':'var(--red)'};
-  function _rchip(val,label,n,color){var on=crmRefStatusFilter===val;return '<div onclick="crmRefStatusFilter=\''+val+'\';renderCrmReferrals(document.getElementById(\'sec-crm-referrals\'))" style="cursor:pointer;min-width:92px;flex:1;background:'+(on?color:'#fff')+';border:1.5px solid '+color+';border-radius:10px;padding:8px 12px;text-align:center"><div style="font-size:21px;font-weight:800;color:'+(on?'#fff':color)+'">'+n+'</div><div style="font-size:10px;font-weight:600;color:'+(on?'#fff':'var(--gray-500)')+'">'+label+'</div></div>';}
-  (function(){var _s=crmRefSearchVal.toLowerCase();var _b=refs.slice();if(crmRefTypeFilter)_b=_b.filter(function(r){return r.caseType===crmRefTypeFilter});if(_s)_b=_b.filter(function(r){return (r.patientName||'').toLowerCase().includes(_s)||(r.location||'').toLowerCase().includes(_s)||(r.referralSource||'').toLowerCase().includes(_s)||(r.lawFirm||'').toLowerCase().includes(_s)});var _c={};_so.forEach(function(x){_c[x]=0});var _oth=0;_b.forEach(function(r){if(_c[r.status]!==undefined)_c[r.status]++;else _oth++;});h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 16px">';h+=_rchip('','All',_b.length,'var(--navy)');_so.forEach(function(x){h+=_rchip(x,x.replace(' Scheduling','').replace('Active Treatment','In Treatment'),_c[x],_scol[x]);});if(_oth>0)h+=_rchip('__other','Other',_oth,'var(--gray-400)');h+='</div>';})();
   h += '<div class="table-card"><div class="table-header"><h3>Registry</h3><div class="table-controls">';
   h += '<select class="search-input" style="width:auto" onchange="crmRefTypeFilter=this.value;renderCrmReferrals(document.getElementById(\'sec-crm-referrals\'))"><option value="">All Types</option>';
   typeOptions.forEach(function(t){h+='<option value="'+esc(t)+'"'+(crmRefTypeFilter===t?' selected':'')+'>'+esc(t)+'</option>';});
@@ -2958,8 +2952,6 @@ function renderCrmReferrals(el) {
   let list = refs.slice();
   if(crmRefTypeFilter) list = list.filter(function(r){return r.caseType===crmRefTypeFilter});
   if(search) list = list.filter(function(r){return (r.patientName||'').toLowerCase().includes(search)||(r.location||'').toLowerCase().includes(search)||(r.referralSource||'').toLowerCase().includes(search)||(r.lawFirm||'').toLowerCase().includes(search)});
-  if(crmRefStatusFilter==='__other') list=list.filter(function(r){return _so.indexOf(r.status)===-1});
-  else if(crmRefStatusFilter) list=list.filter(function(r){return r.status===crmRefStatusFilter});
   if(crmRefSort==='newest') list.sort(function(a,b){return(b.enteredAt||b.createdDate||'').localeCompare(a.enteredAt||a.createdDate||'')});
   else if(crmRefSort==='oldest') list.sort(function(a,b){return(a.enteredAt||a.createdDate||'').localeCompare(b.enteredAt||b.createdDate||'')});
   else if(crmRefSort==='name') list.sort(function(a,b){return(a.patientName||'').localeCompare(b.patientName||'')});
@@ -3024,54 +3016,23 @@ function renderCrmAlerts(el) {
 
 function renderCrmLostPatients(el){
   var lost=refs.filter(function(r){return r.status==='Patient Lost'});
+  lost.sort(function(a,b){return(b.lostDate||b.createdDate||'').localeCompare(a.lostDate||a.createdDate||'')});
   var h='<div class="page-title">Lost Patients — Unrecoverable Leakage</div><div class="page-subtitle">'+lost.length+' patient'+(lost.length!==1?'s':'')+' lost due to patient choices or inability to schedule.</div>';
 
-  // Summary by reason (all lost)
+  // Summary by reason
   var reasons={};lost.forEach(function(r){var rs=r.lostReason||'Unknown';reasons[rs]=(reasons[rs]||0)+1;});
-  var reasonOrder=Object.entries(reasons).sort(function(a,b){return b[1]-a[1]});
-  if(reasonOrder.length>0){
+  if(Object.keys(reasons).length>0){
     h+='<div class="table-card"><div class="table-header"><h3>Summary by Reason</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Reason</th><th>Count</th><th>%</th></tr></thead><tbody>';
-    reasonOrder.forEach(function(e){h+='<tr><td style="font-weight:600">'+esc(e[0])+'</td><td>'+e[1]+'</td><td>'+(lost.length>0?Math.round(e[1]/lost.length*100):0)+'%</td></tr>';});
+    Object.entries(reasons).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
+      h+='<tr><td style="font-weight:600">'+esc(e[0])+'</td><td>'+e[1]+'</td><td>'+(lost.length>0?Math.round(e[1]/lost.length*100):0)+'%</td></tr>';
+    });
     h+='</tbody></table></div></div>';
   }
 
-  // Reasons Lost by Clinic Location (cross-tab: rows=location, cols=top reasons + Other)
-  if(lost.length>0){
-    var topReasons=reasonOrder.slice(0,6).map(function(e){return e[0];});
-    var hasOther=reasonOrder.length>6;
-    var locs={};
-    lost.forEach(function(r){var loc=r.location||'Unknown';if(!locs[loc])locs[loc]={total:0,by:{}};locs[loc].total++;var rs=r.lostReason||'Unknown';var key=topReasons.indexOf(rs)!==-1?rs:'__other';locs[loc].by[key]=(locs[loc].by[key]||0)+1;});
-    var locRows=Object.keys(locs).sort(function(a,b){return locs[b].total-locs[a].total;});
-    h+='<div class="table-card"><div class="table-header"><h3>Reasons Lost by Clinic Location</h3></div><div class="table-scroll"><table class="tbl" style="min-width:720px"><thead><tr><th>Location</th><th style="text-align:center">Total Lost</th>';
-    topReasons.forEach(function(rs){h+='<th style="text-align:center;font-size:10px">'+esc(rs)+'</th>';});
-    if(hasOther)h+='<th style="text-align:center">Other</th>';
-    h+='</tr></thead><tbody>';
-    locRows.forEach(function(loc){var L=locs[loc];h+='<tr><td style="font-weight:700;color:var(--navy)">'+esc(loc)+'</td><td style="text-align:center;font-weight:700;color:var(--red)">'+L.total+'</td>';topReasons.forEach(function(rs){var v=L.by[rs]||0;h+='<td style="text-align:center'+(v?'':';color:var(--gray-300)')+'">'+(v||'—')+'</td>';});if(hasOther){var ov=L.by['__other']||0;h+='<td style="text-align:center">'+(ov||'—')+'</td>';}h+='</tr>';});
-    h+='<tr style="border-top:2px solid var(--gray-200);font-weight:700"><td>All Locations</td><td style="text-align:center;color:var(--red)">'+lost.length+'</td>';
-    topReasons.forEach(function(rs){h+='<td style="text-align:center">'+(reasons[rs]||0)+'</td>';});
-    if(hasOther){var othTot=reasonOrder.slice(6).reduce(function(a,e){return a+e[1];},0);h+='<td style="text-align:center">'+othTot+'</td>';}
-    h+='</tr></tbody></table></div></div>';
-  }
-
-  // Detail list with sort + location filter
-  var locSet={};lost.forEach(function(r){locSet[r.location||'Unknown']=true;});
-  var locOpts=Object.keys(locSet).sort();
-  var disp=lost.slice();
-  if(crmLostLocFilter)disp=disp.filter(function(r){return (r.location||'Unknown')===crmLostLocFilter;});
-  if(crmLostSort==='location')disp.sort(function(a,b){return(a.location||'').localeCompare(b.location||'')||(b.lostDate||'').localeCompare(a.lostDate||'');});
-  else if(crmLostSort==='source')disp.sort(function(a,b){return(a.referralSource||'').localeCompare(b.referralSource||'');});
-  else if(crmLostSort==='reason')disp.sort(function(a,b){return(a.lostReason||'').localeCompare(b.lostReason||'');});
-  else if(crmLostSort==='type')disp.sort(function(a,b){return(a.caseType||'').localeCompare(b.caseType||'');});
-  else disp.sort(function(a,b){return(b.lostDate||b.createdDate||'').localeCompare(a.lostDate||a.createdDate||'');});
-
-  h+='<div class="table-card"><div class="table-header"><h3>All Lost Patients</h3><div class="table-controls">';
-  h+='<select class="search-input" style="width:auto" onchange="crmLostLocFilter=this.value;renderCrmLostPatients(document.getElementById(\'sec-crm-lost\'))"><option value="">All Locations</option>';
-  locOpts.forEach(function(l){h+='<option value="'+esc(l)+'"'+(crmLostLocFilter===l?' selected':'')+'>'+esc(l)+'</option>';});
-  h+='</select>';
-  h+='<select class="search-input" style="width:auto" onchange="crmLostSort=this.value;renderCrmLostPatients(document.getElementById(\'sec-crm-lost\'))"><option value="date"'+(crmLostSort==='date'?' selected':'')+'>Newest Lost</option><option value="location"'+(crmLostSort==='location'?' selected':'')+'>By Location</option><option value="source"'+(crmLostSort==='source'?' selected':'')+'>By Referral Source</option><option value="reason"'+(crmLostSort==='reason'?' selected':'')+'>By Reason</option><option value="type"'+(crmLostSort==='type'?' selected':'')+'>By Case Type</option></select></div></div>';
-  h+='<div class="table-scroll"><table class="tbl" style="min-width:800px"><thead><tr><th>Patient</th><th>Case Type</th><th>Location</th><th>Source</th><th>Reason Lost</th><th>Date Lost</th><th>Days in System</th><th>Notes</th></tr></thead><tbody>';
-  if(disp.length===0)h+='<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--gray-400)">No lost patients'+(crmLostLocFilter?' at '+esc(crmLostLocFilter):'')+'.</td></tr>';
-  disp.forEach(function(r){
+  // Full list
+  h+='<div class="table-card"><div class="table-header"><h3>All Lost Patients</h3></div><div class="table-scroll"><table class="tbl" style="min-width:800px"><thead><tr><th>Patient</th><th>Case Type</th><th>Location</th><th>Source</th><th>Reason Lost</th><th>Date Lost</th><th>Days in System</th><th>Notes</th></tr></thead><tbody>';
+  if(lost.length===0)h+='<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--gray-400)">No lost patients.</td></tr>';
+  lost.forEach(function(r){
     var daysIn=r.createdDate&&r.lostDate?daysBtw(r.createdDate,r.lostDate):0;
     h+='<tr><td><span class="patient-name" onclick="showCrmDetail(\''+r.id+'\')">'+esc(r.patientName)+'</span></td><td><span class="type-badge">'+esc(r.caseType)+'</span></td><td style="font-size:11px">'+esc(r.location||'—')+'</td><td style="font-size:11px">'+esc(r.referralSource||'—')+'</td><td style="font-size:11px;color:var(--red);font-weight:600">'+esc(r.lostReason||'—')+'</td><td style="font-size:11px">'+fmtDate(r.lostDate)+'</td><td style="font-size:11px">'+daysIn+'</td><td style="font-size:10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.lostNotes||'—')+'</td></tr>';
   });
@@ -8694,7 +8655,7 @@ var NPI_ADL=['Walking','Standing','Sitting','Sleeping','Driving','Lifting','Bend
 var NPI_PMH=['High blood pressure','Diabetes','Heart disease','Asthma/COPD','Thyroid disorder','Kidney disease','Liver disease','Arthritis','Anxiety','Depression','Cancer (history)','Bleeding disorder','Takes blood thinners','Seizures','Currently pregnant'];
 
 function npiBlank(){
-  return {demo:{},claim:{caseType:'WC'},hipaa:{scope:'full'},meds:{list:[{}]},pmh:{conditions:[]},injury:{},areas:{list:[]},pain:{qualities:[]},tx:{list:[{}]},emp:{},adl:{list:[]},prior:{},ref:{regDate:today()},appt:{},meta:{}};
+  return {demo:{},claim:{caseType:'WC'},hipaa:{scope:'full'},meds:{list:[{}]},pmh:{conditions:[]},injury:{events:[]},mva:{},areas:{list:[]},pain:{qualities:[]},tx:{list:[{}]},emp:{},adl:{list:[]},prior:{},since:{},ref:{regDate:today()},appt:{},meta:{}};
 }
 
 async function loadNpIntakes(){
@@ -8714,8 +8675,8 @@ function npiSet(o,path,v){var p=path.split('.');var t=o;for(var i=0;i<p.length-1
 function npiV(path){var v=npiGet(npiCur.data,path);return v==null?'':v;}
 function npiTxt(label,path,opts){opts=opts||{};var v=npiV(path);
   return '<div class="form-group'+(opts.full?' full':'')+'"><label>'+label+(opts.req?' <span style="color:var(--red)">*</span>':'')+'</label>'+
-    (opts.area?'<textarea data-npk="'+path+'" rows="'+(opts.rows||3)+'" placeholder="'+esc(opts.ph||'')+'">'+esc(v)+'</textarea>':
-    '<input type="'+(opts.type||'text')+'" data-npk="'+path+'" value="'+esc(v)+'" placeholder="'+esc(opts.ph||'')+'"'+(opts.list?' list="'+opts.list+'"':'')+(opts.dup?' data-dup="'+opts.dup+'"':'')+'>')+(opts.after||'')+(opts.hint?'<div class="npi-hint">'+opts.hint+'</div>':'')+'</div>';}
+    (opts.area?'<textarea spellcheck="true" data-npk="'+path+'" rows="'+(opts.rows||3)+'" placeholder="'+esc(opts.ph||'')+'">'+esc(v)+'</textarea>':
+    '<input type="'+(opts.type||'text')+'"'+(!opts.type&&!opts.list?' spellcheck="true"':'')+' data-npk="'+path+'" value="'+esc(v)+'" placeholder="'+esc(opts.ph||'')+'"'+(opts.list?' list="'+opts.list+'"':'')+(opts.dup?' data-dup="'+opts.dup+'"':'')+'>')+(opts.after||'')+(opts.hint?'<div class="npi-hint">'+opts.hint+'</div>':'')+'</div>';}
 function npiSel(label,path,options,opts){opts=opts||{};var v=npiV(path);
   var h='<div class="form-group'+(opts.full?' full':'')+'"><label>'+label+(opts.req?' <span style="color:var(--red)">*</span>':'')+'</label><select data-npk="'+path+'"><option value="">— Select —</option>';
   options.forEach(function(o){var val=Array.isArray(o)?o[0]:o,lab=Array.isArray(o)?o[1]:o;h+='<option value="'+esc(val)+'"'+(v===val?' selected':'')+'>'+esc(lab)+'</option>';});
@@ -8730,6 +8691,167 @@ function npiFmtD(d){return d?fmtDate(d):'';}
 function npiList(a){a=(a||[]).filter(Boolean);if(a.length<=1)return a.join('');if(a.length===2)return a[0]+' and '+a[1];return a.slice(0,-1).join(', ')+' and '+a[a.length-1];}
 function npiLc(s){return (s||'').replace(/^(Left|Right|Upper|Mid|Lower|Head|Neck|Chest|Abdomen)/,function(m){return m.toLowerCase();});}
 function npiAreas(d){var a=(d.areas.list||[]).map(npiLc);if(d.areas.other)a.push(d.areas.other.trim());return a;}
+
+// ══════════════════════════════════════════════════════════════════════
+// CLINICAL WRITER — turns scheduler-entered text into third-person clinical
+// documentation for the NP HPI (pronouns, shorthand, misspellings, phrasing,
+// capitalization, punctuation). Deterministic: no data leaves the browser.
+// ══════════════════════════════════════════════════════════════════════
+var CLIN_PRON={Female:{s:'she',o:'her',p:'her',r:'herself',m:'hers'},Male:{s:'he',o:'him',p:'his',r:'himself',m:'his'}};
+var CLIN_SHORT=[
+  [/\b(had|did|doing|do|does|attend(?:ed|s|ing)?|start(?:ed|ing)?|went to|go to|going to|goes to|in|completed|finished|some|of|for|and)\s+pt\b/gi,'$1 physical therapy'],
+  [/\bw\/o\b/gi,'without'],[/\bw\//gi,'with '],[/\bb\/c\b/gi,'because'],[/\bbc\b/g,'because'],[/\babt\b/gi,'about'],
+  [/\bapprox\.?(?=\s|$)/gi,'approximately'],[/\bbilat\.?\b/gi,'bilateral'],[/\b(lt|lft)\.?(?=\s+[a-z])/gi,'left'],[/\b(rt|rgt)\.?(?=\s+[a-z])/gi,'right'],
+  [/\bL(?=\s+(shoulder|arm|elbow|wrist|hand|hip|leg|knee|ankle|foot|side|thumb|finger))/g,'left'],[/\bR(?=\s+(shoulder|arm|elbow|wrist|hand|hip|leg|knee|ankle|foot|side|thumb|finger))/g,'right'],
+  [/\bx[\s-]?rays?\b/gi,function(m){return /s$/i.test(m)?'X-rays':'X-ray';}],[/\bmri'?s?\b/gi,'MRI'],[/\bct scan\b/gi,'CT scan'],[/\bct\b/g,'CT'],[/\bemg\b/gi,'EMG'],
+  [/\bE\.?R\.?(?=[\s,.;]|$)/g,'emergency department'],[/\ber\b(?=[\s,.;]|$)/g,'emergency department'],[/\bed\b(?=\s+(visit|at)\b)/g,'emergency department'],
+  [/\bPT\b/g,'physical therapy'],[/\bpt'?s\b/gi,"patient's"],[/\b(pt|pts)\b/g,'patient'],[/\bPt\b/g,'Patient'],[/\bhosp\b/gi,'hospital'],[/\bmeds\b/gi,'medications'],[/\bmed\b/gi,'medication'],
+  [/\bdr\.?(?=\s+[A-Z])/gi,'Dr.'],[/\bdrs?\b(?!\.?\s+[A-Z])/gi,function(m){return /s$/i.test(m)?'doctors':'doctor';}],[/\b(jan|feb|apr|jun|jul|aug|sept?|oct|nov|dec)\.?(?=[\s,]|$)/gi,function(m){return {jan:'January',feb:'February',apr:'April',jun:'June',jul:'July',aug:'August',sep:'September',sept:'September',oct:'October',nov:'November',dec:'December'}[m.replace('.','').toLowerCase()];}],[/(\d)\s*(mg|mcg|ml)\b/gi,function(m,n,u){return n+' '+u.toLowerCase();}],
+  [/\byrs?\b/gi,function(m){return m.toLowerCase()==='yrs'?'years':'year';}],[/\bwks?\b/gi,function(m){return m.toLowerCase()==='wks'?'weeks':'week';}],
+  [/\bhrs?\b/gi,function(m){return m.toLowerCase()==='hrs'?'hours':'hour';}],[/\bmins?\b/gi,'minutes'],[/\bppl\b/gi,'people'],[/\bthru\b/gi,'through'],
+  [/\s&\s/g,' and '],[/\bu\b/g,'you'],[/\bcuz\b/gi,'because'],[/\bgonna\b/gi,'going to'],[/\bwanna\b/gi,'want to']
+];
+var CLIN_SPELL={sholder:'shoulder',shouler:'shoulder',shoulde:'shoulder',sholders:'shoulders',nek:'neck',kne:'knee',knie:'knee',kness:'knees',anckle:'ankle',ankel:'ankle',ancle:'ankle',
+  wirst:'wrist',wrsit:'wrist',rist:'wrist',elbo:'elbow',hipp:'hip',lowerback:'lower back',lowback:'low back',forklfit:'forklift',forklit:'forklift',pallett:'pallet',palet:'pallet',
+  machiene:'machine',machien:'machine',machin:'machine',equiptment:'equipment',equipement:'equipment',recieved:'received',recieve:'receive',accidant:'accident',accedent:'accident',acident:'accident',
+  injurd:'injured',injuried:'injured',injery:'injury',injurey:'injury',swolen:'swollen',sweling:'swelling',sweeling:'swelling',numbess:'numbness',numbnes:'numbness',tinglin:'tingling',tingleing:'tingling',
+  stiffnes:'stiffness',presure:'pressure',lifitng:'lifting',liftin:'lifting',lifiting:'lifting',carrieng:'carrying',carring:'carrying',slipt:'slipped',sliped:'slipped',triped:'tripped',
+  ambulence:'ambulance',hosptial:'hospital',hospitol:'hospital',hosptal:'hospital',emergancy:'emergency',emergeny:'emergency',theraphy:'therapy',therepy:'therapy',
+  chiropracter:'chiropractor',chiro:'chiropractor',surgury:'surgery',sugery:'surgery',xray:'X-ray',xrays:'X-rays',pian:'pain',painfull:'painful',severly:'severely',
+  vehical:'vehicle',vehicule:'vehicle',seatbealt:'seatbelt',concusion:'concussion',dizzyness:'dizziness',headach:'headache',headaces:'headaches',
+  becuase:'because',becasue:'because',beacuse:'because',alot:'a lot',untill:'until',occured:'occurred',ocurred:'occurred',immediatly:'immediately',immediatelly:'immediately',
+  definately:'definitely',reachin:'reaching',bendin:'bending',walkin:'walking',workin:'working',drivin:'driving',standin:'standing',sittin:'sitting',pullin:'pulling',pushin:'pushing',carryin:'carrying',movin:'moving',goin:'going',doin:'doing',gettin:'getting',comin:'coming',feelin:'feeling',havin:'having',tryin:'trying',slippin:'slipping',trippin:'tripping',fallin:'falling',kid:'child',kids:'children',"didn't":'did not',"doesn't":'does not',"wasn't":'was not',"isn't":'is not',"won't":'will not',"couldn't":'could not',"wouldn't":'would not',"hasn't":'has not',"haven't":'have not',"can't":'cannot',"it's":'it is',"that's":'that is',couldnt:"could not",didnt:'did not',doesnt:'does not',dont:'do not',cant:'cannot',wont:'will not',wasnt:'was not',isnt:'is not',hasnt:'has not',havent:'have not'};
+var CLIN_MEDS={advil:'Advil',tylenol:'Tylenol',motrin:'Motrin',aleve:'Aleve',flexeril:'Flexeril',mobic:'Mobic',naproxen:'naproxen',ibuprofin:'ibuprofen',ibuprophen:'ibuprofen',ibuprofen:'ibuprofen',
+  tramadol:'tramadol',percocet:'Percocet',vicodin:'Vicodin',gabapentin:'gabapentin',neurontin:'Neurontin',lyrica:'Lyrica',meloxicam:'meloxicam',cyclobenzaprine:'cyclobenzaprine',
+  tizanidine:'tizanidine',zanaflex:'Zanaflex',robaxin:'Robaxin',medrol:'Medrol',prednisone:'prednisone',lidocaine:'lidocaine',voltaren:'Voltaren',celebrex:'Celebrex',toradol:'Toradol',
+  norco:'Norco',oxycodone:'oxycodone',ultram:'Ultram',baclofen:'baclofen',methocarbamol:'methocarbamol',diclofenac:'diclofenac',lisinopril:'lisinopril',metformin:'metformin'};
+var CLIN_LEAD=/^(was|were|is|am|felt|feel|feels|had|has|have|got|get|hit|fell|went|slipped|tripped|twisted|injured|hurt|hurts|lifted|bent|struck|stepped|landed|turned|pulled|pushed|reached|noticed|started|began|cannot|can't|could not|did not|does not|do not|lost)\b/i;
+var CLIN_PHRASE=[
+  [/\bnite\b/gi,'night'],[/\btonite\b/gi,'tonight'],[/\b1x\b/gi,'once'],[/\b2x\b/gi,'twice'],[/\b3x\b/gi,'three times'],[/\b4x\b/gi,'four times'],
+  [/[,;]?\s+(?:and\s+)?they\s+(?:gave|prescribed)\s+(?:me|him|her)\s+/gi,' and I was prescribed '],
+  [/[,;]?\s+(?:and\s+)?they\s+(?:did|took|ran|performed|done)\s+/gi,', where I underwent '],
+  [/[,;]?\s+(?:and\s+)?they\s+(?:told|said)\s+(?:me|him|her)\s+(?:it was|it's|i had|i have)\s+/gi,' and I was told it was '],
+  [/\b(passed|blacked) out\b/gi,'lost consciousness'],[/\bknocked out\b/gi,'lost consciousness'],[/\bthrew up\b/gi,'vomited'],[/\bthrow(ing)? up\b/gi,'vomiting'],
+  [/\bpain ?killers?\b/gi,'pain medication'],[/\bmessed up\b/gi,'injured'],[/\bgot hit\b/gi,'was struck'],[/\bhit by\b/gi,'struck by'],[/\bgot (hurt|injured)\b/gi,'was injured'],
+  [/\bfell down\b/gi,'fell'],[/\bbanged\b/gi,'struck'],[/\bslammed into\b/gi,'struck'],[/\bwent to the er\b/gi,'went to the emergency department'],
+  [/\b(kind of|kinda|sort of|sorta|like,)\s*/gi,''],[/\b(operating|using|driving|lifting|carrying|pushing|pulling|moving|unloading|loading|on|onto|off|from|into|over|under|with)\s+(?!(?:a|an|the|his|her|their|my|some|two|three|\d+)\b)((?:[a-z]+\s+){0,2}?)(machine|machinery|forklift|ladder|truck|box|pallet|vehicle|car|cart|floor|step|table|door|shelf|chair|jack|dolly|bucket|crate|rack|conveyor|lift|press|saw|scaffold|platform|curb)\b/gi,function(m,v,mid,n){return v+' '+(/^[aeiou]/i.test(mid||n)?'an ':'a ')+(mid||'')+n;}],
+  [/\b(in|to|on|of|into)\s+(?!(?:the|my|his|her|their|a)\b)((?:left|right|lower|upper|mid|both)\s+)?(shoulders?|neck|back|knees?|ankles?|wrists?|elbows?|hips?|hands?|arms?|legs?|feet|foot|head|chest|ribs|thumb|fingers?)\b/gi,'$1 the $2$3'],
+  [/\bgave (?:me|him|her) (?=[A-Za-z])/gi,'provided '],
+  [/\breally bad\b/gi,'severe'],[/\bsuper bad\b/gi,'severe'],[/(^|[.!?]\s+)?\b(?:and\s+)?my\s+((?:left|right|lower|upper|mid)\s+)?([a-z]+)\s+(popped|snapped)\b(?!\s+(?:forward|back|backward|sideways|around))/gi,function(m,st,side,part,v){return (st!=null?st+'I ':(/^and/i.test(m)?'and ':''))+'felt a '+(v.toLowerCase()==='snapped'?'snap':'pop')+' in my '+(side||'')+part;}],
+  [/\b(?:something|it)\s+(popped|snapped)\b/gi,function(m,v){return 'felt a '+(v.toLowerCase()==='snapped'?'snap':'pop');}],[/\bmy back went out\b/gi,'my back gave out'],[/\bcar accident\b/gi,'motor vehicle accident'],[/\bcar crash\b/gi,'motor vehicle collision'],
+  [/\bgot rear[- ]ended\b/gi,'was rear-ended'],[/\brear ended\b/gi,'rear-ended'],[/\bt[- ]?boned\b/gi,'struck on the side (T-bone collision)']
+];
+var CLIN_VERB3={feel:'feels',hurt:'hurts',need:'needs',get:'gets',go:'goes',work:'works',walk:'walks',sleep:'sleeps',take:'takes',notice:'notices',try:'tries',think:'thinks',want:'wants',
+  use:'uses',wake:'wakes',limp:'limps',drive:'drives',live:'lives',know:'knows',remember:'remembers',see:'sees',do:'does',ache:'aches',struggle:'struggles',avoid:'avoids',report:'reports',
+  experience:'experiences',describe:'describes',deny:'denies',stand:'stands',sit:'sits',lift:'lifts',carry:'carries',wear:'wears',ice:'ices',rest:'rests',say:'says',am:'is'};
+
+var CLIN_KEEP={underwent:1,slid:1,struck:1,tore:1,threw:1,wore:1,swung:1,spun:1,stuck:1,brought:1,became:1,gave:1,sent:1,let:1,set:1,quit:1,read:1,led:1,met:1,paid:1,lay:1,laid:1,rode:1,shook:1,forgot:1,found:1,held:1,used:1,was:1,were:1,went:1,fell:1,hit:1,felt:1,had:1,got:1,took:1,saw:1,did:1,came:1,ran:1,made:1,said:1,told:1,thought:1,bent:1,broke:1,caught:1,could:1,would:1,should:1,can:1,will:1,may:1,might:1,must:1,also:1,still:1,just:1,never:1,always:1,usually:1,only:1,really:1,then:1,now:1,hurt:1,put:1,cut:1,lost:1,left:1,stood:1,sat:1,woke:1,drove:1,began:1,heard:1,knew:1,kept:1,even:1,already:1,often:1,again:1,too:1,not:1,and:1,but:1,or:1,to:1};
+function clinConj(v){if(CLIN_VERB3[v])return CLIN_VERB3[v];if(CLIN_KEEP[v]||/(ed|ly|s|ing)$/.test(v)||v.length<2)return v;if(/(sh|ch|x|z|o)$/.test(v))return v+'es';if(/[^aeiou]y$/.test(v))return v.slice(0,-1)+'ies';return v+'s';}
+function clinPron(d){var sx=d&&d.demo&&d.demo.sex;return CLIN_PRON[sx]||null;}
+function clinCase(m,rep){return m.charAt(0)===m.charAt(0).toUpperCase()&&m.charAt(0)!==m.charAt(0).toLowerCase()?rep.charAt(0).toUpperCase()+rep.slice(1):rep;}
+// opts.fragment: a phrase, not a sentence (no capitalization / period). opts.seen: share "the patient" first-mention state.
+function npiClin(text,d,opts){
+  opts=opts||{};var t=String(text==null?'':text);
+  if(!t.trim())return'';
+  t=t.replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/\s+/g,' ').trim();
+  CLIN_SHORT.forEach(function(r){t=t.replace(r[0],r[1]);});
+  t=t.replace(/[A-Za-z']+/g,function(w){var k=w.toLowerCase();if(CLIN_SPELL.hasOwnProperty(k)&&CLIN_SPELL[k]!==k){return clinCase(w,CLIN_SPELL[k]);}if(CLIN_MEDS.hasOwnProperty(k))return CLIN_MEDS[k];return w;});
+  CLIN_PHRASE.forEach(function(r){t=t.replace(r[0],r[1]);});
+  t=t.replace(/\b[b-df-hj-np-tv-xz]{3,5}\b/gi,function(w){return /^(lbs|mph|hwy|blvd|pkwy|ppl|hrs|pts|st|nd|rd|th)$/i.test(w)?w:w.toUpperCase();});
+  t=t.split(/(?<=[.!?])\s+/).map(function(x){return CLIN_LEAD.test(x)?'I '+x.charAt(0).toLowerCase()+x.slice(1):x;}).join(' ');
+  // first person -> third person
+  var P=clinPron(d),seen=opts.seen||{n:0};
+  var first=function(){if(seen.n++===0||!P)return true;return false;};
+  t=t.replace(/\b(?:I|i)(?:'m|\s*m\b|\s+am\b)|\bI(?:'ve|\s+have)\b|\bI(?:'ll|\s+will)\b|\bI'd\b|\b(?:I|i)\s+(?:can't|cannot|can not)\b|\b(?:I|i)\s+(?:don't|do not)\b|\b(?:I|i)\s+[a-z]+\b|\b(?:I|i)\b|\b(?:my|My|MY)\b|\bmyself\b|\b(?:me|Me)\b|\bmine\b/g,function(m,off,str){
+    var lw=m.toLowerCase(),atStart=off===0||/[.!?]\s*$/.test(str.slice(0,off)),cap=m.charAt(0)!==m.charAt(0).toLowerCase()&&lw!=='i'&&!/^i[\s']/.test(lw);
+    var out;
+    if(lw==='my'){if(P&&!atStart)out=P.p;else out=first()?"the patient's":(P?P.p:'their');}
+    else if(lw==='myself')out=P?P.r:'themself';
+    else if(lw==='me')out=P?P.o:'them';
+    else if(lw==='mine')out=P?P.m:'theirs';
+    else{
+      var S=first()?'the patient':P.s,rest=m.replace(/^[Ii]/,'');
+      if(/^(?:'m|\s*m$|\s+am$)/.test(rest))out=S+' is';
+      else if(/^(?:'ve|\s+have)$/.test(rest))out=S+' has';
+      else if(/^(?:'ll|\s+will)$/.test(rest))out=S+' will';
+      else if(rest==="'d")out=S+' had';
+      else if(/^\s+(?:can't|cannot|can not)$/.test(rest))out=S+' cannot';
+      else if(/^\s+(?:don't|do not)$/.test(rest))out=S+' does not';
+      else if(/^\s+[a-z]+$/.test(rest)){var v=rest.trim();out=S+' '+clinConj(v);}
+      else out=S;
+    }
+    return cap?out.charAt(0).toUpperCase()+out.slice(1):out;
+  });
+  t=t.replace(/\b(the patient|she|he)\s+do not\b/gi,'$1 does not').replace(/\bthe patient's back gave out\b/gi,"the patient's back gave out");
+  // patient wording
+  t=t.replace(/(?<!\b(?:a|an|the|this|that|our|each)\s)\bpatient\b/gi,'the patient').replace(/\bThe patient\b/g,'the patient');
+  t=t.replace(/\b(to|at|in)\s+(?:the\s+)?(emergency department|hospital)\b/gi,'$1 the $2').replace(/\bthe the\b/gi,'the');
+  // punctuation / spacing
+  t=t.replace(/\s+([,.;:!?])/g,'$1').replace(/([,.;:!?])(?=[A-Za-z])/g,'$1 ').replace(/\.{2,}/g,'.').replace(/!+/g,'.').replace(/\s{2,}/g,' ').trim();
+  if(opts.fragment){t=t.replace(/[.\s]+$/,'');return opts.cap?t.charAt(0).toUpperCase()+t.slice(1):t;}
+  // sentence case + final period
+  t=t.replace(/(^|[.?]\s+)([a-z])/g,function(_,a,b){return a+b.toUpperCase();});
+  t=t.replace(/\bi\b/g,'I');
+  if(!/[.?]$/.test(t))t+='.';
+  return t;
+}
+
+// ── structured mechanism of injury ──
+var NPI_ACTIVITY=[['lifting','Lifting','lifting {o|an object}'],['carrying','Carrying','carrying {o|an object}'],['pushpull','Pushing / pulling','pushing or pulling {o|an object}'],
+  ['operating','Operating machinery / equipment','operating {o|machinery}'],['driving','Driving a work vehicle','driving {o|a work vehicle}'],['loading','Loading / unloading','loading and unloading {o|materials}'],
+  ['walking','Walking','walking'],['climbing','Climbing stairs / ladder','climbing {o|stairs}'],['bending','Bending / reaching','bending and reaching'],
+  ['station','Working at a station','performing work at {o|a workstation}'],['repetitive','Repetitive tasks','performing repetitive work tasks'],['other','Other','']];
+var NPI_EVENT=[['pop','Felt a pop','felt a pop in the {a}'],['sudden','Felt sudden pain','felt sudden pain in the {a}'],['slip','Slipped and fell','slipped and fell'],['trip','Tripped and fell','tripped and fell'],
+  ['height','Fell from height','fell from a height'],['struck','Struck by object','was struck by {s|an object}'],['caught','Caught / pinned between objects','was caught between {s|objects}'],
+  ['twist','Twisted / awkward movement','twisted awkwardly'],['balance','Lost balance','lost {p} balance'],['gradual','Gradual onset — no single event','']];
+var NPI_ONSET=[['immediate','Immediately','with immediate onset of pain'],['sameday','Later that day','with onset of pain later that day'],['nextday','Next day','with onset of pain the following day'],['gradual','Gradually','with gradual onset of pain']];
+var NPI_MVA_POS=[['driver','Driver'],['front passenger','Front-seat passenger'],['rear passenger','Rear-seat passenger'],['pedestrian','Pedestrian'],['cyclist','Bicyclist / motorcyclist']];
+var NPI_MVA_TYPE=[['rear-ended','Rear-ended'],['struck on the side (T-bone collision)','T-boned / side impact'],['involved in a head-on collision','Head-on'],['sideswiped','Sideswiped'],
+  ['involved in a rollover','Rollover'],['struck a fixed object','Hit a fixed object'],['struck by a vehicle','Struck by a vehicle (pedestrian/cyclist)'],['other','Other']];
+function clinArt(o){o=String(o||'').trim();if(!o)return'';if(/^(a|an|the|his|her|their|my|some|two|three|several|\d)\b/i.test(o)||/[^s]s$/i.test(o))return o;return (/^[aeiou]/i.test(o)?'an ':'a ')+o;}
+function npiOpt(arr,key){for(var i=0;i<arr.length;i++)if(arr[i][0]===key||arr[i][1]===key)return arr[i];return null;}
+function npiFill(tpl,map){return tpl.replace(/\{(\w)\|?([^}]*)\}/g,function(_,k,def){var v=map[k];return v&&String(v).trim()?String(v).trim():def;});}
+function npiMechanism(d){
+  var j=d.injury||{},ct=(d.claim&&d.claim.caseType)||'WC',P=clinPron(d),areas=npiList(npiAreas(d))||'affected area';
+  var subj2=P?P.s:'the patient',poss=P?P.p:"the patient's",seen={n:1};
+  var doi=j.doi?'On '+npiFmtD(j.doi)+', ':'';
+  var out=[];
+  if(ct==='MVA'||ct==='NJ MVA'){
+    var m=d.mva||{};
+    if(m.pos||m.type){
+      var pos=m.pos||'occupant',isPed=(pos==='pedestrian'||pos==='cyclist');
+      var restr=isPed?'':(m.belt==='yes'?'restrained ':m.belt==='no'?'unrestrained ':'');
+      var typ=m.type==='other'?(npiClin(m.typeOther,d,{fragment:1,seen:seen})||'involved in a collision'):(m.type||'involved in a collision');
+      var s1=isPed?(doi+'the patient was a '+pos+' who was '+(m.type==='struck by a vehicle'||!m.type?'struck by a vehicle':typ)+'.'):
+        (doi+'the patient was the '+restr+pos+' of a vehicle that was '+typ+'.');
+      out.push(s1.charAt(0).toUpperCase()+s1.slice(1));
+      if(!isPed&&m.airbag)out.push(m.airbag==='yes'?'Airbags deployed.':m.airbag==='no'?'Airbags did not deploy.':'');
+      if(m.head)out.push('The patient '+(m.head==='yes'?'reports':'denies')+' striking '+poss+' head'+(m.head==='yes'&&m.headWhat?' on the '+npiClin(m.headWhat,d,{fragment:1}):'')+'.');
+      if(m.loc)out.push('The patient '+(m.loc==='yes'?'reports':'denies')+' loss of consciousness.');
+      if(m.ems)out.push(m.ems==='yes'?'The patient was transported from the scene by ambulance.':'The patient was not transported by ambulance.');
+      if(m.police)out.push(m.police==='yes'?'A police report was filed.':'No police report was filed.');
+    }
+  } else if(j.activity||(j.events||[]).length){
+    var act=npiOpt(NPI_ACTIVITY,j.activity),evs=(j.events||[]).map(function(k){return npiOpt(NPI_EVENT,k)}).filter(Boolean);
+    var actPh=act?(act[0]==='other'?npiClin(j.activityOther,d,{fragment:1,seen:seen}):npiFill(act[2],{o:clinArt(npiClin(j.object,d,{fragment:1}))})):'';
+    var where=ct==='WC'?' at work':'';
+    var gradual=evs.some(function(e){return e[0]==='gradual'});
+    var evPh=evs.filter(function(e){return e[0]!=='gradual'}).map(function(e){return npiFill(e[2],{a:areas,s:clinArt(npiClin(j.struckBy,d,{fragment:1})),p:poss}).replace('{p}',poss)});
+    var s;
+    if(gradual&&!evPh.length){s=doi+'the patient reports a gradual onset of symptoms in the '+areas+(actPh?' while '+actPh+where:'')+', without a single specific event.';}
+    else{
+      s=doi+'the patient was '+(actPh||'working')+where+(evPh.length?' when '+subj2+' '+npiList(evPh):'');
+      var needsArea=evs.length&&!evs.some(function(e){return /\{a\}/.test(e[2])});
+      if(needsArea||!evs.length)s+=', resulting in injury to the '+areas;
+      var on=npiOpt(NPI_ONSET,j.onset);if(on&&!gradual)s+=', '+on[2];
+      s+='.';
+    }
+    out.push(s.charAt(0).toUpperCase()+s.slice(1));
+  }
+  var det=npiClin(j.desc,d,{seen:seen});
+  if(det)out.push(det);
+  return out.filter(Boolean).join(' ');
+}
 
 // ── list page ──
 function renderNpIntakeList(el){
@@ -8857,7 +8979,7 @@ function renderNpIntakeEditor(el){
 
   // 1 Demographics
   var b='<div class="form-grid">'+npiTxt('First Name','demo.firstName',{req:1})+npiTxt('Last Name','demo.lastName',{req:1})+
-    npiTxt('Date of Birth','demo.dob',{type:'date',req:1})+npiTxt('Phone','demo.phone',{req:1})+npiTxt('Email','demo.email')+
+    npiTxt('Date of Birth','demo.dob',{type:'date',req:1})+npiSel('Sex','demo.sex',['Female','Male'],{req:1})+npiTxt('Phone','demo.phone',{req:1})+npiTxt('Email','demo.email')+
     npiSel('Preferred Language','demo.language',['English','Spanish','Other'])+
     npiTxt('Street Address','demo.addr1',{req:1})+npiTxt('Apt / Suite','demo.addr2')+npiTxt('City','demo.city',{req:1})+
     '<div class="form-group"><label>State / ZIP <span style="color:var(--red)">*</span></label><div style="display:flex;gap:6px"><input data-npk="demo.state" value="'+esc(npiV('demo.state'))+'" placeholder="PA" maxlength="2" style="width:60px;text-transform:uppercase"><input data-npk="demo.zip" value="'+esc(npiV('demo.zip'))+'" placeholder="ZIP" style="flex:1"></div></div>'+
@@ -8897,10 +9019,25 @@ function renderNpIntakeEditor(el){
     npiTxt('Authorized Individual','hipaa.name')+npiSel('Relationship','hipaa.rel',['Mother','Father','Son','Daughter','Sibling','Spouse','Friend','Other'])+npiTxt('Individual\'s Phone','hipaa.phone')+'</div>';
   h+=npiSec(3,'HIPAA Authorized Contact','"Is there anyone besides your attorney we\'re allowed to speak with about your care?"',b,'HIPAA');
 
-  // 4 Injury
-  b='<div class="form-grid">'+npiTxt('Approximate time of injury','injury.time',{ph:'e.g. 10:30 AM'})+
-    npiTxt('What happened? (patient\'s words)','injury.desc',{area:1,full:1,rows:5,req:1,ph:isMva?'Driver/passenger, type of collision, seatbelt, airbags, hit head, how they got to care':'What were you doing, what happened, what part of your body was hit/strained, did you fall?'})+'</div>';
-  h+=npiSec(4,'Injury / Accident',isMva?'"In your own words, walk me through the accident — were you the driver or a passenger, where were you hit, were you wearing a seatbelt, did the airbags go off?"':'"In your own words, walk me through exactly what happened on the day you were hurt."',b,'Injury');
+  // 4 Injury — structured mechanism; the CRM writes the clinical sentence
+  b='<div class="form-grid">'+npiTxt('Approximate time of injury','injury.time',{ph:'e.g. 10:30 AM'})+'</div>';
+  if(isMva){
+    b+='<div class="form-grid">'+npiSel('Patient was the…','mva.pos',NPI_MVA_POS,{req:1})+npiSel('Type of collision','mva.type',NPI_MVA_TYPE.map(function(x){return [x[0],x[1]]}),{req:1})+
+      npiTxt('If other, describe the collision','mva.typeOther')+npiSel('Seatbelt worn?','mva.belt',[['yes','Yes'],['no','No'],['unknown','Unsure']])+
+      npiSel('Airbags deployed?','mva.airbag',[['yes','Yes'],['no','No'],['unknown','Unsure']])+npiSel('Hit head?','mva.head',[['yes','Yes'],['no','No']])+
+      npiTxt('Head struck on (if yes)','mva.headWhat',{ph:'e.g. steering wheel, window'})+npiSel('Lost consciousness?','mva.loc',[['yes','Yes'],['no','No']])+
+      npiSel('Taken by ambulance?','mva.ems',[['yes','Yes'],['no','No']])+npiSel('Police report filed?','mva.police',[['yes','Yes'],['no','No']])+'</div>';
+  } else {
+    b+='<div class="form-grid">'+npiSel('What was the patient doing?','injury.activity',NPI_ACTIVITY.map(function(x){return [x[0],x[1]]}),{req:1})+
+      npiTxt('If other, what were they doing?','injury.activityOther',{ph:'e.g. stocking shelves'})+
+      npiTxt('Object / equipment involved','injury.object',{ph:'e.g. lift machine, 50 lb box, pallet jack'})+
+      npiSel('When did the pain start?','injury.onset',NPI_ONSET.map(function(x){return [x[0],x[1]]}))+'</div>'+
+      '<div class="npi-lbl">What happened? (select all that apply) <span style="color:var(--red)">*</span></div>'+npiChecks('injury.events',NPI_EVENT.map(function(x){return x[1]}))+
+      '<div class="form-grid">'+npiTxt('Struck by / caught between (if selected)','injury.struckBy',{ph:'e.g. falling box, two pallets'})+'</div>';
+  }
+  b+='<div class="form-grid">'+npiTxt('Additional details (patient\'s words — optional)','injury.desc',{area:1,full:1,rows:3,ph:'Anything the choices above don\'t cover. Typos and shorthand are cleaned up on the HPI.'})+'</div>'+
+    '<div class="npi-note">📝 <strong>Mechanism of Injury</strong> on the HPI is written from these answers plus the body areas in the next section. Check the HPI preview on the right.</div>';
+  h+=npiSec(4,'Injury / Accident',isMva?'"Walk me through the accident — were you the driver or a passenger, how were you hit, were you wearing a seatbelt, did the airbags go off, did you hit your head?"':'"Walk me through exactly what happened — what were you doing, and what happened to your body? Did the pain start right away?"',b,'Injury');
 
   // 5 Body areas & symptoms
   b='<div class="npi-lbl">Body areas injured <span style="color:var(--red)">*</span></div>'+npiChecks('areas.list',NPI_AREAS)+'<div class="form-grid">'+npiTxt('Other area','areas.other')+'</div>'+
@@ -8926,9 +9063,11 @@ function renderNpIntakeEditor(el){
     '<div class="form-grid">'+npiTxt('Other conditions','pmh.other',{full:1})+npiTxt('Prior surgeries','pmh.surg',{full:1})+'</div>';
   h+=npiSec(8,'Past Medical History','"Do you have any ongoing health conditions? Any surgeries?"',b,'PMH');
 
-  // 9 Prior injuries
-  b=npiBool('No prior injuries or accidents','prior.none')+'<div class="form-grid">'+npiTxt('Prior injuries / accidents (what, when, body area, treatment)','prior.text',{area:1,full:1,rows:3,ph:'e.g. 2014 left arm injury, treated with PT'})+'</div>';
-  h+=npiSec(9,'Previous Injuries or Conditions','"Before this accident, had you ever injured this or any other part of your body — work injuries, car accidents, sports?"',b,'Prior');
+  // 9 Prior & subsequent injuries (relative to the DOI on file)
+  var _doiTxt='<span class="npiDoiTxt">'+(d.injury.doi?npiFmtD(d.injury.doi):'the date of injury')+'</span>';
+  b='<div class="npi-subh">A. Before '+_doiTxt+'</div>'+npiBool('No injuries or accidents before '+_doiTxt,'prior.none')+'<div class="form-grid">'+npiTxt('Injuries / accidents before '+_doiTxt+' (what, when, body area, treatment)','prior.text',{area:1,full:1,rows:3,ph:'e.g. 2014 left arm injury, treated with PT'})+'</div>'+
+    '<div class="npi-subh" style="margin-top:12px">B. Since '+_doiTxt+'</div>'+npiBool('No new injuries or accidents since '+_doiTxt,'since.none')+'<div class="form-grid">'+npiTxt('Injuries / accidents since '+_doiTxt+' (what, when, body area, treatment)','since.text',{area:1,full:1,rows:3,ph:'e.g. fell on ice 12/2026, bruised right hip'})+'</div>';
+  h+=npiSec(9,'Previous &amp; Subsequent Injuries','"Before '+_doiTxt+', had you ever injured this or any other part of your body — work injuries, car accidents, sports?" &nbsp;Then: "Since '+_doiTxt+', have you had any other injuries or accidents?"',b,'Prior / Since');
 
   // 10 Employment (WC only)
   if(ct==='WC'){
@@ -9001,7 +9140,7 @@ function npiBind(el){
   var form=el.querySelector('#npiForm');
   var handler=function(e){
     var t=e.target;
-    if(t.dataset.npk){npiSet(npiCur.data,t.dataset.npk,t.value);if(t.dataset.npk==='claim.caseType'){npiChanged();var y=window.scrollY,mc=document.getElementById('crmMain'),my=mc?mc.scrollTop:0;renderNpIntakeEditor(document.getElementById('sec-crm-intake-edit'));window.scrollTo(0,y);if(mc)mc.scrollTop=my;return;}}
+    if(t.dataset.npk){npiSet(npiCur.data,t.dataset.npk,t.value);if(t.dataset.npk==='injury.doi')el.querySelectorAll('.npiDoiTxt').forEach(function(x){x.textContent=t.value?npiFmtD(t.value):'the date of injury';});if(t.dataset.npk==='claim.caseType'){npiChanged();var y=window.scrollY,mc=document.getElementById('crmMain'),my=mc?mc.scrollTop:0;renderNpIntakeEditor(document.getElementById('sec-crm-intake-edit'));window.scrollTo(0,y);if(mc)mc.scrollTop=my;return;}}
     else if(t.dataset.npr){var p=t.dataset.npr.split('.');npiCur.data[p[0]].list[+p[1]][p[2]]=t.value;}
     else if(t.dataset.npb){npiSet(npiCur.data,t.dataset.npb,t.checked);}
     else if(t.dataset.npa){var arr=npiGet(npiCur.data,t.dataset.npa)||[];var i=arr.indexOf(t.value);if(t.checked&&i===-1)arr.push(t.value);if(!t.checked&&i!==-1)arr.splice(i,1);npiSet(npiCur.data,t.dataset.npa,arr);t.closest('.npi-chip').classList.toggle('on',t.checked);}
@@ -9035,14 +9174,17 @@ function npiMissing(d){
   req(d.ref.source,'Referral source',2);req(d.ref.regDate,'Referred / registered date',2);
   req(d.demo.htFt,'Height',1);req(d.demo.weight,'Weight',1);req(d.demo.hand,'Dominant hand',1);
   var _ct=d.claim.caseType||'WC';req(_ct,'Case type',2);if(_ct==='WC'||_ct==='MVA'||_ct==='NJ MVA')req(d.claim.injState,'State where '+(_ct==='WC'?'injury':'accident')+' happened',2);
-  req(d.injury.doi,'Date of injury',2);req(d.injury.desc,'Injury description',4);
+  req(d.injury.doi,'Date of injury',2);req(d.demo.sex,'Sex',1);
+  if(_ct==='MVA'||_ct==='NJ MVA'){req((d.mva||{}).pos,'Patient position in vehicle',4);req((d.mva||{}).type,'Type of collision',4);}
+  else if(!(d.injury.activity||(d.injury.events||[]).length)&&!d.injury.desc)m.push({l:'Mechanism of injury (activity / what happened)',sec:4});
   if(!(d.areas.list||[]).length&&!d.areas.other)m.push({l:'Body areas injured',sec:5});
   req(d.pain.freq,'Pain frequency',5);
   if(!(d.tx.list||[]).some(function(r){return r.where||r.what})&&!d.tx.none)m.push({l:'Treatment history (or none)',sec:6});
   if(!d.meds.none&&!(d.meds.list||[]).some(function(r){return r.name}))m.push({l:'Medications (or none)',sec:7});
   if(!d.meds.nka&&!d.meds.allergies)m.push({l:'Allergies (or none)',sec:7});
   if(!d.pmh.none&&!(d.pmh.conditions||[]).length&&!d.pmh.other)m.push({l:'Past medical history (or none)',sec:8});
-  if(!d.prior.none&&!d.prior.text)m.push({l:'Prior injuries (or none)',sec:9});
+  if(!d.prior.none&&!d.prior.text)m.push({l:'Injuries before DOI (or none)',sec:9});
+  if(!(d.since||{}).none&&!(d.since||{}).text)m.push({l:'Injuries since DOI (or none)',sec:9});
   if((d.claim.caseType||'WC')==='WC'){
     req(d.emp.employer,'Employer',10);req(d.emp.title,'Job title',10);req(d.emp.status,'Employment status',10);req(d.emp.duration,'Length of employment',10);
     req(d.emp.duties,'Job duties',10);req(d.emp.priorR,'Prior restrictions',10);req(d.emp.reported,'Date reported to employer',10);req(d.emp.cur,'Current work status',10);
@@ -9055,33 +9197,34 @@ function npiMissing(d){
 // ── HPI generation ──
 function npiHpiSections(d){
   var S=[];var areas=npiAreas(d);
+  var C=function(t){return npiClin(t,d)},F=function(t){return npiClin(t,d,{fragment:1})},FC=function(t){return npiClin(t,d,{fragment:1,cap:1})};
   var _c=d.claim.caseType||'WC';var cc=(_c==='WC'?'Work-related injury':(_c==='MVA'||_c==='NJ MVA')?'Motor vehicle accident injury':'Injury')+(areas.length?' involving the '+npiList(areas):'')+(d.injury.doi?' sustained on '+npiFmtD(d.injury.doi):'')+'.';
   S.push({h:'Chief Complaint',lines:[cc]});
   var ht=d.demo.htFt?d.demo.htFt+"'"+(d.demo.htIn||0)+'"':'';
   S.push({h:'Current Height / Weight / Dominant Hand',lines:['Height: '+(ht||'—'),'Weight: '+(d.demo.weight?d.demo.weight+' lbs':'—'),'Dominant Hand: '+(d.demo.hand||'—')]});
-  var meds=d.meds.none?['None per patient']:(d.meds.list||[]).filter(function(r){return r.name}).map(function(r){return r.name+(r.dose?' — '+r.dose:'')+(r.for?' (for '+r.for+')':'')});
+  var meds=d.meds.none?['None per patient']:(d.meds.list||[]).filter(function(r){return r.name}).map(function(r){return FC(r.name)+(r.dose?' — '+F(r.dose):'')+(r.for?' (for '+F(r.for)+')':'')});
   S.push({h:'Current Medications (Past Year)',lines:meds.length?meds:['—']});
-  S.push({h:'Allergies',lines:[d.meds.nka?'No known allergies per patient':(d.meds.allergies||'—')]});
-  var pmh=d.pmh.none?['None per patient']:(d.pmh.conditions||[]).slice();if(!d.pmh.none&&d.pmh.other)pmh.push(d.pmh.other);
-  if(d.pmh.surg)pmh.push('Prior surgeries: '+d.pmh.surg);
+  S.push({h:'Allergies',lines:[d.meds.nka?'No known allergies per patient':(FC(d.meds.allergies)||'—')]});
+  var pmh=d.pmh.none?['None per patient']:(d.pmh.conditions||[]).slice();if(!d.pmh.none&&d.pmh.other)pmh.push(FC(d.pmh.other));
+  if(d.pmh.surg)pmh.push('Prior surgeries: '+F(d.pmh.surg));
   S.push({h:'Past Medical History',lines:pmh.length?pmh:['—']});
   var inj=['Date of Injury: '+(npiFmtD(d.injury.doi)||'—')+(d.injury.time?' at approximately '+d.injury.time:'')];
   if(d.claim.injState)inj.push('State of Injury: '+(d.claim.injState==='Other'?'Other':d.claim.injState));
-  inj.push('Summary of Injury:');inj.push(d.injury.desc||'—');
+  inj.push('Mechanism of Injury:');inj.push(npiMechanism(d)||'—');
   S.push({h:'Injury / Accident Description',lines:inj});
   S.push({h:'Affected Body Areas',lines:areas.length?areas.map(function(a){return a.charAt(0).toUpperCase()+a.slice(1)}):['—']});
   var p=d.pain,s='';
   if(areas.length||p.freq||(p.qualities||[]).length){
     s='Location & Quality of Pain: Pain in the '+(npiList(areas)||'affected area')+' is '+[p.freq,npiList(p.qualities||[])].filter(Boolean).join(' ')+' pain.';
   }
-  if(p.radiate)s+=' The pain radiates '+p.radiate.replace(/^radiates\s*/i,'')+'.';
-  if(p.swell==='yes')s+=' The patient reports ongoing inflammation/swelling involving the '+(npiList(areas)||'affected area')+'.'+(p.swellNote?' '+p.swellNote.replace(/\.?$/,'.'):'');
+  if(p.radiate){var _rd=F(p.radiate).replace(/^(?:it\s+|the pain\s+)?(?:radiates|travels|goes|shoots)\s*/i,'');if(/^(no|none|denies|n\/a)\b/i.test(_rd))s+=' The patient denies radiating pain.';else s+=' The pain radiates '+_rd+'.';}
+  if(p.swell==='yes')s+=' The patient reports ongoing inflammation/swelling involving the '+(npiList(areas)||'affected area')+'.'+(p.swellNote?' '+C(p.swellNote):'');
   else if(p.swell==='no')s+=' The patient denies swelling.';
-  if(p.worse)s+=' Aggravating factors: '+p.worse+'.';
-  if(p.better)s+=' Alleviating factors: '+p.better+'.';
-  if(p.notes)s+=' '+p.notes;
+  if(p.worse)s+=' Aggravating factors: '+F(p.worse)+'.';
+  if(p.better)s+=' Alleviating factors: '+F(p.better)+'.';
+  if(p.notes)s+=' '+C(p.notes);
   S.push({h:'Current Symptoms',lines:[s.trim()||'—']});
-  var tx=(d.tx.list||[]).filter(function(r){return r.where||r.what}).map(function(r){return [r.when,r.where].filter(Boolean).join(' — ')+(r.what?(r.when||r.where?': ':'')+r.what:'')});
+  var tx=(d.tx.list||[]).filter(function(r){return r.where||r.what}).map(function(r){var w=[FC(r.when),FC(r.where)].filter(Boolean).join(' — ');return w+(r.what?(w?': ':'')+(w?F(r.what):FC(r.what)):'')});
   S.push({h:'Treatment History',lines:['Evaluations/Treatments:'].concat(tx.length?tx:['None reported'])});
   if((d.claim.caseType||'WC')==='WC'){
     var e=d.emp,el=[];
@@ -9089,17 +9232,19 @@ function npiHpiSections(d){
     el.push('Employment Status: '+([e.status,e.hrsDay?e.hrsDay+'-hour days':'',e.daysWk?e.daysWk+' days/week':''].filter(Boolean).join(', ')||'—'));
     el.push('Duration of Employment: '+(e.duration||'—'));
     if(e.start||e.end)el.push('Job Hours: '+[e.start,e.end].filter(Boolean).join('–'));
-    el.push('Job Duties: '+(e.duties?e.duties.replace(/\.?\s*$/,'.'):'—')+(e.lift?' Lifting up to '+e.lift+'.':''));
-    el.push('Prior Restrictions: '+(e.priorR==='yes'?(e.priorRText||'Yes'):e.priorR==='no'?'None':'—'));
-    el.push('Date Injury Was Reported to Employer: '+(npiFmtD(e.reported)||'—')+(e.reported&&d.injury.doi&&e.reported===d.injury.doi?' (same day as injury)':'')+(e.reportedTo?' — reported to '+e.reportedTo:''));
+    el.push('Job Duties: '+(e.duties?C(e.duties):'—')+(e.lift?' Lifting up to '+F(e.lift)+'.':''));
+    el.push('Prior Restrictions: '+(e.priorR==='yes'?(FC(e.priorRText)||'Yes'):e.priorR==='no'?'None':'—'));
+    el.push('Date Injury Was Reported to Employer: '+(npiFmtD(e.reported)||'—')+(e.reported&&d.injury.doi&&e.reported===d.injury.doi?' (same day as injury)':'')+(e.reportedTo?' — reported to '+F(e.reportedTo):''));
     if(e.lastWorked)el.push('Last Date Worked: '+(e.lastWorked===d.injury.doi?'Date of injury':npiFmtD(e.lastWorked)));
     var cm={no:'Not currently working',same_light:'Working for the same employer on light/modified duty',same_full:'Working for the same employer at full duty',other:'Working for a different employer'};
-    if(e.cur)el.push('Current Work: '+cm[e.cur]+(e.curText?'. '+e.curText:''));
+    if(e.cur)el.push('Current Work: '+cm[e.cur]+(e.curText?'. '+C(e.curText):''));
     S.push({h:'Employment Information',lines:el});
   }
-  var adl=(d.adl.list||[]).slice();if(d.adl.other)adl.push(d.adl.other);
+  var adl=(d.adl.list||[]).slice();if(d.adl.other)adl.push(FC(d.adl.other));
   S.push({h:'Impact on Daily Activities',lines:adl.length?['The patient reports difficulty with the following due to the injury:'].concat(adl):['—']});
-  S.push({h:'Previous Injuries or Conditions',lines:[d.prior.none?'The patient denies prior injuries or accidents.':(d.prior.text?'The patient reports: '+d.prior.text:'—')]});
+  var _doi=npiFmtD(d.injury.doi),_sn=d.since||{};
+  S.push({h:'Previous Injuries or Conditions'+(_doi?' (Prior to DOI '+_doi+')':''),lines:[d.prior.none?'The patient denies any injuries or accidents prior to '+(_doi||'the date of injury')+'.':(d.prior.text?C(d.prior.text):'—')]});
+  S.push({h:'Subsequent Injuries'+(_doi?' (Since DOI '+_doi+')':''),lines:[_sn.none?'The patient denies any new injuries or accidents since '+(_doi||'the date of injury')+'.':(_sn.text?C(_sn.text):'—')]});
   return S;
 }
 function npiSource(d){
