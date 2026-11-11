@@ -426,7 +426,7 @@
     <div class="nav-item" id="crmNavMgrDash" data-page="crm-mgr-dash" onclick="openCrmMgrDash()" style="display:none"><div class="nav-icon">🔒</div> Manager Analytics</div>
     <div class="nav-item" id="crmNavMgrMetrics" data-page="crm-mgr-metrics" onclick="promptPIN('crm-mgr-metrics')" style="display:none"><div class="nav-icon">🔒</div> Team Metrics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Internal CRM · Confidential<br>build 2026-11-10f-np-intake</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Internal CRM · Confidential<br>build 2026-11-11-views</p></div>
 </nav>
 <div class="main-content" id="crmMain">
   <div class="section active" id="sec-crm-dashboard"></div>
@@ -473,7 +473,7 @@
     <div class="nav-item" id="cmNavMyMetrics" data-page="cm-my-metrics" onclick="cmNav('cm-my-metrics')"><div class="nav-icon">📈</div> My Metrics</div>
     <div class="nav-item" id="cmNavMgrDash" data-page="cm-mgr-dash" onclick="promptPIN('cm-mgr-dash')" style="display:none"><div class="nav-icon">🔒</div> Manager View</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Case Management · Confidential<br>build 2026-11-10f-np-intake</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Case Management · Confidential<br>build 2026-11-11-views</p></div>
 </nav>
 <div class="main-content" id="cmMain">
   <div class="section active" id="sec-cm-dashboard"></div>
@@ -506,7 +506,7 @@
     <div class="nav-item" data-page="mkt-report" onclick="mktNav('mkt-report')"><div class="nav-icon">📄</div> Weekly Snapshot</div>
     <div class="nav-item" data-page="mkt-analytics" onclick="mktNav('mkt-analytics')"><div class="nav-icon">📊</div> Analytics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential<br>build 2026-11-10f-np-intake</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential<br>build 2026-11-11-views</p></div>
 </nav>
 <div class="main-content" id="mktMain">
   <div class="section active" id="sec-mkt-pipeline"></div>
@@ -544,7 +544,7 @@
     <div class="nav-item" id="psrNavMyMetrics" data-page="psr-my-metrics" onclick="psrNav('psr-my-metrics')"><div class="nav-icon">📈</div> My Metrics</div>
     <div class="nav-item" id="psrNavMgrDash" data-page="psr-mgr-dash" onclick="promptPIN('psr-mgr-dash')" style="display:none"><div class="nav-icon">🔒</div> Manager View</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Patient Services · Confidential<br>build 2026-11-10f-np-intake</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Patient Services · Confidential<br>build 2026-11-11-views</p></div>
 </nav>
 <div class="main-content" id="psrMain">
   <div class="section active" id="sec-psr-dashboard"></div>
@@ -584,7 +584,7 @@
     <div class="nav-section-label">Metrics</div>
     <div class="nav-item" id="njmvaNavMgrDash" data-page="njmva-analytics" onclick="if(currentUser==='Manager'||userRole==='nj_mva'||_isExec()){njmvaNav('njmva-analytics')}else{promptPIN('njmva-analytics')}" style="display:none"><div class="nav-icon">📊</div> Analytics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential<br>build 2026-11-10f-np-intake</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential<br>build 2026-11-11-views</p></div>
 </nav>
 <div class="main-content" id="njmvaMain">
   <div class="section active" id="sec-njmva-dashboard"></div>
@@ -1130,7 +1130,7 @@
 </div>
 
 <script>
-console.log('CarePath CRM build: 2026-11-10f-np-intake');
+console.log('CarePath CRM build: 2026-11-11-views');
 // ══════════════════════════════════════════════════════════════════════
 // CORE DATA
 // ══════════════════════════════════════════════════════════════════════
@@ -1415,7 +1415,7 @@ function _dbDelete(table, id){
 
 // ─── Save indicator ────────────────────────────────────────────────
 var _saveTimer=null;
-var EXEC_USERS = ['Gabriel','ghuh@carepathinjury.com'];
+var EXEC_USERS = ['Gabriel','ghuh@carepathinjury.com','Sam Sisco','ssisco@carepathinjury.com'];
 function _isExec(){ var u=(currentUser||'').trim().toLowerCase(), e=(currentEmail||'').trim().toLowerCase(); return userRole==='exec' || EXEC_USERS.some(function(n){var x=n.toLowerCase();return x===u||x===e;}); }
 function _isExecRO(){return _isExec();}
 function _roBlocked(table){ if(_isExecRO() && (table==='referrals'||table==='cases')){ showReadOnly(); return true; } return false; }
@@ -2934,6 +2934,8 @@ function renderCrmAlertCard(a, i) {
 var crmRefSort='newest';
 var crmRefSearchVal='';
 var crmRefTypeFilter='';
+var crmRefStatusFilter='';
+var crmLostSort='date',crmLostLocFilter='';
 function renderCrmReferrals(el) {
   var searchEl=document.getElementById('crmRefSearch');
   if(searchEl)crmRefSearchVal=searchEl.value;
@@ -2942,6 +2944,10 @@ function renderCrmReferrals(el) {
   var typeOptions=Object.keys(caseTypes).sort();
   let h = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">All Referrals</div><div style="margin-left:auto"><button class="btn-primary" onclick="npiStart(null)" style="font-size:11px;padding:7px 14px;background:var(--teal);margin-right:6px" title="Patient is on the phone now — one form creates the referral and the NP HPI">📞 + New Patient Intake</button><button class="btn-primary" onclick="openNewRefModal()" style="font-size:11px;padding:7px 14px" title="Couldn\'t reach the patient yet — add the referral for follow-up">+ New Referral</button></div></div>';
   h += '<div class="page-subtitle">'+refs.length+' total referrals.</div>';
+  var _so=['Pending Scheduling','Scheduled','Active Treatment','Completed','Patient Lost'];
+  var _scol={'Pending Scheduling':'var(--gold)','Scheduled':'var(--teal)','Active Treatment':'#2e7d5b','Completed':'var(--navy)','Patient Lost':'var(--red)'};
+  function _rchip(val,label,n,color){var on=crmRefStatusFilter===val;return '<div onclick="crmRefStatusFilter=\''+val+'\';renderCrmReferrals(document.getElementById(\'sec-crm-referrals\'))" style="cursor:pointer;min-width:92px;flex:1;background:'+(on?color:'#fff')+';border:1.5px solid '+color+';border-radius:10px;padding:8px 12px;text-align:center"><div style="font-size:21px;font-weight:800;color:'+(on?'#fff':color)+'">'+n+'</div><div style="font-size:10px;font-weight:600;color:'+(on?'#fff':'var(--gray-500)')+'">'+label+'</div></div>';}
+  (function(){var _s=crmRefSearchVal.toLowerCase();var _b=refs.slice();if(crmRefTypeFilter)_b=_b.filter(function(r){return r.caseType===crmRefTypeFilter});if(_s)_b=_b.filter(function(r){return (r.patientName||'').toLowerCase().includes(_s)||(r.location||'').toLowerCase().includes(_s)||(r.referralSource||'').toLowerCase().includes(_s)||(r.lawFirm||'').toLowerCase().includes(_s)});var _c={};_so.forEach(function(x){_c[x]=0});var _oth=0;_b.forEach(function(r){if(_c[r.status]!==undefined)_c[r.status]++;else _oth++;});h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 16px">';h+=_rchip('','All',_b.length,'var(--navy)');_so.forEach(function(x){h+=_rchip(x,x.replace(' Scheduling','').replace('Active Treatment','In Treatment'),_c[x],_scol[x]);});if(_oth>0)h+=_rchip('__other','Other',_oth,'var(--gray-400)');h+='</div>';})();
   h += '<div class="table-card"><div class="table-header"><h3>Registry</h3><div class="table-controls">';
   h += '<select class="search-input" style="width:auto" onchange="crmRefTypeFilter=this.value;renderCrmReferrals(document.getElementById(\'sec-crm-referrals\'))"><option value="">All Types</option>';
   typeOptions.forEach(function(t){h+='<option value="'+esc(t)+'"'+(crmRefTypeFilter===t?' selected':'')+'>'+esc(t)+'</option>';});
@@ -2952,6 +2958,8 @@ function renderCrmReferrals(el) {
   let list = refs.slice();
   if(crmRefTypeFilter) list = list.filter(function(r){return r.caseType===crmRefTypeFilter});
   if(search) list = list.filter(function(r){return (r.patientName||'').toLowerCase().includes(search)||(r.location||'').toLowerCase().includes(search)||(r.referralSource||'').toLowerCase().includes(search)||(r.lawFirm||'').toLowerCase().includes(search)});
+  if(crmRefStatusFilter==='__other') list=list.filter(function(r){return _so.indexOf(r.status)===-1});
+  else if(crmRefStatusFilter) list=list.filter(function(r){return r.status===crmRefStatusFilter});
   if(crmRefSort==='newest') list.sort(function(a,b){return(b.enteredAt||b.createdDate||'').localeCompare(a.enteredAt||a.createdDate||'')});
   else if(crmRefSort==='oldest') list.sort(function(a,b){return(a.enteredAt||a.createdDate||'').localeCompare(b.enteredAt||b.createdDate||'')});
   else if(crmRefSort==='name') list.sort(function(a,b){return(a.patientName||'').localeCompare(b.patientName||'')});
@@ -3016,23 +3024,54 @@ function renderCrmAlerts(el) {
 
 function renderCrmLostPatients(el){
   var lost=refs.filter(function(r){return r.status==='Patient Lost'});
-  lost.sort(function(a,b){return(b.lostDate||b.createdDate||'').localeCompare(a.lostDate||a.createdDate||'')});
   var h='<div class="page-title">Lost Patients — Unrecoverable Leakage</div><div class="page-subtitle">'+lost.length+' patient'+(lost.length!==1?'s':'')+' lost due to patient choices or inability to schedule.</div>';
 
-  // Summary by reason
+  // Summary by reason (all lost)
   var reasons={};lost.forEach(function(r){var rs=r.lostReason||'Unknown';reasons[rs]=(reasons[rs]||0)+1;});
-  if(Object.keys(reasons).length>0){
+  var reasonOrder=Object.entries(reasons).sort(function(a,b){return b[1]-a[1]});
+  if(reasonOrder.length>0){
     h+='<div class="table-card"><div class="table-header"><h3>Summary by Reason</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Reason</th><th>Count</th><th>%</th></tr></thead><tbody>';
-    Object.entries(reasons).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){
-      h+='<tr><td style="font-weight:600">'+esc(e[0])+'</td><td>'+e[1]+'</td><td>'+(lost.length>0?Math.round(e[1]/lost.length*100):0)+'%</td></tr>';
-    });
+    reasonOrder.forEach(function(e){h+='<tr><td style="font-weight:600">'+esc(e[0])+'</td><td>'+e[1]+'</td><td>'+(lost.length>0?Math.round(e[1]/lost.length*100):0)+'%</td></tr>';});
     h+='</tbody></table></div></div>';
   }
 
-  // Full list
-  h+='<div class="table-card"><div class="table-header"><h3>All Lost Patients</h3></div><div class="table-scroll"><table class="tbl" style="min-width:800px"><thead><tr><th>Patient</th><th>Case Type</th><th>Location</th><th>Source</th><th>Reason Lost</th><th>Date Lost</th><th>Days in System</th><th>Notes</th></tr></thead><tbody>';
-  if(lost.length===0)h+='<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--gray-400)">No lost patients.</td></tr>';
-  lost.forEach(function(r){
+  // Reasons Lost by Clinic Location (cross-tab: rows=location, cols=top reasons + Other)
+  if(lost.length>0){
+    var topReasons=reasonOrder.slice(0,6).map(function(e){return e[0];});
+    var hasOther=reasonOrder.length>6;
+    var locs={};
+    lost.forEach(function(r){var loc=r.location||'Unknown';if(!locs[loc])locs[loc]={total:0,by:{}};locs[loc].total++;var rs=r.lostReason||'Unknown';var key=topReasons.indexOf(rs)!==-1?rs:'__other';locs[loc].by[key]=(locs[loc].by[key]||0)+1;});
+    var locRows=Object.keys(locs).sort(function(a,b){return locs[b].total-locs[a].total;});
+    h+='<div class="table-card"><div class="table-header"><h3>Reasons Lost by Clinic Location</h3></div><div class="table-scroll"><table class="tbl" style="min-width:720px"><thead><tr><th>Location</th><th style="text-align:center">Total Lost</th>';
+    topReasons.forEach(function(rs){h+='<th style="text-align:center;font-size:10px">'+esc(rs)+'</th>';});
+    if(hasOther)h+='<th style="text-align:center">Other</th>';
+    h+='</tr></thead><tbody>';
+    locRows.forEach(function(loc){var L=locs[loc];h+='<tr><td style="font-weight:700;color:var(--navy)">'+esc(loc)+'</td><td style="text-align:center;font-weight:700;color:var(--red)">'+L.total+'</td>';topReasons.forEach(function(rs){var v=L.by[rs]||0;h+='<td style="text-align:center'+(v?'':';color:var(--gray-300)')+'">'+(v||'—')+'</td>';});if(hasOther){var ov=L.by['__other']||0;h+='<td style="text-align:center">'+(ov||'—')+'</td>';}h+='</tr>';});
+    h+='<tr style="border-top:2px solid var(--gray-200);font-weight:700"><td>All Locations</td><td style="text-align:center;color:var(--red)">'+lost.length+'</td>';
+    topReasons.forEach(function(rs){h+='<td style="text-align:center">'+(reasons[rs]||0)+'</td>';});
+    if(hasOther){var othTot=reasonOrder.slice(6).reduce(function(a,e){return a+e[1];},0);h+='<td style="text-align:center">'+othTot+'</td>';}
+    h+='</tr></tbody></table></div></div>';
+  }
+
+  // Detail list with sort + location filter
+  var locSet={};lost.forEach(function(r){locSet[r.location||'Unknown']=true;});
+  var locOpts=Object.keys(locSet).sort();
+  var disp=lost.slice();
+  if(crmLostLocFilter)disp=disp.filter(function(r){return (r.location||'Unknown')===crmLostLocFilter;});
+  if(crmLostSort==='location')disp.sort(function(a,b){return(a.location||'').localeCompare(b.location||'')||(b.lostDate||'').localeCompare(a.lostDate||'');});
+  else if(crmLostSort==='source')disp.sort(function(a,b){return(a.referralSource||'').localeCompare(b.referralSource||'');});
+  else if(crmLostSort==='reason')disp.sort(function(a,b){return(a.lostReason||'').localeCompare(b.lostReason||'');});
+  else if(crmLostSort==='type')disp.sort(function(a,b){return(a.caseType||'').localeCompare(b.caseType||'');});
+  else disp.sort(function(a,b){return(b.lostDate||b.createdDate||'').localeCompare(a.lostDate||a.createdDate||'');});
+
+  h+='<div class="table-card"><div class="table-header"><h3>All Lost Patients</h3><div class="table-controls">';
+  h+='<select class="search-input" style="width:auto" onchange="crmLostLocFilter=this.value;renderCrmLostPatients(document.getElementById(\'sec-crm-lost\'))"><option value="">All Locations</option>';
+  locOpts.forEach(function(l){h+='<option value="'+esc(l)+'"'+(crmLostLocFilter===l?' selected':'')+'>'+esc(l)+'</option>';});
+  h+='</select>';
+  h+='<select class="search-input" style="width:auto" onchange="crmLostSort=this.value;renderCrmLostPatients(document.getElementById(\'sec-crm-lost\'))"><option value="date"'+(crmLostSort==='date'?' selected':'')+'>Newest Lost</option><option value="location"'+(crmLostSort==='location'?' selected':'')+'>By Location</option><option value="source"'+(crmLostSort==='source'?' selected':'')+'>By Referral Source</option><option value="reason"'+(crmLostSort==='reason'?' selected':'')+'>By Reason</option><option value="type"'+(crmLostSort==='type'?' selected':'')+'>By Case Type</option></select></div></div>';
+  h+='<div class="table-scroll"><table class="tbl" style="min-width:800px"><thead><tr><th>Patient</th><th>Case Type</th><th>Location</th><th>Source</th><th>Reason Lost</th><th>Date Lost</th><th>Days in System</th><th>Notes</th></tr></thead><tbody>';
+  if(disp.length===0)h+='<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--gray-400)">No lost patients'+(crmLostLocFilter?' at '+esc(crmLostLocFilter):'')+'.</td></tr>';
+  disp.forEach(function(r){
     var daysIn=r.createdDate&&r.lostDate?daysBtw(r.createdDate,r.lostDate):0;
     h+='<tr><td><span class="patient-name" onclick="showCrmDetail(\''+r.id+'\')">'+esc(r.patientName)+'</span></td><td><span class="type-badge">'+esc(r.caseType)+'</span></td><td style="font-size:11px">'+esc(r.location||'—')+'</td><td style="font-size:11px">'+esc(r.referralSource||'—')+'</td><td style="font-size:11px;color:var(--red);font-weight:600">'+esc(r.lostReason||'—')+'</td><td style="font-size:11px">'+fmtDate(r.lostDate)+'</td><td style="font-size:11px">'+daysIn+'</td><td style="font-size:10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.lostNotes||'—')+'</td></tr>';
   });
