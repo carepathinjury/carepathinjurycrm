@@ -316,6 +316,23 @@
 
   @media(max-width:900px){.sidebar{display:none}.stats-row{grid-template-columns:repeat(2,1fr)}.form-grid{grid-template-columns:1fr}.detail-grid{grid-template-columns:1fr 1fr}}
   @media(max-width:600px){.stats-row{grid-template-columns:1fr}.main-content{padding:18px 14px 40px}.detail-grid{grid-template-columns:1fr}.detail-cell{border-right:none}.top-tabs{display:none}}
+  /* Billing Ledgers */
+  .bl-card{display:flex;gap:14px;background:white;border:1px solid var(--gray-200);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);padding:16px 18px;margin-bottom:16px}
+  .bl-step{flex:0 0 26px;height:26px;border-radius:50%;background:var(--navy);color:white;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+  .bl-body{flex:1;min-width:0}.bl-h{font-weight:700;color:var(--navy);font-size:14px;margin:3px 0 10px}
+  .bl-case{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:13px}.bl-case span{color:var(--gray-600)}.bl-case a,.bl-file a{color:var(--teal);cursor:pointer;font-weight:600;margin-left:auto;font-size:12px}
+  .bl-drop{display:block;border:2px dashed var(--teal-light);border-radius:var(--radius-sm);padding:18px;text-align:center;font-size:12.5px;color:var(--gray-600);cursor:pointer;background:var(--cream)}.bl-drop.on{background:#e6f3fb;border-color:var(--teal)}
+  .bl-file{border:1px solid var(--gray-200);border-radius:var(--radius-sm);padding:10px 12px;margin-top:10px;font-size:12px}.bl-file-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .bl-src{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;color:white}.bl-src.rx{background:var(--gold)}.bl-src.db{background:var(--navy)}.bl-src.bad{background:var(--red)}
+  .bl-chk{margin-top:6px;font-weight:600}.bl-chk.ok{color:#2e7d4f}.bl-chk.bad{color:var(--red)}
+  .bl-warn{margin-top:6px;font-size:12px;color:#8a5a00;background:#fff6e0;border-radius:8px;padding:6px 10px}.bl-note{margin-top:6px;font-size:12px;color:var(--gray-600);background:var(--cream);border-radius:8px;padding:6px 10px}
+  .bl-stop{margin-top:10px;font-size:12px;color:var(--red);background:#fdecea;border:1px solid #f5c6c0;border-radius:8px;padding:10px 12px}
+  .bl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px 14px;margin-bottom:14px}.bl-f span{display:block;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--gray-600);margin-bottom:3px}.bl-f input{width:100%;box-sizing:border-box}
+  .bl-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px}.bl-kpis div{background:var(--cream);border-radius:12px;padding:10px 14px}.bl-kpis span{display:block;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--gray-600)}.bl-kpis b{font-size:20px;color:var(--navy)}.bl-kpis .bal{background:var(--navy)}.bl-kpis .bal span,.bl-kpis .bal b{color:white}
+  .bl-tbl td,.bl-tbl th{font-size:11.5px;white-space:nowrap}.bl-tbl td:nth-child(5){white-space:normal;min-width:200px}.bl-tbl .n{text-align:right}.bl-tbl tr.off td{opacity:.45;text-decoration:line-through}.bl-tbl tr.off td:first-child{text-decoration:none;opacity:1}
+  .bl-tbl thead th{position:sticky;top:0;background:white;z-index:1}
+  .bl-st{cursor:pointer;font-weight:700;font-size:11px}.bl-st.c{color:#2e7d4f}.bl-st.o{color:var(--red)}
+  .table-card .n{text-align:right}
 </style>
 </head>
 <body>
@@ -426,7 +443,7 @@
     <div class="nav-item" id="crmNavMgrDash" data-page="crm-mgr-dash" onclick="openCrmMgrDash()" style="display:none"><div class="nav-icon">🔒</div> Manager Analytics</div>
     <div class="nav-item" id="crmNavMgrMetrics" data-page="crm-mgr-metrics" onclick="promptPIN('crm-mgr-metrics')" style="display:none"><div class="nav-icon">🔒</div> Team Metrics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Internal CRM · Confidential<br>build 2026-11-11-np-intake</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Internal CRM · Confidential<br>build 2026-11-12-billing-ledgers</p></div>
 </nav>
 <div class="main-content" id="crmMain">
   <div class="section active" id="sec-crm-dashboard"></div>
@@ -460,6 +477,7 @@
     <div class="nav-item" data-page="cm-alerts" onclick="cmNav('cm-alerts')"><div class="nav-icon">⚠️</div> Alerts <span class="nav-badge" id="cmAlertBadge">0</span></div>
     <div class="nav-item" data-page="cm-contacts" onclick="cmNav('cm-contacts')"><div class="nav-icon">📇</div> Contacts</div>
     <div class="nav-item" data-page="cm-faxlog" onclick="cmNav('cm-faxlog')"><div class="nav-icon">📠</div> Fax Log</div>
+    <div class="nav-item" data-page="cm-ledgers" onclick="cmNav('cm-ledgers')"><div class="nav-icon">🧾</div> Billing Ledgers</div>
   </div>
   <div class="nav-section">
     <div class="nav-section-label">Case Managers</div>
@@ -473,7 +491,7 @@
     <div class="nav-item" id="cmNavMyMetrics" data-page="cm-my-metrics" onclick="cmNav('cm-my-metrics')"><div class="nav-icon">📈</div> My Metrics</div>
     <div class="nav-item" id="cmNavMgrDash" data-page="cm-mgr-dash" onclick="promptPIN('cm-mgr-dash')" style="display:none"><div class="nav-icon">🔒</div> Manager View</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Case Management · Confidential<br>build 2026-11-11-np-intake</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Case Management · Confidential<br>build 2026-11-12-billing-ledgers</p></div>
 </nav>
 <div class="main-content" id="cmMain">
   <div class="section active" id="sec-cm-dashboard"></div>
@@ -481,6 +499,7 @@
   <div class="section" id="sec-cm-alerts"></div>
   <div class="section" id="sec-cm-contacts"></div>
   <div class="section" id="sec-cm-faxlog"></div>
+  <div class="section" id="sec-cm-ledgers"></div>
   <div class="section" id="sec-cm-staff-Sophia"></div>
   <div class="section" id="sec-cm-staff-Kent"></div>
   <div class="section" id="sec-cm-staff-Laura"></div>
@@ -506,7 +525,7 @@
     <div class="nav-item" data-page="mkt-report" onclick="mktNav('mkt-report')"><div class="nav-icon">📄</div> Weekly Snapshot</div>
     <div class="nav-item" data-page="mkt-analytics" onclick="mktNav('mkt-analytics')"><div class="nav-icon">📊</div> Analytics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential<br>build 2026-11-11-np-intake</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Marketing · Confidential<br>build 2026-11-12-billing-ledgers</p></div>
 </nav>
 <div class="main-content" id="mktMain">
   <div class="section active" id="sec-mkt-pipeline"></div>
@@ -544,7 +563,7 @@
     <div class="nav-item" id="psrNavMyMetrics" data-page="psr-my-metrics" onclick="psrNav('psr-my-metrics')"><div class="nav-icon">📈</div> My Metrics</div>
     <div class="nav-item" id="psrNavMgrDash" data-page="psr-mgr-dash" onclick="promptPIN('psr-mgr-dash')" style="display:none"><div class="nav-icon">🔒</div> Manager View</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Patient Services · Confidential<br>build 2026-11-11-np-intake</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>Patient Services · Confidential<br>build 2026-11-12-billing-ledgers</p></div>
 </nav>
 <div class="main-content" id="psrMain">
   <div class="section active" id="sec-psr-dashboard"></div>
@@ -584,7 +603,7 @@
     <div class="nav-section-label">Metrics</div>
     <div class="nav-item" id="njmvaNavMgrDash" data-page="njmva-analytics" onclick="if(currentUser==='Manager'||userRole==='nj_mva'||_isExec()){njmvaNav('njmva-analytics')}else{promptPIN('njmva-analytics')}" style="display:none"><div class="nav-icon">📊</div> Analytics</div>
   </div>
-  <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential<br>build 2026-11-11-np-intake</p></div>
+  <div class="sidebar-footer"><p>CarePath Injury Centers<br>NJ MVA Pre-Certification · Confidential<br>build 2026-11-12-billing-ledgers</p></div>
 </nav>
 <div class="main-content" id="njmvaMain">
   <div class="section active" id="sec-njmva-dashboard"></div>
@@ -1130,7 +1149,7 @@
 </div>
 
 <script>
-console.log('CarePath CRM build: 2026-11-11-np-intake');
+console.log('CarePath CRM build: 2026-11-12-billing-ledgers');
 // ══════════════════════════════════════════════════════════════════════
 // CORE DATA
 // ══════════════════════════════════════════════════════════════════════
@@ -2389,7 +2408,7 @@ function loadRecordsData(arr){
 // ══════════════════════════════════════════════════════════════════════
 let currentUser = null;
 let currentEmail = '';
-const BUILD_VERSION='2026-11-11-np-intake';
+const BUILD_VERSION='2026-11-12-billing-ledgers';
 try{console.log('%cCarePath build: '+BUILD_VERSION,'color:#1a7f7a;font-weight:700');}catch(e){}
 let userRole = null; // 'scheduler','case_mgr','marketing','manager'
 let managerUnlocked = false;
@@ -4130,6 +4149,7 @@ function renderCmPage(page) {
   else if(page.startsWith('cm-staff-'))renderCmStaff(el,page.replace('cm-staff-',''));
   else if(page==='cm-contacts')renderCmContacts(el);
   else if(page==='cm-faxlog')renderCmFaxLog(el);
+  else if(page==='cm-ledgers')renderCmLedgers(el);
   else if(page==='cm-my-metrics')renderCmMyMetrics(el);
   else if(page==='cm-mgr-dash')renderCmMgrDash(el);
   else if(page==='cm-detail'&&cmDetailId)showCmDetail(cmDetailId);
@@ -4156,7 +4176,7 @@ function clearCmDateFilter(){
 function toggleCmDrilldown(id){var el=document.getElementById('cmDrill-'+id);if(el)el.style.display=el.style.display==='none'?'block':'none';}
 
 // CM task-completion analytics
-function _logCmTask(c, task){
+function _logCmTask(c, task, extra){
   if(!c)return;
   if(!Array.isArray(c.taskLog))c.taskLog=[];
   // one-time backfill: seed pre-existing completions (attributed to the assigned CM) so nothing is lost
@@ -4165,7 +4185,8 @@ function _logCmTask(c, task){
       if(d[1])c.taskLog.push({task:d[0],by:c.assigned||null,date:String(d[1]).substring(0,10),legacy:true});
     });
   }
-  c.taskLog.push({task:task,by:(typeof currentUser!=='undefined'&&currentUser)||null,date:today()});
+  var _te={task:task,by:(typeof currentUser!=='undefined'&&currentUser)||null,date:today()};if(extra)for(var _k in extra)_te[_k]=extra[_k];
+  c.taskLog.push(_te);
   try{if(_useNewTables)_dbPatch('cases',c.id,{task_log:c.taskLog});else _legacySave('cp11_cases',cases);}catch(e){console.error('task log save',e);}
 }
 function _cmTaskEvents(c){
@@ -5257,7 +5278,7 @@ function showCmDetail(id){
   if(srcRef){h+=dcell('Attorney',srcRef.attorney||'—')+dcell('Law Firm',srcRef.lawFirm||'—')+dcell('Firm Contact',srcRef.lawContact||'—')+dcell('Referral Source',srcRef.referralSource||'—')+refClaimCells(srcRef);}
   h+='</div>';
   if(c.missingInfo) h+='<div class="detail-notes"><div class="detail-cell-label">Missing Info</div><div class="detail-cell-value" style="font-size:12px">'+esc(c.missingInfo)+'</div></div>';
-  h+='<div class="detail-actions"><button class="btn-cancel" onclick="openEditCaseModal(\''+c.id+'\')">Edit Case</button><button class="btn-primary" onclick="openCaseStatusModal(\''+c.id+'\')" style="font-size:11px;padding:7px 14px;background:var(--navy)">⚡ Update Case Status</button><button class="btn-primary" onclick="addCmManualAlert(\''+c.id+'\')" style="font-size:11px;padding:7px 14px">+ Add Reminder</button><button class="btn-primary" onclick="openCallLogModal(\''+(c.sourceRefId||'')+'\',\''+c.id+'\')" style="font-size:11px;padding:7px 14px;background:var(--gold)">📞 Log Call</button></div></div>';
+  h+='<div class="detail-actions"><button class="btn-cancel" onclick="openEditCaseModal(\''+c.id+'\')">Edit Case</button><button class="btn-primary" onclick="openCaseStatusModal(\''+c.id+'\')" style="font-size:11px;padding:7px 14px;background:var(--navy)">⚡ Update Case Status</button><button class="btn-primary" onclick="blStartForCase(\''+c.id+'\')" style="font-size:11px;padding:7px 14px;background:var(--teal)">🧾 Billing Ledger</button><button class="btn-primary" onclick="addCmManualAlert(\''+c.id+'\')" style="font-size:11px;padding:7px 14px">+ Add Reminder</button><button class="btn-primary" onclick="openCallLogModal(\''+(c.sourceRefId||'')+'\',\''+c.id+'\')" style="font-size:11px;padding:7px 14px;background:var(--gold)">📞 Log Call</button></div></div>';
 
   // Upcoming manual alerts (not yet triggered)
   const upcoming=(c.manualAlerts||[]).filter(ma=>!ma.completed&&daysBtw(today(),ma.reminderDate)>0);
@@ -9815,6 +9836,512 @@ window.addEventListener('beforeunload',function(e){
     return e.returnValue;
   }
 });
+
+// ══════════════════════════════════════════════════════════════════════
+// BILLING LEDGERS (Case Management) — RXNT / daisyBill ledger PDFs -> CarePath ledger
+// ══════════════════════════════════════════════════════════════════════
+// ══ BILLING LEDGERS — parsing core (no DOM) ══
+var BL_CPT={
+'99202':'Office visit, new patient (level 2)','99203':'Office visit, new patient (level 3)','99204':'Office visit, new patient (level 4)','99205':'Office visit, new patient (level 5)',
+'99211':'Office visit, established patient (level 1)','99212':'Office visit, established patient (level 2)','99213':'Office visit, established patient (level 3)','99214':'Office visit, established patient (level 4)','99215':'Office visit, established patient (level 5)',
+'G2211':'Visit complexity add-on','T1013':'Interpreter services','99080':'Special report / form completion','99358':'Prolonged service, non face-to-face','99070':'Supplies and materials',
+'97810':'Acupuncture, initial 15 min','97811':'Acupuncture, each additional 15 min','97813':'Acupuncture with electrical stimulation, initial 15 min','97814':'Acupuncture with electrical stimulation, each additional 15 min',
+'97140':'Manual therapy, each 15 min','97110':'Therapeutic exercise, each 15 min','97112':'Neuromuscular re-education, each 15 min','97530':'Therapeutic activities, each 15 min',
+'97014':'Electrical stimulation, unattended','G0283':'Electrical stimulation, unattended','97032':'Electrical stimulation, attended, each 15 min','97035':'Ultrasound therapy, each 15 min',
+'97026':'Infrared therapy','97016':'Vasopneumatic device therapy','97010':'Hot / cold pack therapy','97012':'Mechanical traction','97750':'Physical performance test',
+'97161':'Physical therapy evaluation, low complexity','97162':'Physical therapy evaluation, moderate complexity','97163':'Physical therapy evaluation, high complexity','97164':'Physical therapy re-evaluation',
+'98940':'Chiropractic manipulation, 1-2 spinal regions','98941':'Chiropractic manipulation, 3-4 spinal regions','98942':'Chiropractic manipulation, 5 spinal regions','98943':'Chiropractic manipulation, extraspinal',
+'20552':'Trigger point injections, 1-2 muscles','20553':'Trigger point injections, 3+ muscles','20610':'Joint injection / aspiration, major joint','20611':'Joint injection / aspiration, major joint, with ultrasound',
+'96372':'Therapeutic injection, intramuscular / subcutaneous','J3490':'Injectable medication (unclassified drug)','J1030':'Methylprednisolone acetate, 40 mg','J1040':'Methylprednisolone acetate, 80 mg','J3301':'Triamcinolone acetonide, 10 mg','J1885':'Ketorolac, 15 mg','J0702':'Betamethasone, 3 mg','J1100':'Dexamethasone, 1 mg','J2001':'Lidocaine, 10 mg',
+'72141':'MRI cervical spine without contrast','72146':'MRI thoracic spine without contrast','72148':'MRI lumbar spine without contrast','73221':'MRI upper extremity joint without contrast','73721':'MRI lower extremity joint without contrast',
+'95885':'Needle EMG, each extremity, limited (with nerve conduction)','95886':'Needle EMG, each extremity, complete (with nerve conduction)','95910':'Nerve conduction studies, 7-8 studies','95911':'Nerve conduction studies, 9-10 studies','95912':'Nerve conduction studies, 11-12 studies','95913':'Nerve conduction studies, 13 or more studies',
+'62321':'Epidural injection, cervical / thoracic, with imaging','62323':'Epidural injection, lumbar / sacral, with imaging','64479':'Transforaminal epidural injection, cervical / thoracic, single level','64480':'Transforaminal epidural injection, cervical / thoracic, each additional level','64483':'Transforaminal epidural injection, lumbar / sacral, single level','64484':'Transforaminal epidural injection, lumbar / sacral, each additional level',
+'64490':'Facet joint injection, cervical / thoracic, single level','64491':'Facet joint injection, cervical / thoracic, second level','64493':'Facet joint injection, lumbar / sacral, single level','64494':'Facet joint injection, lumbar / sacral, second level',
+'64633':'Radiofrequency ablation, cervical / thoracic facet, single level','64635':'Radiofrequency ablation, lumbar / sacral facet, single level',
+'0766T':'Transcutaneous magnetic nerve stimulation, initial nerve','0767T':'Transcutaneous magnetic nerve stimulation, each additional nerve'
+};
+function blCptDesc(code){var c=String(code||'').toUpperCase().split(/[:\-]/)[0];return BL_CPT[c]||'';}
+function blNum(s){if(s==null)return NaN;s=String(s).trim();var neg=/^\(.*\)$/.test(s)||/^-/.test(s);s=s.replace(/[()$,\s-]/g,'');if(!/^\d+(\.\d+)?$/.test(s))return NaN;var n=parseFloat(s);return neg?-n:n;}
+function blR(n){return Math.round(n*100)/100;}
+var BL_AMT=/^\(?-?\$?[\d,]+\.\d{2}\)?$/;
+var BL_CODE=/^[A-Za-z0-9]{5}(?:[:\-][A-Za-z0-9]{2})*$/;
+function blIsoDate(mdy){var m=String(mdy||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?m[3]+'-'+('0'+m[1]).slice(-2)+'-'+('0'+m[2]).slice(-2):'';}
+
+// pdf.js text items -> de-duplicated visual lines
+function blGroupLines(items,page){
+  var seen={},cells=[];
+  items.forEach(function(it){var s=(it.str||'').trim();if(!s)return;var x=it.transform[4],y=it.transform[5];var k=s+'@'+Math.round(x)+','+Math.round(y);if(seen[k])return;seen[k]=1;cells.push({s:s,x:x,y:y});});
+  cells.sort(function(a,b){return b.y-a.y||a.x-b.x});
+  var lines=[];
+  cells.forEach(function(c){var L=null;for(var i=lines.length-1;i>=0&&i>=lines.length-3;i--){if(Math.abs(lines[i].y-c.y)<2.5){L=lines[i];break;}}if(!L){L={page:page,y:c.y,cells:[]};lines.push(L);}L.cells.push(c);});
+  lines.forEach(function(l){l.cells.sort(function(a,b){return a.x-b.x});l.text=l.cells.map(function(c){return c.s}).join(' ');});
+  return lines;
+}
+function blDetect(lines){
+  var t=lines.slice(0,80).map(function(l){return l.text}).join('\n');
+  if(/Bills Ledger/i.test(t)&&/Bill ID/i.test(lines.map(function(l){return l.text}).join('\n')))return 'daisy';
+  if(/ENCOUNTER\s*#/i.test(t)&&/Revenue\/?\s*CPT/i.test(t))return 'rxnt';
+  return null;
+}
+
+// ── RXNT patient ledger ──
+function blParseRxnt(lines){
+  var out={source:'RXNT',patient:{name:'',mrn:''},headerDue:null,items:[],warnings:[],rowCount:0};
+  var enc=null,dos='',cols=null,last=null;
+  lines.forEach(function(l){
+    var t=l.text;
+    var pm=t.match(/PATIENT NAME:\s*(.+?)\s+ACCOUNT\s*\/\s*MRN\s*#:\s*(\S+)/i);
+    if(pm){if(!out.patient.name){out.patient.name=pm[1].trim();out.patient.mrn=pm[2];}
+      var im=t.match(/INSURANCE AMOUNT DUE:\s*(\S+)/i),pa=t.match(/PATIENT AMOUNT DUE:\s*(\S+)/i);
+      if(im&&pa&&!out.headerDue)out.headerDue={ins:blNum(im[1]),pat:blNum(pa[1])};return;}
+    var em=t.match(/ENCOUNTER\s*#:\s*(\S+).*?SERVICE DATE:\s*(\d{1,2}\/\d{1,2}\/\d{4})/i);
+    if(em){enc=em[1];dos=blIsoDate(em[2]);last=null;return;}
+    if(/^Revenue\/?\s*CPT/i.test(t)){cols={};l.cells.forEach(function(c){var k=c.s.toLowerCase();if(k==='payment #')cols.num=c.x;else if(k==='payment date')cols.date=c.x;else if(k==='paid by')cols.payer=c.x;else if(k==='payment method')cols.method=c.x;else if(k==='payment type')cols.type=c.x;});return;}
+    if(!enc)return;
+    // tokens: split cells so "350.00 Insurance" becomes two tokens, keep x
+    var toks=[];l.cells.forEach(function(c){var parts=c.s.split(/\s+/);if(parts.length>1&&BL_AMT.test(parts[0])&&!BL_AMT.test(parts[parts.length-1])){toks.push({s:parts[0],x:c.x});toks.push({s:parts.slice(1).join(' '),x:c.x+40});}else toks.push({s:c.s,x:c.x});});
+    var tail=[];for(var i=toks.length-1;i>=0&&tail.length<5;i--){if(BL_AMT.test(toks[i].s))tail.unshift(toks[i]);else break;}
+    if(tail.length<5)return;
+    var head=toks.slice(0,toks.length-5);
+    var isLine=head.length>=2&&BL_CODE.test(head[0].s)&&BL_AMT.test(head[1].s);
+    var mid=isLine?head.slice(2):head;
+    var pay={type:'',num:'',date:'',payer:'',method:''};
+    mid.forEach(function(tk){
+      if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(tk.s)){pay.date=blIsoDate(tk.s);return;}
+      if(cols&&cols.method!=null&&tk.x>=cols.method-15){pay.method=(pay.method?pay.method+' ':'')+tk.s;return;}
+      if(cols&&cols.payer!=null&&tk.x>=cols.payer-15){pay.payer=(pay.payer?pay.payer+' ':'')+tk.s;return;}
+      if(cols&&cols.num!=null&&tk.x>=cols.num-15){pay.num=tk.s;return;}
+      pay.type=(pay.type?pay.type+' ':'')+tk.s;
+    });
+    var a=tail.map(function(t){return blNum(t.s)});
+    var payment={date:pay.date,payer:pay.payer,num:pay.num,method:pay.method,type:pay.type,amount:a[0]};
+    out.rowCount++;
+    if(isLine){
+      last={src:'RXNT',ref:'Enc '+enc,enc:enc,dos:dos,code:head[0].s.toUpperCase(),units:1,provider:'',charge:blNum(head[1].s),paid:a[0],adj:blR(a[1]+a[2]),overpay:a[3],bal:a[4],status:'',payments:a[0]?[payment]:[]};
+      out.items.push(last);
+    } else if(last&&(a[0]||a[1]||a[2])){
+      // additional payment row for the line above
+      last.paid=blR(last.paid+a[0]);last.adj=blR(last.adj+a[1]+a[2]);last.bal=a[4];if(a[0])last.payments.push(payment);
+      out.warnings.push('Encounter '+enc+' ('+last.code+') has more than one payment row — combined. Check this line against RXNT.');
+    }
+  });
+  var sumBal=blR(out.items.reduce(function(s,i){return s+i.bal},0));
+  out.check={label:'Line balances vs. RXNT amount due',parsed:sumBal,source:out.headerDue?blR(out.headerDue.ins+out.headerDue.pat):null};
+  out.check.ok=out.check.source!=null&&Math.abs(out.check.parsed-out.check.source)<0.01;
+  out.items.forEach(function(i){var calc=blR(i.charge-i.paid-i.adj+(i.overpay||0));if(Math.abs(calc-i.bal)>=0.01)out.warnings.push('Encounter '+i.enc+' '+i.code+': charge − payments − adjustments ('+calc.toFixed(2)+') does not equal RXNT amount due ('+i.bal.toFixed(2)+').');if(i.overpay)out.warnings.push('Encounter '+i.enc+' '+i.code+' shows an overpayment of '+i.overpay.toFixed(2)+'.');});
+  if(!out.items.length)out.warnings.push('No line items were found in this RXNT file.');
+  return out;
+}
+
+// ── daisyBill Bills Ledger ──
+function blParseDaisy(lines){
+  var out={source:'daisyBill',patient:{name:'',dob:''},claim:{admin:'',number:'',doi:'',employer:''},summary:null,bills:[],warnings:[]};
+  var sec='',bill=null,inDetail=false;
+  function kv(l){if(l.cells.length<2)return null;return [l.cells[0].s,l.cells.slice(1).map(function(c){return c.s}).join(' ')];}
+  lines.forEach(function(l){
+    var t=l.text;
+    var bm=t.match(/^Bill ID#\s*(\S+)\s*-\s*DOS\s*(\d{1,2}\/\d{1,2}\/\d{4})/i);
+    if(bm){inDetail=true;bill={id:bm[1],dos:blIsoDate(bm[2]),status:'',provider:'',dx:'',lines:[],total:null};out.bills.push(bill);return;}
+    if(!inDetail){
+      if(/^(Billing Provider|Patient|Injury)$/i.test(t)){sec=t.toLowerCase();return;}
+      if(/^Summary of Bills/i.test(t)){sec='summary';return;}
+      var tm=t.match(/^Total\s+(\$?[\d,]+\.\d{2})\s+(\$?[\d,]+\.\d{2})$/);
+      if(tm&&sec==='summary'){out.summary={charge:blNum(tm[1]),paid:blNum(tm[2])};return;}
+      var p=kv(l);if(!p)return;
+      if(sec==='patient'){if(/^Name$/i.test(p[0]))out.patient.name=p[1];else if(/^DOB$/i.test(p[0]))out.patient.dob=blIsoDate(p[1]);}
+      else if(sec==='injury'){if(/Claims Administrator/i.test(p[0]))out.claim.admin=p[1];else if(/Claim Number/i.test(p[0]))out.claim.number=p[1];else if(/^DOI$/i.test(p[0]))out.claim.doi=blIsoDate(p[1]);else if(/Employer/i.test(p[0]))out.claim.employer=p[1];}
+      return;
+    }
+    if(!bill)return;
+    var p2=kv(l);
+    if(p2&&/^Status$/i.test(p2[0])){bill.status=p2[1];return;}
+    if(p2&&/^Rendering Provider$/i.test(p2[0])){bill.provider=p2[1];return;}
+    if(p2&&/^Diagnosis Codes$/i.test(p2[0])){bill.dx=p2[1];return;}
+    var tt=t.match(/^Total\s+(\$?[\d,]+\.\d{2})\s+(\$?[\d,]+\.\d{2})$/);
+    if(tt){bill.total={charge:blNum(tt[1]),paid:blNum(tt[2])};return;}
+    var c=l.cells.map(function(x){return x.s});
+    if(c.length>=4&&BL_CODE.test(c[0])&&/^\d+(\.\d+)?$/.test(c[1])&&BL_AMT.test(c[c.length-2])&&BL_AMT.test(c[c.length-1])){
+      bill.lines.push({code:c[0].toUpperCase(),units:parseFloat(c[1]),charge:blNum(c[c.length-2]),paid:blNum(c[c.length-1])});
+    }
+  });
+  // reconciliation
+  var sc=0,sp=0;
+  out.bills.forEach(function(b){
+    var lc=blR(b.lines.reduce(function(s,x){return s+x.charge},0)),lp=blR(b.lines.reduce(function(s,x){return s+x.paid},0));
+    if(!b.total)out.warnings.push('Bill '+b.id+' ('+b.dos+'): no bill total found — check this bill against daisyBill.');
+    else if(Math.abs(lc-b.total.charge)>=0.01||Math.abs(lp-b.total.paid)>=0.01)out.warnings.push('Bill '+b.id+' ('+b.dos+'): line items ('+lc.toFixed(2)+' / '+lp.toFixed(2)+') do not match the bill total ('+b.total.charge.toFixed(2)+' / '+b.total.paid.toFixed(2)+').');
+    sc+=lc;sp+=lp;
+  });
+  sc=blR(sc);sp=blR(sp);
+  out.check={label:'Bill line items vs. daisyBill summary total',parsed:sc,parsedPaid:sp,source:out.summary?out.summary.charge:null,sourcePaid:out.summary?out.summary.paid:null};
+  out.check.ok=!!out.summary&&Math.abs(sc-out.summary.charge)<0.01&&Math.abs(sp-out.summary.paid)<0.01;
+  if(!out.bills.length)out.warnings.push('No bills were found in this daisyBill file.');
+  return out;
+}
+function blTitle(s){return String(s||'').toLowerCase().replace(/\b([a-z])/g,function(m){return m.toUpperCase()}).replace(/\((\w{2,4})\)/g,function(m,w){return '('+w.toUpperCase()+')'}).replace(/\bLlc\b/g,'LLC').replace(/\bLlp\b/g,'LLP');}
+function blIsClosed(st){return /^(closed|paid in full|paid)$/i.test(String(st||'').trim());}
+
+// Parsed files -> one normalized, reviewable item list
+function blBuildItems(files){
+  var items=[],notes=[];
+  files.forEach(function(f,fi){
+    var p=f.parsed;if(!p)return;
+    if(p.source==='RXNT'){
+      var zero=0;
+      p.items.forEach(function(i){
+        var it={key:'r'+fi+'-'+items.length,src:'RXNT',ref:i.ref,dos:i.dos,code:i.code,desc:blCptDesc(i.code),units:i.units,provider:'',charge:i.charge,paid:i.paid,adj:i.adj,bal:i.bal,status:'',payments:i.payments,include:true,reason:''};
+        if(!i.charge&&!i.paid&&!i.adj&&!i.bal){it.include=false;it.reason='$0 line in RXNT (WC charge moved to daisyBill)';zero++;}
+        items.push(it);
+      });
+      if(zero)notes.push(zero+' $0.00 RXNT line'+(zero===1?'':'s')+' left off the ledger (WC charges zeroed in RXNT and billed in daisyBill).');
+    } else if(p.source==='daisyBill'){
+      // duplicate submissions: same DOS + provider + identical lines; unpaid copies are excluded when a paid copy exists
+      var groups={};
+      p.bills.forEach(function(b){var sig=b.dos+'|'+b.provider+'|'+b.lines.map(function(x){return x.code+'x'+x.units+'@'+x.charge}).sort().join(',');(groups[sig]=groups[sig]||[]).push(b);});
+      var dupIds={};
+      Object.keys(groups).forEach(function(k){var g=groups[k];if(g.length<2)return;var paid=g.filter(function(b){return b.lines.some(function(x){return x.paid>0})});if(!paid.length)return;g.forEach(function(b){if(paid.indexOf(b)===-1)dupIds[b.id]=paid[0].id;});});
+      var nd=Object.keys(dupIds).length;
+      if(nd)notes.push(nd+' duplicate daisyBill submission'+(nd===1?'':'s')+' with no payment left off (same date, provider and services as a paid bill).');
+      p.bills.forEach(function(b){
+        var closed=blIsClosed(b.status);
+        b.lines.forEach(function(x){
+          var it={key:'d'+fi+'-'+items.length,src:'daisyBill',ref:'Bill '+b.id,billId:b.id,dos:b.dos,code:x.code,desc:blCptDesc(x.code),units:x.units,provider:blTitle(b.provider),charge:x.charge,paid:x.paid,adj:0,bal:0,status:b.status,closed:closed,payments:[],include:!dupIds[b.id],reason:dupIds[b.id]?'Duplicate of paid bill '+dupIds[b.id]:''};
+          blApplyStatus(it);items.push(it);
+        });
+      });
+    }
+  });
+  // overlap: billable RXNT line on a DOS that is also billed in daisyBill
+  var dDos={};items.forEach(function(i){if(i.src==='daisyBill'&&i.include)dDos[i.dos]=1;});
+  var ov={};items.forEach(function(i){if(i.src==='RXNT'&&i.include&&i.charge&&dDos[i.dos])ov[i.dos]=1;});
+  Object.keys(ov).forEach(function(d){notes.push('WARNING: '+d+' has charges in both RXNT and daisyBill — confirm this visit is not billed twice.');});
+  items.sort(function(a,b){return (a.dos||'').localeCompare(b.dos||'')||(a.src<b.src?-1:a.src>b.src?1:0);});
+  return {items:items,notes:notes};
+}
+// WC bills: closed -> remainder is the fee schedule / denial adjustment, nothing owed; open -> billed minus paid
+function blApplyStatus(it){if(it.src!=='daisyBill')return;if(it.closed){it.adj=blR(it.charge-it.paid);it.bal=0;}else{it.adj=0;it.bal=blR(it.charge-it.paid);}}
+function blTotals(items){var t={charge:0,paid:0,adj:0,bal:0,n:0,first:'',last:'',visits:{}};items.forEach(function(i){if(!i.include)return;t.charge+=i.charge;t.paid+=i.paid;t.adj+=i.adj;t.bal+=i.bal;t.n++;if(i.dos){if(!t.first||i.dos<t.first)t.first=i.dos;if(!t.last||i.dos>t.last)t.last=i.dos;t.visits[i.dos]=1;}});['charge','paid','adj','bal'].forEach(function(k){t[k]=blR(t[k])});t.visitCount=Object.keys(t.visits).length;return t;}
+
+// ── Billing Ledgers: UI (Case Management) ──
+var blState={caseId:null,files:[],items:[],notes:[],hdr:null,crm:{},savedMsg:'',search:'',showExcluded:false,nameOk:false,busy:false};
+var _blPdfJs=null;
+function blLoadPdfJs(){
+  if(window.pdfjsLib)return Promise.resolve(window.pdfjsLib);
+  if(_blPdfJs)return _blPdfJs;
+  var base='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+  _blPdfJs=new Promise(function(res,rej){var sc=document.createElement('script');sc.src=base+'pdf.min.js';
+    sc.onload=function(){if(!window.pdfjsLib){_blPdfJs=null;rej(new Error('pdf.js missing'));return;}window.pdfjsLib.GlobalWorkerOptions.workerSrc=base+'pdf.worker.min.js';res(window.pdfjsLib);};
+    sc.onerror=function(){_blPdfJs=null;rej(new Error('Could not load the PDF reader'));};document.head.appendChild(sc);});
+  return _blPdfJs;
+}
+async function blReadPdf(file){
+  var lib=await blLoadPdfJs();
+  var buf=await file.arrayBuffer();
+  var doc=await lib.getDocument({data:new Uint8Array(buf)}).promise;
+  var lines=[];
+  for(var p=1;p<=doc.numPages;p++){var pg=await doc.getPage(p);var tc=await pg.getTextContent();lines=lines.concat(blGroupLines(tc.items,p));}
+  return {lines:lines,pages:doc.numPages};
+}
+function blMoney(n){var v=Math.round((n||0)*100)/100;var s=Math.abs(v).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');return (v<0?'-$':'$')+s;}
+function blCase(){return blState.caseId?cases.find(function(c){return c.id===blState.caseId}):null;}
+function blCaseRef(c){return c&&c.sourceRefId?refs.find(function(r){return r.id===c.sourceRefId}):null;}
+function blNameTokens(n){return String(n||'').toLowerCase().replace(/[^a-z\s,]/g,' ').split(/[\s,]+/).filter(function(w){return w.length>1});}
+function blNameMatch(a,b){var A=blNameTokens(a),B=blNameTokens(b);if(!A.length||!B.length)return false;var hit=A.filter(function(w){return B.indexOf(w)!==-1}).length;return hit>=Math.min(2,A.length,B.length);}
+
+function renderCmLedgers(el){blDraw(el);}
+function blStartForCase(id){blReset();blState.caseId=id;cmNav('cm-ledgers');}
+function blReset(){blState={caseId:null,files:[],items:[],notes:[],hdr:null,crm:{},savedMsg:'',search:blState.search||'',showExcluded:false,nameOk:false,busy:false};}
+function blRedraw(){var el=document.getElementById('sec-cm-ledgers');if(el)blDraw(el);}
+
+function blDraw(el){
+  var c=blCase();
+  var h='<div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;flex-wrap:wrap"><div class="page-title" style="margin-bottom:0">Billing Ledgers</div>'+(c?'<div style="margin-left:auto"><button class="btn-cancel" onclick="blReset();blRedraw()" style="font-size:11px;padding:6px 14px">Start Over</button></div>':'')+'</div>';
+  h+='<div class="page-subtitle">Pull the patient\'s ledger from <strong>RXNT</strong> (PI / MVA) and/or <strong>daisyBill</strong> (WC), upload the PDF(s), review, then download the CarePath ledger for the law firm. Files are read in your browser and are not stored.</div>';
+  // Step 1 — case
+  h+='<div class="bl-card"><div class="bl-step">1</div><div class="bl-body"><div class="bl-h">Case</div>';
+  if(!c){
+    h+='<input class="search-input" id="blSearch" style="width:100%;max-width:420px" placeholder="Search patient name…" value="'+esc(blState.search)+'" oninput="blState.search=this.value;blDrawCaseList()">';
+    h+='<div id="blCaseList"></div>';
+  } else {
+    var r=blCaseRef(c);
+    h+='<div class="bl-case"><strong>'+esc(c.patientName)+'</strong><span>'+esc(c.caseType||'')+'</span><span>DOI '+fmtDate(c.doi)+'</span><span>'+esc((r&&r.lawFirm)||c.lawFirm||'No law firm')+'</span><span>'+esc(c.status||'')+'</span><a onclick="blReset();blRedraw()">Change</a></div>';
+  }
+  h+='</div></div>';
+  if(c){
+    // Step 2 — files
+    h+='<div class="bl-card"><div class="bl-step">2</div><div class="bl-body"><div class="bl-h">Source ledgers</div>';
+    h+='<label class="bl-drop" ondragover="event.preventDefault();this.classList.add(\'on\')" ondragleave="this.classList.remove(\'on\')" ondrop="event.preventDefault();this.classList.remove(\'on\');blAddFiles(event.dataTransfer.files)"><input type="file" accept="application/pdf,.pdf" multiple style="display:none" onchange="blAddFiles(this.files);this.value=\'\'">'+(blState.busy?'Reading…':'<strong>Drop PDF ledgers here</strong> or click to choose — RXNT patient ledger and/or daisyBill Bills Ledger')+'</label>';
+    blState.files.forEach(function(f,i){
+      var p=f.parsed,ok=p&&p.check&&p.check.ok;
+      var pname=p?p.patient.name:'';var nm=p?blNameMatch(pname,c.patientName):false;
+      h+='<div class="bl-file"><div class="bl-file-top"><span class="bl-src '+(p?(p.source==='RXNT'?'rx':'db'):'bad')+'">'+(p?p.source:'Not recognized')+'</span><strong>'+esc(f.name)+'</strong>'+(p?'<span>Patient on file: <b style="color:'+(nm?'inherit':'var(--red)')+'">'+esc(pname||'—')+'</b></span>':'')+'<a onclick="blRemoveFile('+i+')">Remove</a></div>';
+      if(f.error)h+='<div class="bl-warn">'+esc(f.error)+'</div>';
+      if(p){
+        if(p.source==='RXNT')h+='<div class="bl-chk '+(ok?'ok':'bad')+'">'+(ok?'✓':'⚠')+' '+p.items.length+' line items · line balances '+blMoney(p.check.parsed)+' vs RXNT amount due '+(p.check.source==null?'(not found)':blMoney(p.check.source))+'</div>';
+        else h+='<div class="bl-chk '+(ok?'ok':'bad')+'">'+(ok?'✓':'⚠')+' '+p.bills.length+' bills · charges '+blMoney(p.check.parsed)+' / paid '+blMoney(p.check.parsedPaid)+' vs daisyBill summary '+(p.check.source==null?'(not found)':blMoney(p.check.source)+' / '+blMoney(p.check.sourcePaid))+'</div>';
+        p.warnings.forEach(function(w){h+='<div class="bl-warn">⚠ '+esc(w)+'</div>';});
+      }
+      h+='</div>';
+    });
+    var mism=blState.files.filter(function(f){return f.parsed&&!blNameMatch(f.parsed.patient.name,c.patientName)});
+    if(mism.length){
+      h+='<div class="bl-stop"><strong>Patient name on '+(mism.length===1?'a ledger':'some ledgers')+' does not match this case ('+esc(c.patientName)+').</strong> Sending another patient\'s ledger to a law firm is a privacy breach. Remove the file, or confirm it is the right patient: <label style="display:inline-flex;gap:6px;align-items:center;margin-left:6px;font-weight:600"><input type="checkbox" '+(blState.nameOk?'checked':'')+' onchange="blState.nameOk=this.checked;blRedraw()"> I verified this is the same patient</label></div>';
+    }
+    var dz=blState.files.map(function(f){return f.parsed&&f.parsed.claim}).filter(Boolean)[0];
+    if(dz&&dz.doi&&c.doi&&dz.doi!==c.doi)h+='<div class="bl-warn">⚠ daisyBill DOI '+fmtDate(dz.doi)+' differs from the case DOI '+fmtDate(c.doi)+'. Make sure this is the right claim.</div>';
+    h+='</div></div>';
+    // Step 3 — review
+    if(blState.items.length){h+=blReviewHtml(c,mism.length&&!blState.nameOk);}
+  }
+  h+=blHistoryHtml();
+  el.innerHTML=h;
+  if(!c)blDrawCaseList();
+}
+function blDrawCaseList(){
+  var box=document.getElementById('blCaseList');if(!box)return;
+  var s=(blState.search||'').trim().toLowerCase();
+  if(s.length<2){box.innerHTML='<div style="font-size:12px;color:var(--gray-600);margin-top:8px">Type at least 2 letters. You can also open a case and click <strong>🧾 Billing Ledger</strong>.</div>';return;}
+  var list=cases.filter(function(x){return (x.patientName||'').toLowerCase().indexOf(s)!==-1}).slice(0,15);
+  var h='<table class="tbl" style="margin-top:10px"><thead><tr><th>Patient</th><th>Type</th><th>DOI</th><th>Law Firm</th><th>Status</th><th>CM</th></tr></thead><tbody>';
+  if(!list.length)h+='<tr><td colspan="6" style="color:var(--gray-600);padding:14px">No matching cases.</td></tr>';
+  list.forEach(function(x){var r=blCaseRef(x);h+='<tr style="cursor:pointer" onclick="blState.caseId=\''+x.id+'\';blRedraw()"><td><strong>'+esc(x.patientName)+'</strong></td><td>'+esc(x.caseType||'')+'</td><td>'+fmtDate(x.doi)+'</td><td>'+esc((r&&r.lawFirm)||x.lawFirm||'—')+'</td><td>'+esc(x.status||'')+'</td><td>'+esc(x.assigned||'')+'</td></tr>';});
+  box.innerHTML=h+'</tbody></table>';
+}
+async function blAddFiles(fl){
+  var arr=Array.prototype.slice.call(fl||[]).filter(function(f){return /\.pdf$/i.test(f.name)||f.type==='application/pdf'});
+  if(!arr.length){alert('Upload the ledger as a PDF.');return;}
+  blState.busy=true;blRedraw();
+  for(var i=0;i<arr.length;i++){
+    var f=arr[i],rec={name:f.name,parsed:null,error:''};
+    try{
+      var rd=await blReadPdf(f);var kind=blDetect(rd.lines);
+      if(kind==='rxnt')rec.parsed=blParseRxnt(rd.lines);
+      else if(kind==='daisy')rec.parsed=blParseDaisy(rd.lines);
+      else rec.error='This PDF does not look like an RXNT patient ledger or a daisyBill Bills Ledger.'+(rd.lines.length<5?' It may be a scanned image — export the ledger directly from the system instead.':'');
+    }catch(e){console.error('ledger read',e);rec.error=/load the PDF reader/.test(e.message)?'Could not load the PDF reader (check your internet connection).':'Could not read this PDF: '+e.message;}
+    blState.files.push(rec);
+  }
+  blState.busy=false;blRebuild();blRedraw();
+}
+function blRemoveFile(i){blState.files.splice(i,1);blState.nameOk=false;blRebuild();blRedraw();}
+function blRebuild(){
+  var b=blBuildItems(blState.files);blState.items=b.items;blState.notes=b.notes;
+  var c=blCase(),r=blCaseRef(c)||{};
+  var dz=blState.files.map(function(f){return f.parsed&&f.parsed.claim?f.parsed:null}).filter(Boolean)[0];
+  var dzc=dz?dz.claim:{};var dzp=dz?dz.patient:{};
+  var prev=blState.hdr||{};
+  blState.hdr={
+    patient:prev.patient||c.patientName||'',
+    dob:prev.dob||c.dob||dzp.dob||'',
+    doi:prev.doi||c.doi||dzc.doi||'',
+    caseType:prev.caseType||c.caseType||'',
+    claimNo:prev.claimNo||r.claimNumber||dzc.number||'',
+    policyNo:prev.policyNo||r.policyNumber||'',
+    carrier:prev.carrier||r.insCarrier||(dzc.admin?blTitle(dzc.admin):''),
+    employer:prev.employer||dzc.employer||'',
+    attorney:prev.attorney||r.attorney||c.attorney||'',
+    lawFirm:prev.lawFirm||r.lawFirm||c.lawFirm||'',
+    date:prev.date||today()
+  };
+  blState.crm=blCrmVals(c);
+  if(dzc.number&&r.claimNumber&&dzc.number.replace(/\W/g,'').toLowerCase()!==String(r.claimNumber).replace(/\W/g,'').toLowerCase())blState.notes.push('WARNING: daisyBill claim # '+dzc.number+' differs from the claim # in the CRM ('+r.claimNumber+').');
+}
+function blReviewHtml(c,blocked){
+  var it=blState.items,t=blTotals(it),hd=blState.hdr,ex=it.filter(function(i){return !i.include}).length;
+  var h='<div class="bl-card"><div class="bl-step">3</div><div class="bl-body"><div class="bl-h">Review &amp; download</div>';
+  var f=function(k,l,type,list){return '<label class="bl-f"><span>'+l+'</span><input class="search-input" type="'+(type||'text')+'" value="'+esc(hd[k]||'')+'"'+(list?' list="'+list+'"':'')+' oninput="blState.hdr.'+k+'=this.value;blDrawSaveNote()"></label>';};
+  var mva=blIsMva(hd.caseType);
+  h+='<div class="bl-grid">'+f('patient','Patient')+f('dob','Date of birth','date')+f('doi','Date of injury','date')+f('caseType','Case type')+f('claimNo','Claim #')+(mva||hd.policyNo?f('policyNo','Policy #'):'')+f('carrier',blCarrierLabel(hd.caseType))+(blIsWc(hd.caseType)||hd.employer?f('employer','Employer'):'')+f('attorney','Attorney')+f('lawFirm','Law firm','text','blFirmList')+f('date','Statement date','date')+'</div>';
+  h+='<datalist id="blFirmList">'+(typeof getAllLawFirms==='function'?getAllLawFirms():[]).map(function(x){return '<option value="'+esc(x)+'">'}).join('')+'</datalist>';
+  if(blState.savedMsg)h+='<div class="bl-chk ok" style="margin:-4px 0 8px">✓ '+esc(blState.savedMsg)+'</div>';
+  h+='<div id="blSaveNote" style="margin:-4px 0 10px">'+blSaveNoteHtml(c)+'</div>';
+  h+='<div class="bl-kpis"><div><span>Total charges</span><b>'+blMoney(t.charge)+'</b></div><div><span>Payments received</span><b>'+blMoney(t.paid)+'</b></div><div><span>Adjustments</span><b>'+blMoney(t.adj)+'</b></div><div class="bal"><span>Balance due</span><b>'+blMoney(t.bal)+'</b></div></div>';
+  h+='<div style="font-size:11px;color:var(--gray-600);margin:-4px 0 10px">All dates of service on file: '+(t.first?fmtDate(t.first)+(t.last!==t.first?' – '+fmtDate(t.last):''):'—')+' · '+t.visitCount+' visit'+(t.visitCount===1?'':'s')+' · '+t.n+' service line'+(t.n===1?'':'s')+'</div>';
+  blState.notes.forEach(function(n){h+='<div class="'+(/^WARNING/.test(n)?'bl-warn':'bl-note')+'">'+esc(n)+'</div>';});
+  h+='<div style="display:flex;gap:10px;align-items:center;margin:12px 0 8px;flex-wrap:wrap"><label style="font-size:12px;display:flex;gap:6px;align-items:center"><input type="checkbox" '+(blState.showExcluded?'checked':'')+' onchange="blState.showExcluded=this.checked;blRedraw()"> Show '+ex+' line'+(ex===1?'':'s')+' left off</label><span style="font-size:11px;color:var(--gray-600)">Uncheck a line to leave it off. Click a WC bill status to switch Closed / Open.</span>';
+  h+='<button class="btn-primary" style="margin-left:auto;font-size:12px;padding:8px 18px;background:var(--teal)'+(blocked||!t.n?';opacity:.45;pointer-events:none':'')+'" onclick="blDownload()">⬇ Download Ledger PDF</button></div>';
+  h+='<div class="table-scroll" style="max-height:560px;overflow:auto;border:1px solid var(--gray-200);border-radius:10px"><table class="tbl bl-tbl"><thead><tr><th></th><th>DOS</th><th>Source</th><th>Code</th><th>Service</th><th>Provider</th><th class="n">Charges</th><th class="n">Payments</th><th class="n">Adj.</th><th class="n">Balance</th><th>Status / paid on</th></tr></thead><tbody>';
+  it.forEach(function(i){
+    if(!i.include&&!blState.showExcluded)return;
+    var st=i.src==='daisyBill'?'<a class="bl-st '+(i.closed?'c':'o')+'" onclick="blToggleBill(\''+i.billId+'\')">'+(i.closed?'Closed':'Open')+'</a>':(i.payments.length?esc(i.payments.map(function(p){return fmtDate(p.date)}).join(', ')):'');
+    h+='<tr class="'+(i.include?'':'off')+'"><td><input type="checkbox" '+(i.include?'checked':'')+' onchange="blToggle(\''+i.key+'\')"></td><td>'+fmtDate(i.dos)+'</td><td><span class="bl-src '+(i.src==='RXNT'?'rx':'db')+'">'+i.src+'</span> <span style="color:var(--gray-600);font-size:10px">'+esc(i.ref)+'</span></td><td>'+esc(i.code)+'</td><td>'+esc(i.desc||'—')+(i.units>1?' <span style="color:var(--gray-600)">×'+i.units+'</span>':'')+(i.reason?'<div style="font-size:10px;color:var(--gold)">'+esc(i.reason)+'</div>':'')+'</td><td>'+esc(i.provider||'—')+'</td><td class="n">'+blMoney(i.charge)+'</td><td class="n">'+blMoney(i.paid)+'</td><td class="n">'+blMoney(i.adj)+'</td><td class="n"><b>'+blMoney(i.bal)+'</b></td><td>'+st+'</td></tr>';
+  });
+  h+='</tbody></table></div></div></div>';
+  return h;
+}
+function blToggle(key){var i=blState.items.find(function(x){return x.key===key});if(i){i.include=!i.include;if(i.include)i.reason='';}blRedraw();}
+function blToggleBill(id){blState.items.forEach(function(i){if(i.billId===id){i.closed=!i.closed;i.status=i.closed?'Closed':'Open';blApplyStatus(i);}});blRedraw();}
+function blHistoryHtml(){
+  var rows=[];
+  (cases||[]).forEach(function(c){(c.taskLog||[]).forEach(function(e){if(e.task==='Billing Ledger Generated')rows.push({c:c,e:e});});});
+  if(!rows.length)return '';
+  rows.sort(function(a,b){return (b.e.date||'').localeCompare(a.e.date||'')});
+  var h='<div class="table-card" style="margin-top:18px"><div class="table-header"><h3>Recently generated</h3></div><div class="table-scroll"><table class="tbl"><thead><tr><th>Date</th><th>Patient</th><th>Type</th><th>Sources</th><th class="n">Charges</th><th class="n">Balance due</th><th>By</th></tr></thead><tbody>';
+  rows.slice(0,25).forEach(function(x){var d=x.e.ledger||{};h+='<tr style="cursor:pointer" onclick="showCmDetail(\''+x.c.id+'\')"><td>'+fmtDate(x.e.date)+'</td><td><strong>'+esc(x.c.patientName)+'</strong></td><td>'+esc(x.c.caseType||'')+'</td><td>'+esc(d.sources||'')+'</td><td class="n">'+(d.charge!=null?blMoney(d.charge):'—')+'</td><td class="n">'+(d.bal!=null?blMoney(d.bal):'—')+'</td><td>'+esc(x.e.by||'')+'</td></tr>';});
+  return h+'</tbody></table></div></div>';
+}
+
+// ── branded PDF ──
+function blFileName(hd){var n=String(hd.patient||'Patient').split(',').map(function(s){return s.trim()}).filter(Boolean).join('_').replace(/[^A-Za-z0-9_\-]/g,'');return n+(hd.doi?'_DOI-'+hd.doi:'')+'_Billing_Ledger.pdf';}
+function blLogo(){var im=document.querySelector('#loginScreen img[src^="data:image/png"]');return im?im.getAttribute('src'):null;}
+async function blDownload(){
+  var c=blCase();if(!c)return;
+  var items=blState.items.filter(function(i){return i.include});if(!items.length){alert('No lines selected.');return;}
+  try{var JsPDF=await npiLoadPdfLib();}catch(e){alert('Could not load the PDF tool (check your internet connection).');return;}
+  var hd=blState.hdr,t=blTotals(blState.items);
+  var doc=blBuildPdf(JsPDF,hd,items,t,blLogo());
+  doc.save(blFileName(hd));
+  // log once per case per user per day
+  var by=(typeof currentUser!=='undefined'&&currentUser)||null,dt=today();
+  var srcs=[];items.forEach(function(i){if(srcs.indexOf(i.src)===-1)srcs.push(i.src);});
+  var info={sources:srcs.join(' + '),charge:t.charge,paid:t.paid,adj:t.adj,bal:t.bal,dosFrom:t.first,dosTo:t.last};
+  var ex=(c.taskLog||[]).find(function(e){return e.task==='Billing Ledger Generated'&&e.date===dt&&e.by===by});
+  if(ex){ex.ledger=info;try{if(_useNewTables)_dbPatch('cases',c.id,{task_log:c.taskLog});else _legacySave('cp11_cases',cases);}catch(e){}}
+  else _logCmTask(c,'Billing Ledger Generated',{ledger:info});
+  blSaveBack(c);
+  blRedraw();
+}
+function blBuildPdf(JsPDF,hd,items,t,logo){
+  var S=typeof npiPdfSafe==='function'?npiPdfSafe:function(x){return String(x==null?'':x)};
+  var doc=new JsPDF({unit:'pt',format:'letter'});
+  var W=612,H=792,M=40,CW=W-2*M,y=0;
+  var NAVY=[48,80,143],SKY=[63,167,224],INK=[26,25,22],MUTE=[110,110,110],SHADE=[244,247,251],LINE=[220,224,232];
+  var D=function(iso){if(!iso)return'';var p=String(iso).split('-');return p.length===3?p[1]+'/'+p[2]+'/'+p[0]:iso;};
+  var $=function(n){return blMoney(n)};
+  var fill=function(c){doc.setFillColor(c[0],c[1],c[2])},txt=function(c){doc.setTextColor(c[0],c[1],c[2])},draw=function(c){doc.setDrawColor(c[0],c[1],c[2])};
+  // columns
+  var C=[{k:'dos',l:'Date',w:52},{k:'code',l:'Code',w:46},{k:'desc',l:'Service',w:150},{k:'prov',l:'Provider',w:64},{k:'charge',l:'Charges',w:56,r:1},{k:'paid',l:'Payments',w:56,r:1},{k:'adj',l:'Adjustments',w:58,r:1},{k:'bal',l:'Balance',w:50,r:1}];
+  var cx=[];var acc=M;C.forEach(function(c){cx.push(acc);acc+=c.w;});
+  function pageTop(first){
+    fill(NAVY);doc.rect(0,0,W,5,'F');fill(SKY);doc.rect(0,5,W,2,'F');
+    if(first){
+      if(logo){try{doc.addImage(logo,'PNG',M,22,109,48);}catch(e){logo=null;}}
+      if(!logo){doc.setFont('helvetica','bold');doc.setFontSize(16);txt(NAVY);doc.text('CAREPATH',M,50);doc.setFont('helvetica','normal');doc.setFontSize(7);txt(MUTE);doc.text('INJURY CENTERS OF PENNSYLVANIA',M,61);}
+      doc.setFont('helvetica','bold');doc.setFontSize(17);txt(NAVY);doc.text('Patient Billing Ledger',W-M,44,{align:'right'});
+      doc.setFont('helvetica','normal');doc.setFontSize(9);txt(MUTE);doc.text('CarePath Injury Centers of Pennsylvania',W-M,58,{align:'right'});
+      doc.text('Statement date: '+D(hd.date),W-M,70,{align:'right'});
+      draw(NAVY);doc.setLineWidth(1.2);doc.line(M,82,W-M,82);y=98;
+    } else {
+      doc.setFont('helvetica','bold');doc.setFontSize(10);txt(NAVY);doc.text('Patient Billing Ledger',M,30);
+      doc.setFont('helvetica','normal');doc.setFontSize(9);txt(MUTE);doc.text(S(hd.patient+(hd.doi?'   DOI '+D(hd.doi):'')),W-M,30,{align:'right'});
+      draw(LINE);doc.setLineWidth(0.6);doc.line(M,38,W-M,38);y=52;
+    }
+  }
+  var brk=false;function ensure(hh,headFn){if(y+hh>H-50){doc.addPage();pageTop(false);if(headFn)headFn();brk=true;}}
+  function field(label,val,x,yy,w){doc.setFont('helvetica','bold');doc.setFontSize(7);txt(MUTE);doc.text(label.toUpperCase(),x,yy);doc.setFont('helvetica','normal');doc.setFontSize(9.5);txt(INK);var ln=doc.splitTextToSize(S(val||'-'),w);doc.text(ln[0],x,yy+12);if(ln[1])doc.text(ln[1]+(ln.length>2?'...':''),x,yy+23);}
+  pageTop(true);
+  // case block
+  var col=CW/3;
+  var isWC=blIsWc(hd.caseType);
+  var F=[['Patient',hd.patient],['Date of birth',D(hd.dob)],['Date of injury',D(hd.doi)],['Case type',blIsMva(hd.caseType)?'PI':hd.caseType],['Claim #',hd.claimNo]];
+  if(hd.policyNo)F.push(['Policy #',hd.policyNo]);
+  F.push([blCarrierLabel(hd.caseType),hd.carrier]);
+  if(hd.employer)F.push(['Employer',hd.employer]);
+  if(hd.attorney)F.push(['Attorney',hd.attorney]);
+  if(hd.lawFirm)F.push(['Law firm',hd.lawFirm]);
+  F.forEach(function(f,i){field(f[0],f[1],M+(i%3)*col,y+(Math.floor(i/3))*36,col-12);});
+  y+=Math.ceil(F.length/3)*36+4;
+  // summary boxes
+  var bw=(CW-18)/4,bx=[M,M+bw+6,M+2*(bw+6),M+3*(bw+6)];
+  var K=[['Total charges',t.charge],['Payments received',t.paid],['Adjustments',t.adj],['Balance due',t.bal]];
+  K.forEach(function(k,i){var last=i===3;if(last)fill(NAVY);else fill(SHADE);doc.roundedRect(bx[i],y,bw,46,4,4,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(7);if(last)doc.setTextColor(255,255,255);else txt(MUTE);doc.text(k[0].toUpperCase(),bx[i]+10,y+15);
+    doc.setFontSize(15);if(last)doc.setTextColor(255,255,255);else txt(NAVY);doc.text($(k[1]),bx[i]+10,y+35);});
+  y+=66;
+  // line items
+  doc.setFont('helvetica','bold');doc.setFontSize(11);txt(NAVY);doc.text('Itemized Charges',M,y);y+=8;
+  function tableHead(){fill(NAVY);doc.rect(M,y,CW,16,'F');doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(255,255,255);C.forEach(function(c,i){if(c.r)doc.text(c.l,cx[i]+c.w-4,y+11,{align:'right'});else doc.text(c.l,cx[i]+4,y+11);});y+=16;}
+  tableHead();
+  var groups=[],gm={};items.forEach(function(i){if(!gm[i.dos]){gm[i.dos]={dos:i.dos,rows:[]};groups.push(gm[i.dos]);}gm[i.dos].rows.push(i);});
+  groups.forEach(function(g,gi){
+    g.rows.forEach(function(i,ri){
+      doc.setFont('helvetica','normal');doc.setFontSize(8);
+      var desc=(i.desc||'')+(i.units>1?' (x'+(i.units%1?i.units:i.units.toFixed(0))+')':'');
+      var dl=doc.splitTextToSize(S(desc||'—'),C[2].w-8);var rh=Math.max(14,dl.length*9.5+4.5);
+      ensure(rh,tableHead);
+      if(gi%2===0){fill(SHADE);doc.rect(M,y,CW,rh,'F');}
+      txt(INK);
+      if(ri===0||brk){brk=false;doc.setFont('helvetica','bold');doc.text(D(i.dos),cx[0]+4,y+10);doc.setFont('helvetica','normal');}
+      doc.text(S(i.code),cx[1]+4,y+10);
+      doc.text(dl,cx[2]+4,y+10);
+      doc.text(doc.splitTextToSize(S(i.provider||''),C[3].w-6)[0]||'',cx[3]+4,y+10);
+      doc.text($(i.charge),cx[4]+C[4].w-4,y+10,{align:'right'});
+      doc.text($(i.paid),cx[5]+C[5].w-4,y+10,{align:'right'});
+      doc.text($(i.adj),cx[6]+C[6].w-4,y+10,{align:'right'});
+      doc.setFont('helvetica','bold');doc.text($(i.bal),cx[7]+C[7].w-4,y+10,{align:'right'});
+      y+=rh;
+    });
+  });
+  ensure(20);
+  draw(NAVY);doc.setLineWidth(1);doc.line(M,y,W-M,y);
+  doc.setFont('helvetica','bold');doc.setFontSize(8.5);txt(NAVY);doc.text('Totals',cx[0]+4,y+12);
+  [[4,t.charge],[5,t.paid],[6,t.adj],[7,t.bal]].forEach(function(p){doc.text($(p[1]),cx[p[0]]+C[p[0]].w-4,y+12,{align:'right'});});
+  y+=38;
+  // payments received
+  var pay={},porder=[];
+  items.forEach(function(i){(i.payments||[]).forEach(function(p){var k=(p.date||'')+'|'+(p.num||'')+'|'+(p.payer||'');if(!pay[k]){pay[k]={date:p.date,num:p.num,payer:p.payer,method:p.method,amount:0};porder.push(k);}pay[k].amount+=p.amount||0;});});
+  var dbPaid=Math.round(items.filter(function(i){return i.src==='daisyBill'}).reduce(function(s,i){return s+i.paid},0)*100)/100;
+  if(porder.length||dbPaid){
+    ensure(60);
+    doc.setFont('helvetica','bold');doc.setFontSize(11);txt(NAVY);doc.text('Payments Received',M,y);y+=8;
+    var P=[{l:'Payment date',w:80},{l:'Paid by',w:230},{l:'Check / reference #',w:100},{l:'Method',w:60},{l:'Amount',w:62,r:1}];
+    var px=[];acc=M;P.forEach(function(c){px.push(acc);acc+=c.w;});
+    var phead=function(){fill(NAVY);doc.rect(M,y,CW,16,'F');doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(255,255,255);P.forEach(function(c,i){if(c.r)doc.text(c.l,px[i]+c.w-4,y+11,{align:'right'});else doc.text(c.l,px[i]+4,y+11);});y+=16;};
+    phead();
+    porder.sort(function(a,b){return a.localeCompare(b)});
+    var rows=porder.map(function(k){var p=pay[k];return [D(p.date),blTitle(p.payer),p.num||'',p.method||'',p.amount];});
+    if(dbPaid)rows.push(['Various',hd.carrier||'Workers\' compensation carrier','Per itemized charges','',dbPaid]);
+    rows.forEach(function(r,ri){ensure(14,phead);if(ri%2===0){fill(SHADE);doc.rect(M,y,CW,14,'F');}doc.setFont('helvetica','normal');doc.setFontSize(8);txt(INK);
+      for(var j=0;j<4;j++)doc.text(doc.splitTextToSize(S(r[j]),P[j].w-6)[0]||'',px[j]+4,y+10);
+      doc.text($(r[4]),px[4]+P[4].w-4,y+10,{align:'right'});y+=14;});
+    ensure(18);draw(NAVY);doc.setLineWidth(1);doc.line(M,y,W-M,y);doc.setFont('helvetica','bold');doc.setFontSize(8.5);txt(NAVY);doc.text('Total payments',px[0]+4,y+12);doc.text($(t.paid),px[4]+P[4].w-4,y+12,{align:'right'});y+=26;
+  }
+  if(items.some(function(i){return i.src==='daisyBill'})||isWC){
+    ensure(30);doc.setFont('helvetica','normal');doc.setFontSize(8);txt(MUTE);
+    doc.splitTextToSize('Workers\' compensation charges are paid according to the Pennsylvania Workers\' Compensation medical fee schedule. Adjustments shown on workers\' compensation services are fee schedule reductions and are not billable to the patient.',CW).forEach(function(l){doc.text(l,M,y);y+=10;});
+  }
+  // footer
+  var n=doc.getNumberOfPages();
+  for(var p=1;p<=n;p++){doc.setPage(p);draw(LINE);doc.setLineWidth(0.6);doc.line(M,H-34,W-M,H-34);doc.setFont('helvetica','normal');doc.setFontSize(7.5);txt(MUTE);
+    doc.text('CarePath Injury Centers of Pennsylvania  |  Confidential patient billing information',M,H-22);doc.text('Page '+p+' of '+n,W-M,H-22,{align:'right'});}
+  return doc;
+}
+
+function blIsWc(t){return /^\s*(WC|work)/i.test(t||'');}
+function blIsMva(t){return /MVA|auto/i.test(t||'');}
+function blCarrierLabel(t){return blIsWc(t)?'Claims administrator / carrier':blIsMva(t)?'Auto carrier':'Insurance carrier';}
+// CRM values the ledger fields can be saved back to (linked referral)
+var BL_BACK=[['claimNo','claimNumber','Claim #'],['policyNo','policyNumber','Policy #'],['carrier','insCarrier','Carrier'],['attorney','attorney','Attorney'],['lawFirm','lawFirm','Law firm']];
+function blCrmVals(c){var r=blCaseRef(c),o={};BL_BACK.forEach(function(b){o[b[0]]=r?String(r[b[1]]||'').trim():'';});return o;}
+function blSame(a,b){return String(a||'').replace(/[^a-z0-9]/gi,'').toLowerCase()===String(b||'').replace(/[^a-z0-9]/gi,'').toLowerCase();}
+function blSaveNoteHtml(c){
+  var r=blCaseRef(c),hd=blState.hdr||{},crm=blState.crm||{},add=[],diff=[];
+  BL_BACK.forEach(function(b){var v=String(hd[b[0]]||'').trim();if(!v)return;if(!crm[b[0]])add.push(b[2]);else if(!blSame(v,crm[b[0]]))diff.push(b[2]+' (CRM: '+crm[b[0]]+')');});
+  var h='';
+  if(!r){if(add.length)h+='<div class="bl-note">This case has no linked referral, so what you enter here is used on this ledger only.</div>';return h;}
+  if(add.length)h+='<div class="bl-note" style="color:var(--navy)">On download, these will be saved to the referral (currently blank in the CRM): <strong>'+esc(add.join(', '))+'</strong></div>';
+  if(diff.length)h+='<div class="bl-warn">⚠ Different from the CRM: '+esc(diff.join('; '))+'. The ledger uses what is entered here; the CRM is not changed.</div>';
+  return h;
+}
+function blDrawSaveNote(){var el=document.getElementById('blSaveNote');if(el)el.innerHTML=blSaveNoteHtml(blCase());}
+function blSaveBack(c){
+  var r=blCaseRef(c);if(!r)return;
+  var hd=blState.hdr||{},patch={},saved=[];
+  BL_BACK.forEach(function(b){var v=String(hd[b[0]]||'').trim();if(!v||String(r[b[1]]||'').trim())return;r[b[1]]=v;patch[_refMap[b[1]]]=v;saved.push(b[2]+': '+v);});
+  if(!saved.length)return;
+  if(patch.law_firm&&typeof dupRegister==='function')dupRegister('firm',patch.law_firm);
+  if(!Array.isArray(r.updateLog))r.updateLog=[];
+  r.updateLog.push({date:today(),method:'System',summary:'Added from billing ledger by '+((typeof currentUser!=='undefined'&&currentUser)||'CM')+' \u2014 '+saved.join('; ')});
+  patch.update_log=r.updateLog;
+  _markModified(r.id);
+  if(_useNewTables)_dbPatch('referrals',r.id,patch);else _legacySave('cp11_refs',refs);
+  // keep the case's own attorney / law firm in step, only where the case is blank
+  var cp={};if(patch.attorney&&!String(c.attorney||'').trim()){c.attorney=patch.attorney;cp.attorney=patch.attorney;}if(patch.law_firm&&!String(c.lawFirm||'').trim()){c.lawFirm=patch.law_firm;cp.law_firm=patch.law_firm;}
+  if(Object.keys(cp).length){_markModified(c.id);if(_useNewTables)_dbPatch('cases',c.id,cp);else _legacySave('cp11_cases',cases);}
+  blState.crm=blCrmVals(c);
+  blState.savedMsg='Saved to the referral: '+saved.join('; ');
+}
+
 </script>
 </body>
 </html>
